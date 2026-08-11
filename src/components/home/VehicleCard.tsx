@@ -1,57 +1,88 @@
 import React from 'react';
-import { VehicleSummary } from '../../lib/financialEngine';
+import type { VehicleSummary } from '../../lib/financialEngine';
+import { colors, formatMiles, glassCard, type } from '../../theme/theme';
 
-export function VehicleCard({
-  shortName,
-  summary,
-  showFixedShare,
-}: {
+export interface VehicleCardProps {
   shortName: string;
   summary: VehicleSummary;
-  showFixedShare: boolean;
-}) {
-  const netColor = summary.net >= 0 ? '#22C55E' : '#F87171';
-  const netSign = summary.net >= 0 ? '+' : '';
+  showFixedShare?: boolean;
+  /** En kârlı araç bu ayın/periyodun lideri ise küçük bir rozet gösterir. */
+  isTopPerformer?: boolean;
+}
+
+/**
+ * Tek bir aracın performans kartı — ARAÇLAR listesinde ve araç detayında
+ * kullanılır. Aynı import yolunda (../home/VehicleCard) hem HomePage hem
+ * VehiclesPage tarafından kullanıldığı için prop şekli değiştirilmedi.
+ *
+ * NOT — "Saatlik" satırı: financialEngine.ts / mileageEngine.ts içinde
+ * "çalışılan saat" verisi tutulmuyor, bu yüzden $/saat burada hesaplanamıyor
+ * ve gösterilmiyor. $/mil ise net kâr / milesDriven üzerinden gerçek veriyle
+ * hesaplanıyor.
+ */
+export function VehicleCard({ shortName, summary, showFixedShare, isTopPerformer }: VehicleCardProps) {
+  const isProfit = summary.net >= 0;
+  const accent = isProfit ? colors.positive : colors.negative;
+  const perMile = summary.milesDriven > 0 ? summary.net / summary.milesDriven : null;
 
   return (
-    <div style={styles.card}>
-      <div style={styles.header}>
-        <p style={styles.name}>{shortName}</p>
-        <p style={{ ...styles.net, color: netColor }}>
-          {netSign}${Math.abs(summary.net).toLocaleString('en-US')}
-        </p>
+    <div style={{ ...glassCard(), padding: 16, position: 'relative' }}>
+      {isTopPerformer && (
+        <span style={styles.topBadge}>
+          <span style={{ color: colors.neonGreen }}>★</span> EN KÂRLI
+        </span>
+      )}
+
+      <div style={styles.headerRow}>
+        <span style={{ ...type.sectionTitle, fontSize: 14 }}>{shortName}</span>
+        <span style={{ ...styles.statusPill, background: isProfit ? colors.neonGreenSoft : colors.negativeSoft, color: accent }}>
+          {isProfit ? 'KÂRDA' : 'ZARARDA'}
+        </span>
       </div>
-      <div style={styles.row}>
-        <Metric label="Kazanç" value={summary.income} positive />
-        <Metric label="Benzin" value={-summary.gas} />
-        <Metric label="Araç Gideri" value={-summary.vehicleExpense} />
-        {showFixedShare && <Metric label="Sabit Pay" value={-summary.fixedShare} />}
+
+      <p style={{ ...type.caption, marginTop: 10, marginBottom: 2 }}>NET KÂR</p>
+      <p style={{ fontSize: 24, fontWeight: 800, color: accent, margin: 0, fontVariantNumeric: 'tabular-nums' }}>
+        {isProfit ? '+' : '-'}${Math.abs(summary.net).toLocaleString('en-US')}
+      </p>
+
+      <div style={styles.statRow}>
+        {perMile !== null && (
+          <Stat label="MİL BAŞINA" value={`$${perMile.toFixed(2)}`} />
+        )}
+        <Stat label="MİL" value={formatMiles(summary.milesDriven)} />
+        <Stat label="GELİR" value={`$${summary.income.toLocaleString('en-US')}`} color={colors.positive} />
+        {showFixedShare && summary.fixedShare > 0 && (
+          <Stat label="SABİT PAY" value={`$${summary.fixedShare.toLocaleString('en-US')}`} color={colors.textSecondary} />
+        )}
       </div>
-      <p style={styles.mileage}>{summary.milesDriven.toLocaleString('en-US')} mi</p>
     </div>
   );
 }
 
-function Metric({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
-  const color = positive ? '#22C55E' : value < 0 ? '#F87171' : '#94A3B8';
-  const sign = value > 0 ? '+' : '';
+function Stat({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
     <div>
-      <p style={styles.metricLabel}>{label}</p>
-      <p style={{ ...styles.metricValue, color }}>
-        {sign}${Math.abs(value).toLocaleString('en-US')}
-      </p>
+      <p style={{ ...type.caption, fontSize: 10.5 }}>{label}</p>
+      <p style={{ fontSize: 13, fontWeight: 700, color: color ?? colors.textPrimary, margin: 0 }}>{value}</p>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  card: { background: '#151B2C', borderRadius: 16, padding: 16 },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  name: { fontSize: 15, fontWeight: 700, margin: 0 },
-  net: { fontSize: 18, fontWeight: 800, margin: 0 },
-  row: { display: 'flex', gap: 16, flexWrap: 'wrap' },
-  metricLabel: { fontSize: 11, color: '#64748B', margin: 0 },
-  metricValue: { fontSize: 14, fontWeight: 600, margin: 0 },
-  mileage: { fontSize: 12, color: '#64748B', marginTop: 10, marginBottom: 0 },
+  topBadge: {
+    position: 'absolute',
+    top: -9,
+    right: 14,
+    background: colors.bgBase,
+    border: `1px solid ${colors.neonGreen}`,
+    borderRadius: 999,
+    padding: '2px 8px',
+    fontSize: 10,
+    fontWeight: 800,
+    letterSpacing: 0.3,
+    color: colors.textPrimary,
+  },
+  headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between' },
+  statusPill: { fontSize: 10.5, fontWeight: 800, padding: '4px 9px', borderRadius: 999, letterSpacing: 0.3 },
+  statRow: { display: 'flex', gap: 18, marginTop: 14, flexWrap: 'wrap' },
 };
