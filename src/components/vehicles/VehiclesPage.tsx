@@ -28,9 +28,6 @@ import {
 
 import { VehicleCard } from '../home/VehicleCard';
 
-// ÖNEMLİ:
-// @/lib/supabase yerine proje içindeki göreli yol kullanılıyor.
-// Bu, mevcut Netlify build hatasını ortadan kaldırır.
 import { supabase } from '../../lib/supabase';
 
 interface VehiclesPageProps {
@@ -49,13 +46,13 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     retry,
   } = useFamilyRealtimeData(familyId);
 
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
-    null
-  );
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+
   const [fullName, setFullName] = useState('');
   const [shortName, setShortName] = useState('');
+
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -87,15 +84,13 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     recordDate: r.record_date,
   }));
 
-  const fixedVersions: FixedExpenseVersion[] = (fixedExpenses ?? []).map(
-    (f) => ({
-      id: f.id,
-      label: f.label,
-      monthlyAmount: f.monthly_amount,
-      effectiveFrom: f.effective_from,
-      effectiveTo: f.effective_to,
-    })
-  );
+  const fixedVersions: FixedExpenseVersion[] = (fixedExpenses ?? []).map((f) => ({
+    id: f.id,
+    label: f.label,
+    monthlyAmount: f.monthly_amount,
+    effectiveFrom: f.effective_from,
+    effectiveTo: f.effective_to,
+  }));
 
   const mileageEntries: MileageEntry[] = (mileageLog ?? []).map((m) => ({
     id: m.id,
@@ -115,16 +110,12 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     const vehicleShortName = shortName.trim();
 
     if (!vehicleName || !vehicleShortName) {
-      setFormError(
-        'Lütfen tam araç adını ve kısa adını doldurun.'
-      );
+      setFormError('Lütfen tam araç adını ve kısa adını doldurun.');
       return;
     }
 
     if (!familyId) {
-      setFormError(
-        'Aile bilgisi bulunamadı. Lütfen tekrar giriş yapın.'
-      );
+      setFormError('Aile bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
       return;
     }
 
@@ -153,21 +144,29 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
       const errorObject = err as {
         message?: string;
         code?: string;
+        details?: string;
       };
 
       const message =
-        errorObject?.message || 'Bilinmeyen bir hata oluştu.';
+        errorObject.message ||
+        errorObject.details ||
+        'Bilinmeyen bir hata oluştu.';
+
+      const lowerMessage = message.toLowerCase();
 
       if (
-        errorObject?.code === '42501' ||
-        message.toLowerCase().includes('row-level security') ||
-        message.toLowerCase().includes('permission denied')
+        errorObject.code === '42501' ||
+        lowerMessage.includes('permission denied') ||
+        lowerMessage.includes('row-level security') ||
+        lowerMessage.includes('rls')
       ) {
         setFormError(
-          'Bu aileye araç ekleme yetkiniz bulunmuyor. Aile üyeliği veya RLS kontrolü gerekiyor.'
+          'Araç eklenemedi: Bu aileye araç ekleme yetkiniz bulunmuyor.'
         );
       } else {
-        setFormError(`Araç eklenemedi: ${message}`);
+        setFormError(
+          'Araç eklenemedi: ' + message
+        );
       }
     } finally {
       setIsSaving(false);
@@ -175,12 +174,11 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   };
 
   const selectedVehicle =
-    vehicles?.find(
-      (vehicle) => vehicle.id === selectedVehicleId
-    ) ?? null;
+    vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null;
 
   return (
     <div style={styles.page}>
+
       <div style={styles.headerRow}>
         <h1 style={styles.heading}>🚗 Araçlar</h1>
 
@@ -228,13 +226,21 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                   id: vehicle.id,
                   shortName: vehicle.short_name,
                 },
+
                 period: 'month',
+
                 boundary,
+
                 income: incomeRecords,
+
                 expenses: expenseRecords,
+
                 fixedExpenseVersions: fixedVersions,
+
                 monthAnchorDate: monthAnchor,
+
                 totalVehicleCount: vehicles.length,
+
                 milesInPeriod: sumMilesInPeriod(
                   vehicleMiles,
                   boundary.start,
@@ -247,9 +253,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                   key={vehicle.id}
                   type="button"
                   style={styles.cardButton}
-                  onClick={() =>
-                    setSelectedVehicleId(vehicle.id)
-                  }
+                  onClick={() => {
+                    setSelectedVehicleId(vehicle.id);
+                  }}
                 >
                   <VehicleCard
                     shortName={vehicle.short_name}
@@ -259,14 +265,17 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 </button>
               );
             } catch (calcError) {
+              const message =
+                calcError instanceof Error
+                  ? calcError.message
+                  : 'Bilinmeyen hesaplama hatası';
+
               return (
                 <div
                   key={vehicle.id}
                   style={styles.cardError}
                 >
-                  {vehicle.short_name}: Hesaplama hatası (
-                  {(calcError as Error).message}
-                  )
+                  {vehicle.short_name}: Hesaplama hatası ({message})
                 </div>
               );
             }
@@ -286,7 +295,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
           mileageEntries={mileageEntries.filter(
             (m) => m.vehicleId === selectedVehicle.id
           )}
-          onClose={() => setSelectedVehicleId(null)}
+          onClose={() => {
+            setSelectedVehicleId(null);
+          }}
         />
       )}
 
@@ -301,7 +312,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         >
           <div
             style={styles.addModal}
-            onClick={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
           >
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>
@@ -340,9 +353,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(e) =>
-                    setFullName(e.target.value)
-                  }
+                  onChange={(e) => {
+                    setFullName(e.target.value);
+                  }}
                   placeholder="Örn: 2026 Kia Sportage Hybrid"
                   disabled={isSaving}
                   style={styles.input}
@@ -358,9 +371,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 <input
                   type="text"
                   value={shortName}
-                  onChange={(e) =>
-                    setShortName(e.target.value)
-                  }
+                  onChange={(e) => {
+                    setShortName(e.target.value);
+                  }}
                   placeholder="Örn: KIA"
                   disabled={isSaving}
                   style={styles.input}
@@ -371,9 +384,9 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 <button
                   type="button"
                   disabled={isSaving}
-                  onClick={() =>
-                    setIsAddModalOpen(false)
-                  }
+                  onClick={() => {
+                    setIsAddModalOpen(false);
+                  }}
                   style={styles.cancelButton}
                 >
                   İptal
@@ -382,10 +395,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  style={{
-                    ...styles.submitButton,
-                    opacity: isSaving ? 0.6 : 1,
-                  }}
+                  style={styles.submitButton}
                 >
                   {isSaving
                     ? 'Kaydediliyor...'
@@ -442,7 +452,9 @@ function VehicleDetailModal({
     >
       <div
         style={styles.detailModal}
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
       >
         <div style={styles.modalHeader}>
           <h2 style={styles.modalTitle}>
@@ -463,7 +475,9 @@ function VehicleDetailModal({
         </p>
 
         {combined.length === 0 ? (
-          <EmptyState message="Bu araç için henüz kayıt yok" />
+          <EmptyState
+            message="Bu araç için henüz kayıt yok"
+          />
         ) : (
           <div style={styles.history}>
             {combined.map((item, index) => (
@@ -484,9 +498,11 @@ function VehicleDetailModal({
                   }}
                 >
                   {item.amount >= 0 ? '+' : ''}
+
                   {Number(item.amount).toLocaleString(
                     'en-US'
                   )}
+
                   $
                 </span>
               </div>
@@ -498,10 +514,7 @@ function VehicleDetailModal({
   );
 }
 
-const styles: Record<
-  string,
-  React.CSSProperties
-> = {
+const styles: Record<string, React.CSSProperties> = {
   page: {
     padding: '16px 16px 96px',
     color: 'white',
@@ -526,7 +539,7 @@ const styles: Record<
     color: '#000',
     border: 'none',
     borderRadius: 10,
-    padding: '12px 16px',
+    padding: '12px 18px',
     fontWeight: 700,
     fontSize: 13,
     cursor: 'pointer',
