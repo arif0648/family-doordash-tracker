@@ -40,7 +40,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
-  // Araç ekleme modalı eyaletleri
+  // Araç ekleme modalı durumları
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [shortName, setShortName] = useState('');
@@ -51,9 +51,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
 
-  // ============================================================
-  // VERİLERİ FINANCIAL ENGINE FORMATINA ÇEVİR
-  // ============================================================
+  // Verileri financial engine formatına çevir
   const incomeRecords: IncomeRecord[] = (income ?? []).map((r) => ({
     id: r.id,
     vehicleId: r.vehicle_id,
@@ -86,9 +84,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     milesDriven: m.miles_driven ?? m.miles ?? 0,
   }));
 
-  // ============================================================
-  // ARAÇ EKLE
-  // ============================================================
+  // Yeni araç ekleme fonksiyonu
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -119,7 +115,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
       if (insertError) throw insertError;
 
-      // Başarılı kayıt sonrası temizlik
+      // Başarılı kayıt sonrası formu temizle ve modalı kapat
       setFullName('');
       setShortName('');
       setFormError(null);
@@ -146,13 +142,10 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
   const selectedVehicle = vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null;
 
-  // ============================================================
-  // MAIN JSX (HER DURUMDA ÜST BAŞLIK VE BUTON GÖRÜNÜR)
-  // ============================================================
   return (
     <div style={styles.page}>
 
-      {/* ÜST BAŞLIK & EKLE BUTONU (HER ZAMAN EN ÜSTTE) */}
+      {/* ÜST BAŞLIK VE EKLE BUTONU (HER ZAMAN GÖRÜNÜR) */}
       <div style={styles.headerRow}>
         <h1 style={styles.heading}>🚗 Araçlar</h1>
         <button
@@ -168,7 +161,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         </button>
       </div>
 
-      {/* LOADING / ERROR CONTROLS ORTA ALANDA GÖSTERİLİR */}
+      {/* İÇERİK DURUMLARI (YÜKLENİYOR, HATA VEYA LİSTE) */}
       {loading ? (
         <LoadingScreen label="Araçlar yükleniyor…" />
       ) : error ? (
@@ -317,9 +310,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   );
 }
 
-// ============================================================
-// VEHICLE DETAIL MODAL
-// ============================================================
+// Araç detay modalı bileşeni
 function VehicleDetailModal({
   vehicleName,
   income,
@@ -372,9 +363,7 @@ function VehicleDetailModal({
   );
 }
 
-// ============================================================
-// STYLES
-// ============================================================
+// Stil tanımları
 const styles: Record<string, React.CSSProperties> = {
   page: { padding: '16px 16px 96px', color: 'white' },
   headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
@@ -391,14 +380,14 @@ const styles: Record<string, React.CSSProperties> = {
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   modalTitle: { fontSize: 18, fontWeight: 700, margin: 0 },
   closeButton: { background: 'none', border: 'none', color: '#38BDF8', fontSize: 14, cursor: 'pointer', padding: 8 },
-  modalSubtitle: { fontSize: 12, color: '#64748B', marginTop: 4 },
+  modalSubtitle: {fontSize: 12, color: '#64748B', marginTop: 4 },
   history: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 },
   historyRow: { display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, fontSize: 13, borderBottom: '1px solid #1E293B', paddingBottom: 8 },
   form: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 },
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
   label: { fontSize: 12, fontWeight: 600, color: '#94A3B8' },
   input: { background: '#1E293B', border: '1px solid #334155', borderRadius: 8, padding: '11px 12px', color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box', width: '100%' },
-  formActions: { giz: 'flex', display: 'flex', gap: 10, marginTop: 8 },
+  formActions: { display: 'flex', gap: 10, marginTop: 8 },
   cancelButton: { flex: 1, background: '#1E293B', border: '1px solid #334155', color: '#CBD5E1', borderRadius: 8, padding: '11px 10px', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
   submitButton: { flex: 1, background: '#00E676', border: 'none', color: '#000', borderRadius: 8, padding: '11px 10px', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
   errorBox: { background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 12 },
