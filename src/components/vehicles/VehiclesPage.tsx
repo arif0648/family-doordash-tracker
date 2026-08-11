@@ -40,7 +40,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
 
-  // Araç ekleme modalı durumları
+  // Araç ekleme modalı state'leri
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [shortName, setShortName] = useState('');
@@ -51,7 +51,10 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
 
-  // Verileri financial engine formatına çevir
+  if (loading) return <LoadingScreen label="Araçlar yükleniyor…" />;
+  if (error) return <ErrorScreen message={error} onRetry={retry} />;
+
+  // Verileri financial engine formatına map etme
   const incomeRecords: IncomeRecord[] = (income ?? []).map((r) => ({
     id: r.id,
     vehicleId: r.vehicle_id,
@@ -84,7 +87,6 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     milesDriven: m.miles_driven ?? m.miles ?? 0,
   }));
 
-  // Yeni araç ekleme fonksiyonu
   const handleAddVehicle = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
@@ -93,18 +95,19 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     const vehicleShortName = shortName.trim();
 
     if (!vehicleName || !vehicleShortName) {
-      setFormError('Lütfen tam araç adı ve kısa adı doldurun.');
+      setFormError('Lütfen tam araç adını ve kısa adını doldurun.');
       return;
     }
 
     if (!familyId) {
-      setFormError('Aile bilgisi bulunamadı. Lütfen tekrar giriş yapın.');
+      setFormError('Aile kimliği (familyId) bulunamadı. Lütfen oturumunuzu yenileyin.');
       return;
     }
 
     setIsSaving(true);
 
     try {
+      // Supabase'e güvenli INSERT (RSL policy: is_family_member(family_id) denetiminden geçer)
       const { error: insertError } = await supabase
         .from('vehicles')
         .insert({
@@ -115,14 +118,14 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
       if (insertError) throw insertError;
 
-      // Başarılı kayıt sonrası formu temizle ve modalı kapat
+      // Başarılı kayıt sonrası form temizliği ve modal kapanışı
       setFullName('');
       setShortName('');
       setFormError(null);
       setIsAddModalOpen(false);
 
     } catch (err: any) {
-      console.error('Araç kaydetme hatası:', err);
+      console.error('Araç ekleme hatası:', err);
       const errorCode = err?.code;
       const errorMessage = err?.message || '';
 
@@ -131,7 +134,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         errorMessage.toLowerCase().includes('permission denied') ||
         errorMessage.toLowerCase().includes('row-level security')
       ) {
-        setFormError('Yetki / RLS hatası: Bu aileye araç ekleme yetkiniz bulunmuyor.');
+        setFormError('Güvenlik Hatası (RLS): Bu aileye araç ekleme yetkiniz yok veya is_family_member doğrulaması başarısız oldu.');
       } else {
         setFormError(`Araç eklenirken hata oluştu: ${errorMessage || 'Lütfen tekrar deneyin.'}`);
       }
@@ -145,7 +148,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   return (
     <div style={styles.page}>
 
-      {/* ÜST BAŞLIK VE EKLE BUTONU (HER ZAMAN GÖRÜNÜR) */}
+      {/* ÜST BAŞLIK VE DOKUNMATİK EKLE BUTONU */}
       <div style={styles.headerRow}>
         <h1 style={styles.heading}>🚗 Araçlar</h1>
         <button
@@ -161,12 +164,8 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         </button>
       </div>
 
-      {/* İÇERİK DURUMLARI (YÜKLENİYOR, HATA VEYA LİSTE) */}
-      {loading ? (
-        <LoadingScreen label="Araçlar yükleniyor…" />
-      ) : error ? (
-        <ErrorScreen message={error} onRetry={retry} />
-      ) : !vehicles || vehicles.length === 0 ? (
+      {/* ARAÇ LİSTESİ VEYA BOŞ DURUM */}
+      {!vehicles || vehicles.length === 0 ? (
         <div style={styles.emptyContainer}>
           <EmptyState message="Henüz araç tanımlanmamış" icon="🚗" />
           <button
@@ -214,7 +213,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
             } catch (calcError) {
               return (
                 <div key={vehicle.id} style={styles.cardError}>
-                  {vehicle.short_name}: hesaplama hatası ({(calcError as Error).message})
+                  {vehicle.short_name}: Hesaplama hatası ({(calcError as Error).message})
                 </div>
               );
             }
@@ -226,7 +225,6 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
       {selectedVehicle && (
         <VehicleDetailModal
           vehicleName={selectedVehicle.short_name}
-          vehicleId={selectedVehicle.id}
           income={incomeRecords.filter((r) => r.vehicleId === selectedVehicle.id)}
           expenses={expenseRecords.filter((r) => r.vehicleId === selectedVehicle.id)}
           mileageEntries={mileageEntries.filter((m) => m.vehicleId === selectedVehicle.id)}
@@ -310,7 +308,6 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   );
 }
 
-// Araç detay modalı bileşeni
 function VehicleDetailModal({
   vehicleName,
   income,
@@ -319,7 +316,6 @@ function VehicleDetailModal({
   onClose,
 }: {
   vehicleName: string;
-  vehicleId: string;
   income: IncomeRecord[];
   expenses: ExpenseRecord[];
   mileageEntries: MileageEntry[];
@@ -363,14 +359,13 @@ function VehicleDetailModal({
   );
 }
 
-// Stil tanımları
 const styles: Record<string, React.CSSProperties> = {
   page: { padding: '16px 16px 96px', color: 'white' },
   headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   heading: { fontSize: 20, fontWeight: 700, margin: 0 },
-  addButton: { background: '#00E676', color: '#000', border: 'none', borderRadius: 10, padding: '9px 14px', fontWeight: 700, fontSize: 13, cursor: 'pointer' },
+  addButton: { background: '#00E676', color: '#000', border: 'none', borderRadius: 10, padding: '12px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', minHeight: 44 },
   emptyContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, margin: '20px 0' },
-  firstAddButton: { background: '#1E293B', color: '#00E676', border: '1px solid #334155', borderRadius: 10, padding: '10px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer' },
+  firstAddButton: { background: '#1E293B', color: '#00E676', border: '1px solid #334155', borderRadius: 10, padding: '12px 20px', fontWeight: 700, fontSize: 13, cursor: 'pointer', minHeight: 44 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
   cardButton: { background: 'none', border: 'none', padding: 0, textAlign: 'left', width: '100%', cursor: 'pointer' },
   cardError: { background: '#3F1D1D', borderRadius: 12, padding: 14, color: '#FCA5A5', fontSize: 13 },
@@ -379,16 +374,16 @@ const styles: Record<string, React.CSSProperties> = {
   detailModal: { background: '#0F172A', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 20, width: '100%', maxWidth: 520, maxHeight: '80vh', overflowY: 'auto', boxSizing: 'border-box' },
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
   modalTitle: { fontSize: 18, fontWeight: 700, margin: 0 },
-  closeButton: { background: 'none', border: 'none', color: '#38BDF8', fontSize: 14, cursor: 'pointer', padding: 8 },
-  modalSubtitle: {fontSize: 12, color: '#64748B', marginTop: 4 },
+  closeButton: { background: 'none', border: 'none', color: '#38BDF8', fontSize: 14, cursor: 'pointer', padding: 12, minHeight: 44 },
+  modalSubtitle: { fontSize: 12, color: '#64748B', marginTop: 4 },
   history: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 },
   historyRow: { display: 'grid', gridTemplateColumns: '1fr auto auto', gap: 12, fontSize: 13, borderBottom: '1px solid #1E293B', paddingBottom: 8 },
   form: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 },
   field: { display: 'flex', flexDirection: 'column', gap: 6 },
   label: { fontSize: 12, fontWeight: 600, color: '#94A3B8' },
-  input: { background: '#1E293B', border: '1px solid #334155', borderRadius: 8, padding: '11px 12px', color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box', width: '100%' },
+  input: { background: '#1E293B', border: '1px solid #334155', borderRadius: 8, padding: '12px 14px', color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box', width: '100%', minHeight: 44 },
   formActions: { display: 'flex', gap: 10, marginTop: 8 },
-  cancelButton: { flex: 1, background: '#1E293B', border: '1px solid #334155', color: '#CBD5E1', borderRadius: 8, padding: '11px 10px', fontSize: 14, fontWeight: 600, cursor: 'pointer' },
-  submitButton: { flex: 1, background: '#00E676', border: 'none', color: '#000', borderRadius: 8, padding: '11px 10px', fontSize: 14, fontWeight: 700, cursor: 'pointer' },
+  cancelButton: { flex: 1, background: '#1E293B', border: '1px solid #334155', color: '#CBD5E1', borderRadius: 8, padding: '12px', fontSize: 14, fontWeight: 600, cursor: 'pointer', minHeight: 44 },
+  submitButton: { flex: 1, background: '#00E676', border: 'none', color: '#000', borderRadius: 8, padding: '12px', fontSize: 14, fontWeight: 700, cursor: 'pointer', minHeight: 44 },
   errorBox: { background: 'rgba(239, 68, 68, 0.15)', border: '1px solid #EF4444', color: '#FCA5A5', padding: '10px 12px', borderRadius: 8, fontSize: 13, marginTop: 12 },
 };
