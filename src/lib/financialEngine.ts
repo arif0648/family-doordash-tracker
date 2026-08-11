@@ -47,7 +47,7 @@ export interface FamilySummary {
   market: number;
   otherFamily: number;
   otherVehicle: number;
-  fixed: number;
+  fixedExpense: number;
   net: number;
 }
 
@@ -97,11 +97,11 @@ export function computeFamilySummary({
       else if (e.category === 'other' && e.vehicleId) otherVehicle += e.amount;
     });
 
-  const fixed = fixedExpenseVersions
+  const fixedExpense = fixedExpenseVersions
     .filter((f) => f.effectiveFrom <= boundary.end && (!f.effectiveTo || f.effectiveTo >= boundary.start))
     .reduce((sum, f) => sum + f.monthlyAmount, 0);
 
-  const totalExpenses = gas + vehicleExpense + market + otherFamily + otherVehicle + fixed;
+  const totalExpenses = gas + vehicleExpense + market + otherFamily + otherVehicle + fixedExpense;
   const net = totalIncome - totalExpenses;
 
   return {
@@ -111,7 +111,7 @@ export function computeFamilySummary({
     market,
     otherFamily,
     otherVehicle,
-    fixed,
+    fixedExpense,
     net,
   };
 }
