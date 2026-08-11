@@ -20,7 +20,7 @@ import {
   MileageEntry,
 } from '../../lib/mileageEngine';
 import { VehicleCard } from '../home/VehicleCard';
-import { supabase } from '../../lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 interface VehiclesPageProps {
   familyId: string;
@@ -49,7 +49,6 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
 
-  // Debug ekosistemi: Gelen familyId ve vehicles durumunu ekrana basalım
   console.log('DEBUG VehiclesPage:', { familyId, vehicles, loading, error });
 
   if (loading) return <LoadingScreen label="Araçlar yükleniyor…" />;
@@ -150,7 +149,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         </button>
       </div>
 
-      {/* DEBUG BİLGİ PANELİ (Sorunun kaynağını görmek için) */}
+      {/* DEBUG BİLGİ PANELİ */}
       <div style={styles.debugBox}>
         <p style={{ margin: 0, fontWeight: 'bold', color: '#38BDF8' }}>🔍 Bağlantı Durumu:</p>
         <p style={{ margin: '4px 0 0', fontSize: 11 }}>familyId: {familyId || 'YOK (Boş!)'}</p>
