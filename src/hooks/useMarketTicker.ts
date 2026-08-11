@@ -45,11 +45,13 @@ export function useMarketTicker() {
     };
   }, []);
 
+  const goldPrice: number | undefined = undefined;
+  const goldChangePercent: number | undefined = undefined;
+
   return {
     usdRate,
     usdChangePercent,
-    // Gold: kendi API key'li kaynağınla doldur.
-    goldPrice: undefined as number | undefined,
-    goldChangePercent: undefined as number | undefined,
+    goldPrice,
+    goldChangePercent,
   };
 }
