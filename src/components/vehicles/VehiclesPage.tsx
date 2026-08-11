@@ -39,8 +39,6 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   } = useFamilyRealtimeData(familyId);
 
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
-
-  // Araç ekleme modalı state'leri
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [fullName, setFullName] = useState('');
   const [shortName, setShortName] = useState('');
@@ -51,10 +49,12 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
 
+  // Debug ekosistemi: Gelen familyId ve vehicles durumunu ekrana basalım
+  console.log('DEBUG VehiclesPage:', { familyId, vehicles, loading, error });
+
   if (loading) return <LoadingScreen label="Araçlar yükleniyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
 
-  // Verileri financial engine formatına map etme
   const incomeRecords: IncomeRecord[] = (income ?? []).map((r) => ({
     id: r.id,
     vehicleId: r.vehicle_id,
@@ -100,14 +100,13 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
     }
 
     if (!familyId) {
-      setFormError('Aile kimliği (familyId) bulunamadı. Lütfen oturumunuzu yenileyin.');
+      setFormError('familyId boş geldiği için kayıt yapılamıyor!');
       return;
     }
 
     setIsSaving(true);
 
     try {
-      // Supabase'e güvenli INSERT (RSL policy: is_family_member(family_id) denetiminden geçer)
       const { error: insertError } = await supabase
         .from('vehicles')
         .insert({
@@ -118,37 +117,24 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
 
       if (insertError) throw insertError;
 
-      // Başarılı kayıt sonrası form temizliği ve modal kapanışı
       setFullName('');
       setShortName('');
       setFormError(null);
       setIsAddModalOpen(false);
-
     } catch (err: any) {
       console.error('Araç ekleme hatası:', err);
-      const errorCode = err?.code;
-      const errorMessage = err?.message || '';
-
-      if (
-        errorCode === '42501' ||
-        errorMessage.toLowerCase().includes('permission denied') ||
-        errorMessage.toLowerCase().includes('row-level security')
-      ) {
-        setFormError('Güvenlik Hatası (RLS): Bu aileye araç ekleme yetkiniz yok veya is_family_member doğrulaması başarısız oldu.');
-      } else {
-        setFormError(`Araç eklenirken hata oluştu: ${errorMessage || 'Lütfen tekrar deneyin.'}`);
-      }
+      setFormError(`Kayıt başarısız: ${err?.message || 'Bilinmeyen hata'}`);
     } finally {
       setIsSaving(false);
     }
   };
 
-  const selectedVehicle = vehicles?.find((vehicle) => vehicle.id === selectedVehicleId) ?? null;
+  const selectedVehicle = vehicles?.find((v) => v.id === selectedVehicleId) ?? null;
 
   return (
     <div style={styles.page}>
-
-      {/* ÜST BAŞLIK VE DOKUNMATİK EKLE BUTONU */}
+      
+      {/* ÜST BAŞLIK VE BUTON */}
       <div style={styles.headerRow}>
         <h1 style={styles.heading}>🚗 Araçlar</h1>
         <button
@@ -164,7 +150,14 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         </button>
       </div>
 
-      {/* ARAÇ LİSTESİ VEYA BOŞ DURUM */}
+      {/* DEBUG BİLGİ PANELİ (Sorunun kaynağını görmek için) */}
+      <div style={styles.debugBox}>
+        <p style={{ margin: 0, fontWeight: 'bold', color: '#38BDF8' }}>🔍 Bağlantı Durumu:</p>
+        <p style={{ margin: '4px 0 0', fontSize: 11 }}>familyId: {familyId || 'YOK (Boş!)'}</p>
+        <p style={{ margin: '2px 0 0', fontSize: 11 }}>Gelen Araç Sayısı: {vehicles ? vehicles.length : 'Gelsin Bekleniyor / Undefined'}</p>
+      </div>
+
+      {/* LİSTE VEYA BOŞ DURUM */}
       {!vehicles || vehicles.length === 0 ? (
         <div style={styles.emptyContainer}>
           <EmptyState message="Henüz araç tanımlanmamış" icon="🚗" />
@@ -221,7 +214,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         </div>
       )}
 
-      {/* ARAÇ DETAY MODALI */}
+      {/* MODALLAR */}
       {selectedVehicle && (
         <VehicleDetailModal
           vehicleName={selectedVehicle.short_name}
@@ -232,12 +225,8 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
         />
       )}
 
-      {/* ARAÇ EKLEME MODALI */}
       {isAddModalOpen && (
-        <div
-          style={styles.modalOverlay}
-          onClick={() => { if (!isSaving) setIsAddModalOpen(false); }}
-        >
+        <div style={styles.modalOverlay} onClick={() => { if (!isSaving) setIsAddModalOpen(false); }}>
           <div style={styles.addModal} onClick={(e) => e.stopPropagation()}>
             <div style={styles.modalHeader}>
               <h2 style={styles.modalTitle}>🚗 Araç Ekle</h2>
@@ -260,7 +249,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                   type="text"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  placeholder="Örn: 2026 Kia Sportage Hybrid"
+                  placeholder="Örn: 2026 Kia Sportage"
                   disabled={isSaving}
                   style={styles.input}
                   autoFocus
@@ -291,10 +280,7 @@ export function VehiclesPage({ familyId }: VehiclesPageProps) {
                 <button
                   type="submit"
                   disabled={isSaving}
-                  style={{
-                    ...styles.submitButton,
-                    opacity: isSaving ? 0.6 : 1,
-                  }}
+                  style={styles.submitButton}
                 >
                   {isSaving ? 'Kaydediliyor...' : 'Kaydet'}
                 </button>
@@ -335,7 +321,6 @@ function VehicleDetailModal({
           <h2 style={styles.modalTitle}>{vehicleName}</h2>
           <button type="button" style={styles.closeButton} onClick={onClose}>Geri</button>
         </div>
-
         <p style={styles.modalSubtitle}>Toplam Mil: {totalMiles} mi</p>
 
         {combined.length === 0 ? (
@@ -361,9 +346,10 @@ function VehicleDetailModal({
 
 const styles: Record<string, React.CSSProperties> = {
   page: { padding: '16px 16px 96px', color: 'white' },
-  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   heading: { fontSize: 20, fontWeight: 700, margin: 0 },
-  addButton: { background: '#00E676', color: '#000', border: 'none', borderRadius: 10, padding: '12px 18px', fontWeight: 700, fontSize: 13, cursor: 'pointer', minHeight: 44 },
+  addButton: { background: '#00E676', color: '#000', border: 'none', borderRadius: 10, padding: '10px 16px', fontWeight: 700, fontSize: 13, cursor: 'pointer', minHeight: 44 },
+  debugBox: { background: '#1E293B', border: '1px solid #334155', borderRadius: 8, padding: 10, marginBottom: 16, fontSize: 12, color: '#94A3B8' },
   emptyContainer: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, margin: '20px 0' },
   firstAddButton: { background: '#1E293B', color: '#00E676', border: '1px solid #334155', borderRadius: 10, padding: '12px 20px', fontWeight: 700, fontSize: 13, cursor: 'pointer', minHeight: 44 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
