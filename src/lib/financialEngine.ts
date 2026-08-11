@@ -51,17 +51,11 @@ export interface FamilySummary {
   net: number;
 }
 
-/**
- * Leaderboard bileşeni için araç özetlerini net kâra göre sıralayan saf adaptör fonksiyonu.
- */
 export function computeLeaderboard(summaries: VehicleSummary[]): VehicleSummary[] {
   if (!Array.isArray(summaries)) return [];
   return [...summaries].sort((a, b) => b.netProfit - a.netProfit);
 }
 
-/**
- * Aile özeti hesaplar
- */
 export function computeFamilySummary({
   period,
   boundary,
@@ -116,9 +110,6 @@ export function computeFamilySummary({
   };
 }
 
-/**
- * Araç özeti hesaplar
- */
 export function computeVehicleSummary({
   vehicle,
   period,
