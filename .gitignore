@@ -1,0 +1,36 @@
+# Dependencies
+node_modules/
+
+# Production / test build output
+dist/
+dist_pure_test/
+
+# TypeScript incremental build info
+*.tsbuildinfo
+
+# Vite / TS project-reference emit (source of truth: vite.config.ts)
+vite.config.js
+vite.config.d.ts
+
+# Vite dev cache
+.vite/
+
+# Environment (keep template in repo)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE / editor
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
