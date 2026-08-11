@@ -48,8 +48,7 @@ export function useMarketTicker() {
   return {
     usdRate,
     usdChangePercent,
-    // Gold: kendi API key'li kaynağınla doldur.
-    goldPrice: undefined as number | undefined,
-    goldChangePercent: undefined as number | undefined,
+    goldPrice: undefined,
+    goldChangePercent: undefined,
   };
 }
