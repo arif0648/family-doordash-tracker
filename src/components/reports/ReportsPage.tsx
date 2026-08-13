@@ -7,10 +7,11 @@ import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { toCsv, downloadCsv } from '../../lib/csvExport';
 import { Leaderboard } from '../leaderboard/Leaderboard';
 import { LeaderboardCard } from '../home/LeaderboardCard';
+import { CreditCardsDashboard } from '../home/CreditCardsDashboard';
 import { supabase } from '../../lib/supabaseClient';
 
 export function ReportsPage({ familyId }: { familyId: string }) {
-  const { vehicles, income, expenses, mileageLog, fixedExpenses, profiles, loading, error, retry } =
+  const { vehicles, income, expenses, mileageLog, fixedExpenses, creditCards, loading, error, retry } =
     useFamilyRealtimeData(familyId);
 
   const now = new Date();
@@ -129,7 +130,10 @@ export function ReportsPage({ familyId }: { familyId: string }) {
           <Leaderboard title="AYIN 1.'Sİ" vehicleSummaries={vehicleSummaries} hasAnyRealActivity={hasAnyData} />
 
           <h2 style={styles.sectionTitle}>Aile Sıralaması</h2>
-          <LeaderboardCard income={incomeRecords} profiles={profiles} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
+          <LeaderboardCard income={incomeRecords} vehicles={vehicles} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
+
+          <h2 style={styles.sectionTitle}>Borç Özeti</h2>
+          <CreditCardsDashboard cards={creditCards} />
 
           <h2 style={styles.sectionTitle}>Dışa Aktar (CSV)</h2>
           <div style={styles.exportRow}>

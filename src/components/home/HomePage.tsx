@@ -1,12 +1,12 @@
 import React, { useMemo, useState, useEffect } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
-import { CreditCardsDashboard } from './CreditCardsDashboard';
 import { WeeklyGoalBar } from './WeeklyGoalBar';
 import { MarketRatesMini } from './MarketRatesMini';
 import { LeaderboardCard } from './LeaderboardCard';
 import { Upcoming7Days } from './Upcoming7Days';
 import { QuickAddButton } from './QuickAddButton';
+import { VehiclePerformanceCard } from './VehiclePerformanceCard';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString, weekBoundary, monthBoundary } from '../../lib/timezone';
 import { NavLink, useSearchParams } from 'react-router-dom';
@@ -15,7 +15,7 @@ import { supabase } from '../../lib/supabaseClient';
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
 
 export function HomePage({ familyId }: { familyId: string }) {
-  const { income, expenses, fixedExpenses, creditCards, appointments, goals, profiles, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const { income, expenses, fixedExpenses, creditCards, vehicles, appointments, goals, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
@@ -94,7 +94,8 @@ export function HomePage({ familyId }: { familyId: string }) {
         </div>
       </section>
 
-      <LeaderboardCard income={inc} profiles={profiles} today={{ start: todayStr, end: todayStr }} week={weekB} month={monthB} />
+      <LeaderboardCard income={inc} vehicles={vehicles} today={{ start: todayStr, end: todayStr }} week={weekB} month={monthB} />
+      <VehiclePerformanceCard income={inc} vehicles={vehicles} month={monthB} />
 
       <Upcoming7Days
         creditCards={creditCards}
@@ -102,8 +103,9 @@ export function HomePage({ familyId }: { familyId: string }) {
         appointments={appointments}
       />
 
-      <CreditCardsDashboard cards={creditCards} maxCards={2} />
       <WeeklyGoalBar goals={goals} />
+
+      <VehiclePerformanceCard income={inc} vehicles={vehicles} month={monthB} />
 
       <NavLink to="/sabit-giderler" style={S.fixedLink}>
         <div>
