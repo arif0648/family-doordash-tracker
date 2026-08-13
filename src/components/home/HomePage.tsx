@@ -3,7 +3,7 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { CreditCardsDashboard } from './CreditCardsDashboard';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
-import { MarketRatesStrip } from './MarketRatesStrip';
+import { MarketRatesMini } from './MarketRatesMini';
 import { LeaderboardCard } from './LeaderboardCard';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString, weekBoundary, monthBoundary } from '../../lib/timezone';
@@ -37,6 +37,7 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
   return (
     <main style={S.page}>
       <header style={S.header}>
+        <MarketRatesMini />
         <div style={{ textAlign: 'center', flex: 1 }}>
           <h1 style={S.h1}>BARBİN AİLESİ</h1>
           <p style={S.sub}>Gelir, gider ve borçlar tek ekranda.</p>
@@ -60,8 +61,6 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
           </button>
         ))}
       </div>
-
-      <MarketRatesStrip />
 
       <section style={{ ...S.netCard, borderColor: net >= 0 ? 'rgba(52,211,153,.38)' : 'rgba(127,29,29,.55)' }}>
         <div>

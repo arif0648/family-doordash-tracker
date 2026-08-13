@@ -7,7 +7,6 @@ import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { toCsv, downloadCsv } from '../../lib/csvExport';
 import { Leaderboard } from '../leaderboard/Leaderboard';
 import { LeaderboardCard } from '../home/LeaderboardCard';
-import { MarketRatesStrip } from '../home/MarketRatesStrip';
 import { supabase } from '../../lib/supabaseClient';
 
 export function ReportsPage({ familyId }: { familyId: string }) {
@@ -99,8 +98,6 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   return (
     <div style={styles.page}>
       <h1 style={styles.heading}>Raporlar</h1>
-
-      <MarketRatesStrip />
 
       <h2 style={styles.sectionTitle}>Finansal Özet</h2>
       {!hasAnyData ? (
