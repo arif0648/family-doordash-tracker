@@ -3,32 +3,35 @@ import { NavLink } from 'react-router-dom';
 
 const tabs = [
   { path: '/', label: 'Ana', icon: '⌂' },
-  { path: '/araclar', label: 'Araçlar', icon: '◇' },
   { path: '/kredi-kartlari', label: 'Kartlar', icon: '💳' },
-  { path: '/randevular', label: 'Randevular', icon: '📅' },
-  { path: '/bildirimler', label: 'Bildirimler', icon: '🔔' },
-  { path: '/islemler', label: 'Hareketler', icon: '↕' },
+  { path: '/raporlar', label: 'Raporlar', icon: '�' },
   { path: '/profil', label: 'Profil', icon: '◉' },
 ];
 
 export function BottomNav() {
   return (
     <nav style={S.nav}>
-      {tabs.map((t) => (
-        <NavLink
-          key={t.path}
-          to={t.path}
-          end={t.path === '/'}
-          style={({ isActive }) => ({
-            ...S.tab,
-            color: isActive ? '#E9D5FF' : '#6F748A',
-            background: isActive ? 'rgba(168,85,247,.12)' : 'transparent',
-            boxShadow: isActive ? 'inset 0 0 22px rgba(168,85,247,.08)' : 'none',
-          })}
-        >
-          <span style={S.icon}>{t.icon}</span>
-          <span style={S.label}>{t.label}</span>
-        </NavLink>
+      {tabs.map((t, i) => (
+        <React.Fragment key={t.path}>
+          {i === 2 ? (
+            <NavLink to="/kazanc" style={S.center}>
+              <span>＋</span>
+            </NavLink>
+          ) : null}
+          <NavLink
+            to={t.path}
+            end={t.path === '/'}
+            style={({ isActive }) => ({
+              ...S.tab,
+              color: isActive ? '#38BDF8' : '#8A90A6',
+              background: isActive ? 'rgba(56,189,248,.12)' : 'transparent',
+              boxShadow: isActive ? 'inset 0 0 22px rgba(56,189,248,.08)' : 'none',
+            })}
+          >
+            <span style={S.icon}>{t.icon}</span>
+            <span style={S.label}>{t.label}</span>
+          </NavLink>
+        </React.Fragment>
       ))}
     </nav>
   );
@@ -41,20 +44,18 @@ const S: Record<string, React.CSSProperties> = {
     right: 6,
     bottom: 'calc(6px + env(safe-area-inset-bottom))',
     display: 'grid',
-    gridTemplateColumns: 'repeat(7, 1fr)',
-    gap: 2,
-    padding: 4,
-    borderRadius: 20,
-    background: 'rgba(8,9,21,.9)',
-    backdropFilter: 'blur(22px)',
-    WebkitBackdropFilter: 'blur(22px)',
-    border: '1px solid rgba(168,85,247,.22)',
+    gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
+    gap: 4,
+    padding: 6,
+    borderRadius: 24,
+    background: 'rgba(20,25,38,.94)',
+    border: '1px solid rgba(255,255,255,.07)',
     boxShadow: '0 18px 50px rgba(0,0,0,.48)',
     zIndex: 50,
   },
   tab: {
     minHeight: 50,
-    borderRadius: 14,
+    borderRadius: 16,
     textDecoration: 'none',
     display: 'flex',
     flexDirection: 'column',
@@ -63,6 +64,21 @@ const S: Record<string, React.CSSProperties> = {
     gap: 2,
     fontWeight: 800,
   },
-  icon: { fontSize: 19, lineHeight: 1 },
-  label: { fontSize: 8 },
+  center: {
+    display: 'grid',
+    placeItems: 'center',
+    width: 54,
+    height: 54,
+    borderRadius: 999,
+    background: '#38BDF8',
+    color: '#0A0E1A',
+    fontSize: 28,
+    fontWeight: 900,
+    textDecoration: 'none',
+    alignSelf: 'center',
+    justifySelf: 'center',
+    boxShadow: '0 8px 24px rgba(56,189,248,.35)',
+  },
+  icon: { fontSize: 18, lineHeight: 1 },
+  label: { fontSize: 9 },
 };

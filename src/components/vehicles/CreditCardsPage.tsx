@@ -9,7 +9,7 @@ import { translateError } from '../../lib/errorMessage';
 export function CreditCardsPage({ familyId }: { familyId: string }) {
   const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [show, setShow] = useState(true);
-  const [showPayment, setShowPayment] = useState<string | null>(null);
+  const [showPayment, setShowPayment] = useState<{ id: string; amount: number } | null>(null);
 
   useEffect(() => {
     if (creditCards.length > 0) setShow(false);
@@ -40,7 +40,8 @@ export function CreditCardsPage({ familyId }: { familyId: string }) {
               key={c.id}
               card={c}
               onChanged={retry}
-              onPayment={() => setShowPayment(c.id)}
+              onPayment={() => setShowPayment({ id: c.id, amount: Number(c.current_balance) })}
+              onQuickPay={(amount) => setShowPayment({ id: c.id, amount })}
             />
           ))}
         </div>
@@ -50,7 +51,8 @@ export function CreditCardsPage({ familyId }: { familyId: string }) {
 
       {showPayment && (
         <PaymentForm
-          cardId={showPayment}
+          cardId={showPayment.id}
+          initialAmount={showPayment.amount}
           onClose={() => setShowPayment(null)}
           onSaved={() => { setShowPayment(null); retry(); }}
         />
@@ -106,12 +108,15 @@ function CardForm({ familyId, existingCards, onSaved }: { familyId: string; exis
   );
 }
 
-function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: () => void; onPayment: () => void }) {
+function Card({ card, onChanged, onPayment, onQuickPay }: { card: CreditCardRow; onChanged: () => void; onPayment: () => void; onQuickPay: (amount: number) => void }) {
   const status = computeCreditCardStatus(card);
   const days = status.days;
   const urgent = days !== null && days >= 0 && days <= 7;
   const overdue = days !== null && days < 0;
   const [error, setError] = useState<string | null>(null);
+  const balance = Number(card.current_balance || 0);
+  const limit = Number(card.credit_limit || 0);
+  const pct = limit > 0 ? Math.min((balance / limit) * 100, 100) : 0;
 
   async function del() {
     if (!confirm(`${card.card_name} silinsin mi?`)) return;
@@ -129,6 +134,7 @@ function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: 
         <div>
           <span style={{ ...S.chip, color: status.accent }}>{status.label}</span>
           <h2>{card.card_name}</h2>
+          {card.last_four ? <div style={S.cardNumber}>•••• {card.last_four}</div> : null}
         </div>
         <div style={S.actions}>
           <button onClick={onPayment} style={S.payBtn}>Öde</button>
@@ -136,8 +142,19 @@ function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: 
         </div>
       </div>
       {error && <p style={{ ...S.error, marginTop: 8 }}>{error}</p>}
-      <div style={S.balance}>${Number(card.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
-      {card.credit_limit && <div style={S.limit}>Limit: ${card.credit_limit.toLocaleString('en-US')}</div>}
+      <div style={S.balance}>${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+      {card.credit_limit ? (
+        <>
+          <div style={S.limitBarTrack}>
+            <div style={{ ...S.limitBarFill, width: `${pct}%`, background: pct > 70 ? '#F43F5E' : pct > 40 ? '#F59E0B' : '#10B981' }} />
+          </div>
+          <div style={S.limit}>Limit: ${card.credit_limit.toLocaleString('en-US')} ({pct.toFixed(0)}%)</div>
+        </>
+      ) : null}
+      <div style={S.quickPay}>
+        {card.minimum_payment ? <button onClick={() => onQuickPay(Number(card.minimum_payment))} style={S.quickBtn}>Asgari Öde ${Number(card.minimum_payment).toFixed(0)}</button> : null}
+        {balance > 0 ? <button onClick={() => onQuickPay(balance)} style={S.quickBtn}>Tamamını Öde</button> : null}
+      </div>
       {card.due_date && (
         <div style={overdue ? S.dueOverdue : urgent ? S.dueUrgent : S.due}>
           <span>Son ödeme</span>
@@ -150,8 +167,8 @@ function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: 
   );
 }
 
-function PaymentForm({ cardId, onClose, onSaved }: { cardId: string; onClose: () => void; onSaved: () => void }) {
-  const [amount, setAmount] = useState('');
+function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: string; initialAmount: number; onClose: () => void; onSaved: () => void }) {
+  const [amount, setAmount] = useState(initialAmount.toFixed(2));
   const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [note, setNote] = useState('');
   const [save, setSave] = useState(false);
@@ -212,8 +229,12 @@ const S: Record<string, React.CSSProperties> = {
   card: { padding: 18, borderRadius: 23, background: 'linear-gradient(145deg,rgba(21,16,48,.95),rgba(7,9,20,.98))', border: '1px solid' },
   cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
   chip: { fontSize: 8, letterSpacing: 2, color: '#A78BFA' },
-  status: { fontSize: 10, padding: '4px 8px', borderRadius: 8, background: 'rgba(168,85,247,.2)', color: '#C084FC', marginLeft: 8 },
-  balance: { fontSize: 32, fontWeight: 900, letterSpacing: -1, margin: '14px 0' },
+  cardNumber: { fontSize: 14, color: '#9CA3AF', letterSpacing: 2, marginTop: 6 },
+  balance: { fontSize: 32, fontWeight: 900, letterSpacing: -1, margin: '14px 0 4px' },
+  limitBarTrack: { height: 5, borderRadius: 5, background: 'rgba(255,255,255,.06)', overflow: 'hidden', marginTop: 8 },
+  limitBarFill: { height: '100%', borderRadius: 5, transition: 'width .4s ease' },
+  quickPay: { display: 'flex', gap: 8, marginTop: 12 },
+  quickBtn: { border: '1px solid rgba(255,255,255,.1)', borderRadius: 10, padding: '8px 12px', background: 'rgba(255,255,255,.04)', color: '#E8EAF2', fontWeight: 800, fontSize: 11 },
   limit: { fontSize: 12, color: '#7F8499', marginTop: 4 },
   due: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 13, background: 'rgba(255,255,255,.035)', color: '#8F93A8', fontSize: 11 },
   dueUrgent: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 13, background: 'rgba(244,114,182,.08)', color: '#F9A8D4', fontSize: 11 },
