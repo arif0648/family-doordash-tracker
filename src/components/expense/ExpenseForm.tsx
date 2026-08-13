@@ -34,7 +34,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
     setError(null);
 
     const amountNum = parseFloat(amount.replace(',', '.'));
-    if (isNaN(amountNum) || amountNum < 0) return setError('Geçerli bir tutar girin (örn. 12.50).');
+    if (isNaN(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir tutar girin (örn. 12.50).');
     if (requiresVehicle && !vehicleId) return setError('Araç seçimi zorunludur.');
     
 
@@ -106,7 +106,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
         inputMode="decimal"
         placeholder="0.00"
         value={amount}
-        onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'))}
+        onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.'))}
       />
 
       <label style={styles.label}>Tarih</label>
