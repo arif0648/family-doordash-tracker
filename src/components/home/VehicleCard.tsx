@@ -1,57 +1,55 @@
 import React from 'react';
+import { Vehicle } from '../../types/database';
 import { VehicleSummary } from '../../lib/financialEngine';
 
-export function VehicleCard({
-  shortName,
-  summary,
-  showFixedShare,
-}: {
-  shortName: string;
-  summary: VehicleSummary;
-  showFixedShare: boolean;
-}) {
-  const netColor = summary.net >= 0 ? '#A855F7' : '#F87171';
-  const netSign = summary.net >= 0 ? '+' : '−';
+const FUEL_EFFICIENCY: Record<string, number> = {
+  Hybrid: 50,
+  Electric: 120,
+  Gasoline: 32,
+  Diesel: 38,
+};
+
+export function VehicleCard({ vehicle, summary }: { vehicle: Vehicle; summary: VehicleSummary }) {
+  const mpg = FUEL_EFFICIENCY[vehicle.fuel_type || ''] ?? 32;
+  const isPositive = summary.net >= 0;
 
   return (
-    <div style={styles.card}>
-      <div style={styles.header}>
-        <p style={styles.name}>{shortName}</p>
-        <p style={{ ...styles.net, color: netColor }}>
-          {netSign}${Math.abs(summary.net).toLocaleString('en-US')}
-        </p>
+    <div style={{ ...S.card, borderColor: isPositive ? 'rgba(16,185,129,.25)' : 'rgba(244,63,94,.25)' }}>
+      <div style={S.top}>
+        <div style={S.icon}>🚗</div>
+        <div style={S.header}>
+          <h3 style={S.title}>{vehicle.year} {vehicle.make} {vehicle.model}</h3>
+          <p style={S.sub}>Yakıt Verimi: {mpg} MPG</p>
+        </div>
       </div>
-      <div style={styles.row}>
-        <Metric label="Kazanç" value={summary.income} positive />
-        <Metric label="Benzin" value={-summary.gas} />
-        <Metric label="Araç Gideri" value={-summary.vehicleExpense} />
-        {showFixedShare && <Metric label="Sabit Pay" value={-summary.fixedShare} />}
+      <div style={S.divider} />
+      <div style={S.row}>
+        <span style={S.label}>Toplam Mil</span>
+        <span style={S.value}>{summary.milesDriven.toLocaleString('en-US')} mi</span>
       </div>
-      <p style={styles.mileage}>{summary.milesDriven.toLocaleString('en-US')} mi</p>
+      <div style={S.row}>
+        <span style={S.label}>Toplam Kazanç</span>
+        <span style={{ ...S.value, color: '#10B981' }}>${summary.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+      </div>
+      <div style={S.row}>
+        <span style={S.label}>Net</span>
+        <span style={{ ...S.value, color: isPositive ? '#10B981' : '#F43F5E' }}>
+          {isPositive ? '' : '−'}${Math.abs(summary.net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+        </span>
+      </div>
     </div>
   );
 }
 
-function Metric({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
-  const color = positive ? '#A855F7' : value < 0 ? '#F87171' : '#A7ABC0';
-  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
-  return (
-    <div>
-      <p style={styles.metricLabel}>{label}</p>
-      <p style={{ ...styles.metricValue, color }}>
-        {sign}${Math.abs(value).toLocaleString('en-US')}
-      </p>
-    </div>
-  );
-}
-
-const styles: Record<string, React.CSSProperties> = {
-  card: { background: '#120E2A', borderRadius: 16, padding: 16 },
-  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  name: { fontSize: 15, fontWeight: 700, margin: 0 },
-  net: { fontSize: 18, fontWeight: 800, margin: 0 },
-  row: { display: 'flex', gap: 16, flexWrap: 'wrap' },
-  metricLabel: { fontSize: 11, color: '#7F8499', margin: 0 },
-  metricValue: { fontSize: 14, fontWeight: 600, margin: 0 },
-  mileage: { fontSize: 12, color: '#7F8499', marginTop: 10, marginBottom: 0 },
+const S: Record<string, React.CSSProperties> = {
+  card: { padding: 18, borderRadius: 22, background: 'linear-gradient(145deg, rgba(20,25,38,.96), rgba(7,9,21,.98))', border: '1px solid', boxShadow: '0 18px 45px rgba(0,0,0,.35)' },
+  top: { display: 'flex', alignItems: 'center', gap: 14, marginBottom: 14 },
+  icon: { width: 50, height: 50, borderRadius: 14, display: 'grid', placeItems: 'center', background: 'rgba(56,189,248,.12)', fontSize: 26 },
+  header: { flex: 1 },
+  title: { fontSize: 16, fontWeight: 900, margin: 0 },
+  sub: { fontSize: 13, color: '#10B981', margin: '4px 0 0', fontWeight: 700 },
+  divider: { height: 1, background: 'rgba(255,255,255,.06)', marginBottom: 14 },
+  row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  label: { fontSize: 13, color: '#8A90A6' },
+  value: { fontSize: 15, fontWeight: 800, color: '#E8EAF2' },
 };

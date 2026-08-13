@@ -125,7 +125,7 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
                     Arşivle
                   </button>
                 </div>
-                <VehicleCard shortName={vehicle.short_name} summary={summary} showFixedShare />
+                <VehicleCard vehicle={vehicle} summary={summary} />
               </div>
             );
           })}
