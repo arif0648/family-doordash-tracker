@@ -13,9 +13,9 @@ export function VehiclePerformanceCard({ income, vehicles, month }: VehiclePerfo
   const names = Object.fromEntries(vehicles.map((v) => [v.id, v.short_name || v.full_name || 'Araç']));
   const map = new Map<string, number>();
   income
-    .filter((r) => r.recordDate >= month.start && r.recordDate <= month.end)
+    .filter((r) => r.recordDate >= month.start && r.recordDate <= month.end && r.vehicleId)
     .forEach((r) => {
-      const vid = r.vehicleId || 'unknown';
+      const vid = r.vehicleId!;
       map.set(vid, (map.get(vid) || 0) + r.amount);
     });
   const sorted = [...map.entries()].sort((a, b) => b[1] - a[1]);

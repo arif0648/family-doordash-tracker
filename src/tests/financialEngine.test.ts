@@ -91,7 +91,7 @@ describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $20
     expect(family.net).toBe(-6010);
   });
 
-  it('Kia Net = -1370', () => {
+  it('Kia operational net = 850, estimated net = -1370', () => {
     const kia: Vehicle = { id: 'kia', shortName: 'Kia Sportage' };
     const summary = computeVehicleSummary({
       vehicle: kia,
@@ -104,10 +104,13 @@ describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $20
       totalVehicleCount: 3,
       milesInPeriod: 0,
     });
-    expect(summary.net).toBe(-1370);
+    expect(summary.net).toBe(850);
+    expect(summary.operationalNet).toBe(850);
+    expect(summary.estimatedNet).toBe(-1370);
+    expect(summary.fixedShare).toBe(2220);
   });
 
-  it('Market Toyota netini etkilemiyor (izole)', () => {
+  it('Toyota operational net = 0, estimated net = -2220', () => {
     const toyota: Vehicle = { id: 'toyota', shortName: 'Toyota Corolla' };
     const summary = computeVehicleSummary({
       vehicle: toyota,
@@ -121,7 +124,9 @@ describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $20
       milesInPeriod: 0,
     });
     expect(summary.income).toBe(0);
-    expect(summary.net).toBe(-2220);
+    expect(summary.net).toBe(0);
+    expect(summary.operationalNet).toBe(0);
+    expect(summary.estimatedNet).toBe(-2220);
   });
 });
 
@@ -158,6 +163,26 @@ describe('Fixed expense versioning', () => {
     ];
     expect(totalFixedExpenseAsOf(versions, '2026-05-15')).toBe(2900);
     expect(totalFixedExpenseAsOf(versions, '2026-08-15')).toBe(3100);
+  });
+});
+
+describe('Credit card spending does not double count', () => {
+  it('Expense $100 market is subtracted once; no card debt parameter in family net', () => {
+    const income: IncomeRecord[] = [];
+    const expenses: ExpenseRecord[] = [
+      { id: 'e1', category: 'market', vehicleId: null, amount: 100, recordDate: '2026-08-05' },
+    ];
+    const family = computeFamilySummary({
+      period: 'month',
+      boundary: { start: '2026-08-01', end: '2026-08-31' },
+      income,
+      expenses,
+      fixedExpenseVersions: [],
+      monthAnchorDate: '2026-08-15',
+    });
+    expect(family.totalIncome).toBe(0);
+    expect(family.market).toBe(100);
+    expect(family.net).toBe(-100);
   });
 });
 

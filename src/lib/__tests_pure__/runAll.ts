@@ -118,7 +118,8 @@ console.log('\n=== TEST A — Boş veri: Bugün/Bu Hafta/Bu Ay ===');
     milesInPeriod: 0,
   });
   assertEqual(kiaMonthly.fixedShare, 2220, 'TEST A — Kia aylık sabit pay = 2220 (asla 148 değil)');
-  assertEqual(kiaMonthly.net, -2220, 'TEST A — Kia aylık net = -2220');
+  assertEqual(kiaMonthly.net, 0, 'TEST A — Kia aylık operational net = 0');
+  assertEqual(kiaMonthly.estimatedNet, -2220, 'TEST A — Kia aylık estimated net = -2220');
 }
 
 console.log('\n=== TEST B — Kia income $1000, gas $100, vehicle expense $50, market $200 ===');
@@ -156,7 +157,8 @@ console.log('\n=== TEST B — Kia income $1000, gas $100, vehicle expense $50, m
     totalVehicleCount: 3,
     milesInPeriod: 0,
   });
-  assertEqual(kiaSummary.net, -1370, 'TEST B — Kia Net = -1370');
+  assertEqual(kiaSummary.net, 850, 'TEST B — Kia operational net = 850');
+  assertEqual(kiaSummary.estimatedNet, -1370, 'TEST B — Kia estimated net = -1370');
 
   const toyota: Vehicle = { id: 'toyota', shortName: 'Toyota Corolla' };
   const toyotaSummary = computeVehicleSummary({
@@ -171,7 +173,8 @@ console.log('\n=== TEST B — Kia income $1000, gas $100, vehicle expense $50, m
     milesInPeriod: 0,
   });
   assertEqual(toyotaSummary.income, 0, 'TEST B — Toyota income = 0 (izole)');
-  assertEqual(toyotaSummary.net, -2220, 'TEST B — Toyota net = -2220 (sadece sabit pay)');
+  assertEqual(toyotaSummary.net, 0, 'TEST B — Toyota operational net = 0');
+  assertEqual(toyotaSummary.estimatedNet, -2220, 'TEST B — Toyota estimated net = -2220 (sadece sabit pay)');
 }
 
 console.log('\n=== TEST C — Mileage zinciri: 94150 -> 94380 -> 94610 ===');
@@ -316,8 +319,8 @@ console.log('\n=== Leaderboard — veri yokken sahte kazanan gösterme ===');
 
   const resultWithData = computeLeaderboard({
     vehicleSummaries: [
-      { vehicleId: 'kia', shortName: 'Kia Sportage', income: 1000, gas: 100, vehicleExpense: 50, otherVehicle: 0, fixedShare: 2220, net: -1370, milesDriven: 230 },
-      { vehicleId: 'toyota', shortName: 'Toyota Camry', income: 0, gas: 0, vehicleExpense: 0, otherVehicle: 0, fixedShare: 2220, net: -2220, milesDriven: 0 },
+      { vehicleId: 'kia', shortName: 'Kia Sportage', income: 1000, gas: 100, vehicleExpense: 50, otherVehicle: 0, fixedShare: 2220, net: 850, operationalNet: 850, estimatedNet: -1370, milesDriven: 230 },
+      { vehicleId: 'toyota', shortName: 'Toyota Camry', income: 0, gas: 0, vehicleExpense: 0, otherVehicle: 0, fixedShare: 2220, net: 0, operationalNet: 0, estimatedNet: -2220, milesDriven: 0 },
     ],
     hasAnyRealActivity: true,
   });

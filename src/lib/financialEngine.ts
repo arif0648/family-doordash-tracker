@@ -182,7 +182,9 @@ export interface VehicleSummary {
   vehicleExpense: number;
   otherVehicle: number;
   fixedShare: number;
-  net: number;
+  net: number; // operational net: income - directly-attached vehicle expenses
+  operationalNet: number;
+  estimatedNet: number;
   milesDriven: number;
 }
 
@@ -232,7 +234,8 @@ export function computeVehicleSummary(args: {
       ? vehicleFixedShare(totalFixedExpenseAsOf(fixedExpenseVersions, monthAnchorDate), totalVehicleCount)
       : 0;
 
-  const net = roundCurrency(vIncome - gas - vehicleExpense - otherVehicle - fixedShare);
+  const operationalNet = roundCurrency(vIncome - gas - vehicleExpense - otherVehicle);
+  const estimatedNet = roundCurrency(operationalNet - fixedShare);
 
   return {
     vehicleId: vehicle.id,
@@ -242,7 +245,9 @@ export function computeVehicleSummary(args: {
     vehicleExpense: roundCurrency(vehicleExpense),
     otherVehicle: roundCurrency(otherVehicle),
     fixedShare: roundCurrency(fixedShare),
-    net,
+    net: operationalNet, // kept for backward compatibility; now means operational net
+    operationalNet,
+    estimatedNet,
     milesDriven: milesInPeriod,
   };
 }
@@ -279,7 +284,7 @@ export function computeLeaderboard(args: {
   }
 
   const ranking = [...vehicleSummaries]
-    .map((v) => ({ vehicleId: v.vehicleId, shortName: v.vehicleId, net: v.net }))
+    .map((v) => ({ vehicleId: v.vehicleId, shortName: v.shortName, net: v.net }))
     .sort((a, b) => b.net - a.net);
 
   return { hasData: true, winner: ranking[0], ranking };
