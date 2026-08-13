@@ -10,9 +10,9 @@ export interface CreditCardStatus {
 
 function daysUntil(dueDate: string | null): number | null {
   if (!dueDate) return null;
-  const d = new Date(`${dueDate}T12:00:00`);
+  const d = new Date(`${dueDate}T00:00:00`);
   const n = new Date();
-  n.setHours(12, 0, 0, 0);
+  n.setHours(0, 0, 0, 0);
   return Math.round((d.getTime() - n.getTime()) / 86400000);
 }
 

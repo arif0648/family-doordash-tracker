@@ -41,13 +41,13 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
   const [tab, setTab] = useState<Tab>('all');
 
   const { pastDues, dues } = useMemo(() => {
-    const today = new Date(new Date().toDateString()).getTime();
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     const dueList: CreditCardRow[] = [];
     const pastList: CreditCardRow[] = [];
     for (const c of creditCards) {
       if (!c.due_date) continue;
-      const t = new Date(`${c.due_date}T12:00:00`).getTime();
-      const days = Math.round((t - today) / 86400000);
+      const t = new Date(`${c.due_date}T00:00:00`).getTime();
+      const days = Math.round((t - today.getTime()) / 86400000);
       if (days < 0) pastList.push(c);
       else if (days <= 7) dueList.push(c);
     }
@@ -189,8 +189,8 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
 }
 
 function PaymentCard({ card, overdue }: { card: CreditCardRow; overdue: boolean }) {
-  const today = new Date(new Date().toDateString()).getTime();
-  const days = card.due_date ? Math.round((new Date(`${card.due_date}T12:00:00`).getTime() - today) / 86400000) : null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const days = card.due_date ? Math.round((new Date(`${card.due_date}T00:00:00`).getTime() - today.getTime()) / 86400000) : null;
   const amount = Number(card.current_balance || 0);
   return (
     <NavLink
