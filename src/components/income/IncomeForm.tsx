@@ -99,7 +99,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     }
 
     setSaving(false);
-    if (rpcError) { setError(translateDbError(rpcError.message)); return; }
+    if (rpcError) { setError(translateError(rpcError.message)); return; }
     playIncomeSound();
     speak(`${amountNum.toFixed(2)} dolar ${editingIncome ? 'düzenlendi' : 'eklendi'}.`);
     setAmount(''); setClosingMileage(''); setNote(''); setWarning(null);
@@ -137,15 +137,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     </div>
   );
 }
-function translateDbError(message: string): string {
-  if (message.includes('MILEAGE_LOWER_THAN_PREVIOUS')) return 'Girilen kilometre önceki kayıttan düşük olamaz.';
-  if (message.includes('AUTH_REQUIRED')) return 'Oturumunuz sona ermiş. Tekrar giriş yapın.';
-  if (message.includes('FAMILY_ACCESS_DENIED')) return 'Bu kayda yetkiniz yok.';
-  if (message.includes('VEHICLE_FAMILY_MISMATCH')) return 'Seçilen araç bu aileye ait değil.';
-  if (message.includes('INCOME_NOT_FOUND')) return 'Kayıt bulunamadı.';
-  if (message.includes('column') && message.includes('mileage_log_id')) return 'Veritabanı şeması güncel değil. 0014 migration uygulanmalı.';
-  return 'Kaydedilemedi: ' + message;
-}
+import { translateError } from '../../lib/errorMessage';
 const styles: Record<string, React.CSSProperties> = {
   shell:{padding:'12px 14px calc(110px + env(safe-area-inset-bottom))'},
   form:{background:'linear-gradient(145deg,rgba(24,18,55,.94),rgba(8,10,24,.98))',border:'1px solid rgba(168,85,247,.34)',borderRadius:20,padding:14,boxShadow:'0 16px 40px rgba(0,0,0,.3)',display:'flex',flexDirection:'column',gap:7},

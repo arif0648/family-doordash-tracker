@@ -2,6 +2,7 @@ import React, { useState, FormEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Vehicle, ExpenseCategory } from '../../types/database';
 import { playExpenseSound, speak } from '../../lib/sound';
+import { translateError } from '../../lib/errorMessage';
 import { toPacificDateString } from '../../lib/timezone';
 
 interface Props {
@@ -53,7 +54,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
     setSaving(false);
 
     if (insertError) {
-      setError('Kaydedilirken bir hata oluştu: ' + insertError.message);
+      setError(translateError(insertError.message));
       return;
     }
 

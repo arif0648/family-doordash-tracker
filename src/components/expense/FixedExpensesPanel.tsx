@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { translateError } from '../../lib/errorMessage';
 import { FixedExpenseRow } from '../../types/database';
 import { toPacificDateString } from '../../lib/timezone';
 
@@ -22,7 +23,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     setSaving(true);
     const {error}=await supabase.from('fixed_expenses').insert({family_id:familyId,label:label.trim(),monthly_amount:n,effective_from:toPacificDateString(new Date()),created_by:user.id});
     setSaving(false);
-    if(error){setError(error.message);return;}
+    if(error){setError(translateError(error.message));return;}
     setLabel('');setAmount('');onChanged();
   }
 
@@ -30,7 +31,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     const n=Number(next); if(!Number.isFinite(n)||n<0){setError('Geçerli bir tutar girin.');return;}
     if(n === Number(row.monthly_amount)) return;
     const {error:saveError}=await supabase.from('fixed_expenses').update({monthly_amount:n}).eq('id',row.id).eq('family_id',familyId);
-    if(saveError){setError(saveError.message);} else {setError(null); onChanged();}
+    if(saveError){setError(translateError(saveError.message));} else {setError(null); onChanged();}
   }
 
   function startEdit(row:FixedExpenseRow, value:string){
@@ -45,14 +46,14 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     if(value!==undefined) void save(row,value);
   }
 
-  function keySave(row:FixedExpenseRow, e:React.KeyboardEvent){
-    if(e.key==='Enter'){ e.currentTarget.blur(); }
+  function keySave(e: React.KeyboardEvent<HTMLInputElement>){
+    if(e.key==='Enter'){ (e.currentTarget as HTMLInputElement).blur(); }
   }
 
   async function remove(row:FixedExpenseRow){
     if(!confirm(`${row.label} sabit giderini silmek istiyor musun?`))return;
     const {error}=await supabase.from('fixed_expenses').delete().eq('id',row.id).eq('family_id',familyId);
-    if(error)setError(error.message); else onChanged();
+    if(error)setError(translateError(error.message)); else onChanged();
   }
 
   return <section style={styles.shell}>
@@ -62,7 +63,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     {error&&<div style={styles.error}>{error}</div>}
     <div style={styles.list}>{active.map(row=>{
       const val = edits[row.id] ?? row.monthly_amount.toString();
-      return <div key={row.id} style={styles.item}><div style={{minWidth:0}}><strong style={styles.name}>{row.label}</strong><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={e=>keySave(row,e)} style={styles.edit}/><button onClick={()=>void remove(row)} style={styles.delete}>Sil</button></div></div>
+      return <div key={row.id} style={styles.item}><div style={{minWidth:0}}><strong style={styles.name}>{row.label}</strong><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={keySave} style={styles.edit}/><button onClick={()=>void remove(row)} style={styles.delete}>Sil</button></div></div>
     })}</div>
   </section>
 }

@@ -4,6 +4,7 @@ import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
 import { CreditCardRow } from '../../types/database';
 import { computeCreditCardStatus } from '../../lib/creditCardStatus';
+import { translateError } from '../../lib/errorMessage';
 
 export function CreditCardsPage({ familyId }: { familyId: string }) {
   const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
@@ -84,7 +85,7 @@ function CardForm({ familyId, onSaved }: { familyId: string; onSaved: () => void
       minimum_payment: minimum ? Number(minimum) : null,
     });
     setSave(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(translateError(error.message));
     onSaved();
   }
 
@@ -112,7 +113,7 @@ function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: 
     if (!confirm(`${card.card_name} silinsin mi?`)) return;
     const { error: delError } = await supabase.from('credit_cards').delete().eq('id', card.id);
     if (delError) {
-      setError(delError.message);
+      setError(translateError(delError.message));
       return;
     }
     onChanged();
@@ -165,7 +166,7 @@ function PaymentForm({ cardId, onClose, onSaved }: { cardId: string; onClose: ()
       p_note: note || null,
     });
     setSave(false);
-    if (error) return setErr(error.message);
+    if (error) return setErr(translateError(error.message));
     onSaved();
   }
 
