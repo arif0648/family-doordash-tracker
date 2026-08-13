@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && shx cp dist/index.html dist/200.html",
     "typecheck": "tsc -b --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
@@ -30,6 +30,7 @@
     "eslint": "^8.57.0",
     "jsdom": "^24.1.1",
     "sharp": "^0.35.3",
+    "shx": "^0.4.0",
     "typescript": "^5.5.3",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^1.3.0",
