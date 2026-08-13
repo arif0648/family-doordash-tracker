@@ -1,6 +1,7 @@
 -- ============================================================================
 -- 0011_family_messaging.sql
 -- FINAL / PRODUCTION / CLEAN
+-- Uses the existing 0007 touch_updated_at() trigger helper; no duplicate timestamp function.
 --
 -- AİLE MESAJLAŞMA + SESLİ MESAJ + REALTIME + PRIVATE STORAGE
 --
@@ -185,8 +186,7 @@ on public.family_chats;
 create trigger trigger_set_timestamp_family_chats
 before update on public.family_chats
 for each row
-execute function public.handle_update_timestamp();
-
+execute function public.touch_updated_at();
 
 drop trigger if exists trigger_set_timestamp_family_messages
 on public.family_messages;
@@ -194,7 +194,7 @@ on public.family_messages;
 create trigger trigger_set_timestamp_family_messages
 before update on public.family_messages
 for each row
-execute function public.handle_update_timestamp();
+execute function public.touch_updated_at();
 
 
 -- ============================================================================

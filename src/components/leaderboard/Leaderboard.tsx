@@ -2,35 +2,46 @@ import React from 'react';
 import { computeLeaderboard, VehicleSummary } from '../../lib/financialEngine';
 import { EmptyState } from '../common/StateScreens';
 
+const MEDALS = ['🥇', '🥈', '🥉', '4', '5', '6', '7', '8', '9', '10'];
+
 export function Leaderboard({
   title,
   vehicleSummaries,
-  vehicleNames,
   hasAnyRealActivity,
 }: {
   title: string;
   vehicleSummaries: VehicleSummary[];
-  vehicleNames: Record<string, string>;
   hasAnyRealActivity: boolean;
 }) {
   const result = computeLeaderboard({ vehicleSummaries, hasAnyRealActivity });
 
   return (
-    <div style={styles.card}>
-      <p style={styles.title}>{title}</p>
+    <div style={styles.wrap}>
+      <div style={styles.head}>
+        <span style={styles.kicker}>ARAÇ PERFORMANSI</span>
+        <h3 style={styles.title}>{title}</h3>
+      </div>
       {!result.hasData ? (
         <EmptyState message="Henüz veri yok" icon="🏆" />
       ) : (
-        <div style={styles.ranking}>
-          {result.ranking.map((entry, idx) => (
-            <div key={entry.vehicleId} style={styles.row}>
-              <span style={styles.rank}>{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</span>
-              <span style={styles.name}>{vehicleNames[entry.vehicleId] ?? entry.vehicleId}</span>
-              <span style={{ ...styles.net, color: entry.net >= 0 ? '#22C55E' : '#F87171' }}>
-                {entry.net >= 0 ? '+' : ''}${Math.abs(entry.net).toLocaleString('en-US')}
-              </span>
-            </div>
-          ))}
+        <div style={styles.list}>
+          {result.ranking.map((entry, idx) => {
+            const positive = entry.net >= 0;
+            const top3 = idx < 3;
+            return (
+              <div key={entry.vehicleId} style={{ ...styles.row, background: top3 ? 'rgba(255,255,255,.05)' : 'transparent', borderColor: top3 ? 'rgba(168,85,247,.25)' : 'rgba(255,255,255,.06)' }}>
+                <div style={{ ...styles.rank, background: top3 ? 'rgba(168,85,247,.18)' : 'rgba(255,255,255,.05)', color: top3 ? '#E9D5FF' : '#9CA3AF' }}>
+                  {MEDALS[idx] ?? idx + 1}
+                </div>
+                <div style={styles.info}>
+                  <div style={styles.name}>{entry.shortName}</div>
+                </div>
+                <div style={{ ...styles.net, color: positive ? '#34D399' : '#FDA4AF' }}>
+                  {positive ? '+' : '−'}${Math.abs(entry.net).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
@@ -38,11 +49,14 @@ export function Leaderboard({
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  card: { background: '#151B2C', borderRadius: 16, padding: 16, marginBottom: 12 },
-  title: { fontSize: 13, fontWeight: 700, color: '#94A3B8', marginBottom: 10 },
-  ranking: { display: 'flex', flexDirection: 'column', gap: 8 },
-  row: { display: 'flex', alignItems: 'center', gap: 10 },
-  rank: { fontSize: 18 },
-  name: { flex: 1, fontSize: 14, color: 'white' },
-  net: { fontSize: 14, fontWeight: 700 },
+  wrap: { background: 'linear-gradient(145deg,rgba(20,14,43,.95),rgba(7,9,21,.98))', borderRadius: 20, padding: 16, marginBottom: 12, border: '1px solid rgba(168,85,247,.15)' },
+  head: { marginBottom: 12 },
+  kicker: { fontSize: 9, letterSpacing: 2, color: '#9C8BEF', fontWeight: 900 },
+  title: { fontSize: 18, fontWeight: 800, margin: '4px 0 0', color: '#fff' },
+  list: { display: 'flex', flexDirection: 'column', gap: 8 },
+  row: { display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, border: '1px solid', transition: 'transform .15s, background .15s' },
+  rank: { width: 34, height: 34, borderRadius: 10, display: 'grid', placeItems: 'center', fontSize: 14, fontWeight: 900, flexShrink: 0 },
+  info: { flex: 1, minWidth: 0 },
+  name: { fontSize: 15, fontWeight: 800, color: '#fff' },
+  net: { fontSize: 16, fontWeight: 900, whiteSpace: 'nowrap' },
 };

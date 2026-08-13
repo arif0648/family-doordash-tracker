@@ -10,7 +10,7 @@ export function VehicleCard({
   summary: VehicleSummary;
   showFixedShare: boolean;
 }) {
-  const netColor = summary.net >= 0 ? '#22C55E' : '#F87171';
+  const netColor = summary.net >= 0 ? '#A855F7' : '#F87171';
   const netSign = summary.net >= 0 ? '+' : '';
 
   return (
@@ -33,7 +33,7 @@ export function VehicleCard({
 }
 
 function Metric({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
-  const color = positive ? '#22C55E' : value < 0 ? '#F87171' : '#94A3B8';
+  const color = positive ? '#A855F7' : value < 0 ? '#F87171' : '#A7ABC0';
   const sign = value > 0 ? '+' : '';
   return (
     <div>
@@ -46,12 +46,12 @@ function Metric({ label, value, positive }: { label: string; value: number; posi
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  card: { background: '#151B2C', borderRadius: 16, padding: 16 },
+  card: { background: '#120E2A', borderRadius: 16, padding: 16 },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   name: { fontSize: 15, fontWeight: 700, margin: 0 },
   net: { fontSize: 18, fontWeight: 800, margin: 0 },
   row: { display: 'flex', gap: 16, flexWrap: 'wrap' },
-  metricLabel: { fontSize: 11, color: '#64748B', margin: 0 },
+  metricLabel: { fontSize: 11, color: '#7F8499', margin: 0 },
   metricValue: { fontSize: 14, fontWeight: 600, margin: 0 },
-  mileage: { fontSize: 12, color: '#64748B', marginTop: 10, marginBottom: 0 },
+  mileage: { fontSize: 12, color: '#7F8499', marginTop: 10, marginBottom: 0 },
 };

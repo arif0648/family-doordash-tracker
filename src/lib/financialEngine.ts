@@ -20,6 +20,7 @@ export type ExpenseCategory =
 
 export interface IncomeRecord {
   id: string;
+  userId?: string;
   vehicleId: string;
   amount: number;
   recordDate: string; // 'YYYY-MM-DD' in Pacific-local terms

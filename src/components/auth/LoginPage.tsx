@@ -28,38 +28,39 @@ export function LoginPage() {
   }
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Aile DoorDash Takip</h1>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          style={styles.input}
-          type="email"
-          placeholder="E-posta"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-        />
-        <input
-          style={styles.input}
-          type="password"
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-        />
-        {error && <p style={styles.error}>{error}</p>}
-        <button style={styles.primaryButton} type="submit" disabled={loading}>
-          {loading ? 'Yükleniyor…' : 'Giriş Yap'}
-        </button>
-        <div style={styles.links}>
-          <Link to="/sifremi-unuttum" style={styles.link}>
-            Şifremi Unuttum
-          </Link>
-          <Link to="/kayit-ol" style={styles.link}>
-            Kayıt Ol
-          </Link>
-        </div>
-      </form>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>BARBİN AİLESİ</h1>
+        <p style={styles.subtitle}>Aile operasyon merkezine hoş geldiniz</p>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>E-posta</label>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="ornek@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <label style={styles.label}>Şifre</label>
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+          />
+          {error && <p style={styles.error}>{error}</p>}
+          <button style={styles.primaryButton} type="submit" disabled={loading}>
+            {loading ? 'Giriş yapılıyor…' : 'Giriş Yap'}
+          </button>
+          <div style={styles.links}>
+            <Link to="/sifremi-unuttum" style={styles.link}>Şifremi Unuttum</Link>
+            <Link to="/kayit-ol" style={styles.link}>Kayıt Ol</Link>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }
@@ -73,41 +74,65 @@ export function translateAuthError(message: string): string {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
+  page: {
     minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    background: '#0B1120',
+    padding: '20px 16px',
+    background: 'radial-gradient(circle at 50% 0%, rgba(168,85,247,.10), transparent 40%), #050711',
+  },
+  card: {
+    width: '100%',
+    maxWidth: 380,
+    padding: 26,
+    borderRadius: 24,
+    background: 'linear-gradient(145deg, rgba(25,18,56,.95), rgba(7,9,21,.98))',
+    border: '1px solid rgba(168,85,247,.22)',
+    boxShadow: '0 24px 60px rgba(0,0,0,.45)',
   },
   title: {
-    color: 'white',
-    fontSize: 24,
-    fontWeight: 700,
+    color: '#C4B5FD',
+    fontSize: 28,
+    fontWeight: 900,
     textAlign: 'center',
-    marginBottom: 32,
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    margin: '0 0 6px',
+    textShadow: '0 -1px 0 #7C3AED, 0 1px 0 #5B21B6, 0 2px 0 #4C1D95, 0 3px 0 #3730A3, 0 5px 10px rgba(0,0,0,.4)',
   },
-  form: { display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360, width: '100%', margin: '0 auto' },
+  subtitle: {
+    color: '#7F8499',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+  form: { display: 'flex', flexDirection: 'column', gap: 8 },
+  label: { fontSize: 11, color: '#A7ABC0', marginTop: 4 },
   input: {
-    padding: '14px 16px',
-    borderRadius: 12,
-    border: '1px solid #1E293B',
-    background: '#151B2C',
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: 14,
+    border: '1px solid rgba(148,163,184,.16)',
+    background: 'rgba(5,7,18,.78)',
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
+    minHeight: 46,
+    boxSizing: 'border-box',
   },
   primaryButton: {
-    padding: '14px 16px',
-    borderRadius: 12,
+    width: '100%',
+    padding: '14px',
+    borderRadius: 14,
     border: 'none',
-    background: '#22C55E',
+    background: 'linear-gradient(135deg, #A855F7, #6366F1)',
     color: 'white',
-    fontWeight: 600,
-    fontSize: 16,
+    fontWeight: 900,
+    fontSize: 15,
     marginTop: 8,
+    cursor: 'pointer',
   },
-  error: { color: '#F87171', fontSize: 14, textAlign: 'center' },
-  links: { display: 'flex', justifyContent: 'space-between', marginTop: 8 },
-  link: { color: '#38BDF8', fontSize: 14, textDecoration: 'none' },
+  error: { color: '#FB7185', fontSize: 12, textAlign: 'center', marginTop: 4 },
+  links: { display: 'flex', justifyContent: 'space-between', marginTop: 14 },
+  link: { color: '#C084FC', fontSize: 12, textDecoration: 'none', fontWeight: 700 },
 };

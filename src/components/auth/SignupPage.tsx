@@ -46,93 +46,144 @@ export function SignupPage() {
 
   if (success) {
     return (
-      <div style={styles.container}>
-        <div style={styles.successBox}>
-          <h2 style={{ color: 'white', fontSize: 20 }}>Hesap oluşturuldu</h2>
-          <p style={{ color: '#94A3B8', marginTop: 8 }}>
-            Devam etmek için e-postanızı doğrulamanız gerekebilir. Ardından giriş yapabilirsiniz.
-          </p>
-          <Link to="/giris" style={styles.link}>
-            Giriş ekranına dön
-          </Link>
-          <p style={{ color: '#64748B', fontSize: 12, marginTop: 16 }}>
-            Not: Aile üyeliğinizin (family_id) eklenmesi için hesabınız oluşturulduktan sonra bir aile
-            yöneticisinin sizi aileye eklemesi gerekir.
-          </p>
+      <div style={styles.page}>
+        <div style={styles.card}>
+          <div style={styles.success}>
+            <div style={styles.check}>✓</div>
+            <h2 style={{ color: 'white', fontSize: 20, margin: '0 0 8px' }}>Hesap oluşturuldu</h2>
+            <p style={{ color: '#A7ABC0', fontSize: 13, lineHeight: 1.5 }}>
+              Devam etmek için e-postanızı doğrulamanız gerekebilir. Ardından giriş yapabilirsiniz.
+            </p>
+            <Link to="/giris" style={styles.primaryButton}>Giriş ekranına dön</Link>
+            <p style={{ color: '#7F8499', fontSize: 11, marginTop: 16 }}>
+              Not: Aile üyeliğinizin eklenmesi için bir aile yöneticisinin sizi aileye eklemesi gerekir.
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Hesap Oluştur</h1>
-      <form onSubmit={handleSubmit} style={styles.form}>
-        <input
-          style={styles.input}
-          type="text"
-          placeholder="Adınız"
-          value={displayName}
-          onChange={(e) => setDisplayName(e.target.value)}
-        />
-        <input
-          style={styles.input}
-          type="email"
-          placeholder="E-posta"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="email"
-        />
-        <input
-          style={styles.input}
-          type="password"
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="new-password"
-        />
-        {error && <p style={styles.error}>{error}</p>}
-        <button style={styles.primaryButton} type="submit" disabled={loading}>
-          {loading ? 'Yükleniyor…' : 'Kayıt Ol'}
-        </button>
-        <Link to="/giris" style={styles.link}>
-          Zaten hesabım var
-        </Link>
-      </form>
+    <div style={styles.page}>
+      <div style={styles.card}>
+        <h1 style={styles.title}>HESAP OLUŞTUR</h1>
+        <p style={styles.subtitle}>Aile hesabına katıl</p>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <label style={styles.label}>Adınız</label>
+          <input
+            style={styles.input}
+            type="text"
+            placeholder="Ad Soyad"
+            value={displayName}
+            onChange={(e) => setDisplayName(e.target.value)}
+          />
+          <label style={styles.label}>E-posta</label>
+          <input
+            style={styles.input}
+            type="email"
+            placeholder="ornek@email.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="email"
+          />
+          <label style={styles.label}>Şifre</label>
+          <input
+            style={styles.input}
+            type="password"
+            placeholder="En az 6 karakter"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="new-password"
+          />
+          {error && <p style={styles.error}>{error}</p>}
+          <button style={styles.primaryButton} type="submit" disabled={loading}>
+            {loading ? 'Hesap oluşturuluyor…' : 'Kayıt Ol'}
+          </button>
+          <Link to="/giris" style={{ ...styles.link, marginTop: 14 }}>
+            Zaten hesabım var
+          </Link>
+        </form>
+      </div>
     </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  container: {
+  page: {
     minHeight: '100vh',
     display: 'flex',
-    flexDirection: 'column',
+    alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
-    background: '#0B1120',
+    padding: '20px 16px',
+    background: 'radial-gradient(circle at 50% 0%, rgba(168,85,247,.10), transparent 40%), #050711',
   },
-  title: { color: 'white', fontSize: 24, fontWeight: 700, textAlign: 'center', marginBottom: 32 },
-  form: { display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360, width: '100%', margin: '0 auto' },
+  card: {
+    width: '100%',
+    maxWidth: 380,
+    padding: 26,
+    borderRadius: 24,
+    background: 'linear-gradient(145deg, rgba(25,18,56,.95), rgba(7,9,21,.98))',
+    border: '1px solid rgba(168,85,247,.22)',
+    boxShadow: '0 24px 60px rgba(0,0,0,.45)',
+  },
+  title: {
+    color: '#C4B5FD',
+    fontSize: 22,
+    fontWeight: 900,
+    textAlign: 'center',
+    letterSpacing: 2,
+    textTransform: 'uppercase',
+    margin: '0 0 6px',
+    textShadow: '0 -1px 0 #7C3AED, 0 1px 0 #5B21B6, 0 2px 0 #4C1D95, 0 3px 0 #3730A3, 0 5px 10px rgba(0,0,0,.4)',
+  },
+  subtitle: {
+    color: '#7F8499',
+    fontSize: 12,
+    textAlign: 'center',
+    marginBottom: 22,
+  },
+  form: { display: 'flex', flexDirection: 'column', gap: 8 },
+  label: { fontSize: 11, color: '#A7ABC0', marginTop: 4 },
   input: {
-    padding: '14px 16px',
-    borderRadius: 12,
-    border: '1px solid #1E293B',
-    background: '#151B2C',
+    width: '100%',
+    padding: '12px 14px',
+    borderRadius: 14,
+    border: '1px solid rgba(148,163,184,.16)',
+    background: 'rgba(5,7,18,.78)',
     color: 'white',
-    fontSize: 16,
+    fontSize: 14,
+    minHeight: 46,
+    boxSizing: 'border-box',
   },
   primaryButton: {
-    padding: '14px 16px',
-    borderRadius: 12,
+    display: 'block',
+    width: '100%',
+    padding: '14px',
+    borderRadius: 14,
     border: 'none',
-    background: '#22C55E',
+    background: 'linear-gradient(135deg, #A855F7, #6366F1)',
     color: 'white',
-    fontWeight: 600,
-    fontSize: 16,
+    fontWeight: 900,
+    fontSize: 15,
+    textAlign: 'center',
+    textDecoration: 'none',
     marginTop: 8,
+    cursor: 'pointer',
   },
-  error: { color: '#F87171', fontSize: 14, textAlign: 'center' },
-  link: { color: '#38BDF8', fontSize: 14, textAlign: 'center', textDecoration: 'none', marginTop: 8 },
-  successBox: { maxWidth: 360, margin: '0 auto', textAlign: 'center' },
+  error: { color: '#FB7185', fontSize: 12, textAlign: 'center', marginTop: 4 },
+  link: { color: '#C084FC', fontSize: 12, textAlign: 'center', textDecoration: 'none', fontWeight: 700 },
+  success: { textAlign: 'center' },
+  check: {
+    width: 56,
+    height: 56,
+    borderRadius: 20,
+    margin: '0 auto 16px',
+    display: 'grid',
+    placeItems: 'center',
+    fontSize: 28,
+    color: '#34D399',
+    background: 'rgba(52,211,153,.10)',
+    border: '1px solid rgba(52,211,153,.2)',
+  },
 };

@@ -10,20 +10,22 @@ import {
 import { monthBoundary, toPacificDateString } from '../../lib/timezone';
 import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { VehicleCard } from '../home/VehicleCard';
+import { supabase } from '../../lib/supabaseClient';
 
 export function VehiclesPage({ familyId }: { familyId: string }) {
   const { vehicles, income, expenses, mileageLog, fixedExpenses, loading, error, retry } =
     useFamilyRealtimeData(familyId);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
+  const [showAddVehicle, setShowAddVehicle] = useState(false);
 
   const now = new Date();
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
 
-  // Defensive guards: every array access below is null-safe, so a partial
-  // data shape (e.g. vehicles loaded but income still empty) can never
-  // throw and blank the screen — this is the specific bug class the user
-  // reported previously on this exact tab.
+  // Filter active vehicles only for the main list
+  const activeVehicles = vehicles.filter(v => v.is_active !== false);
+  const archivedVehicles = vehicles.filter(v => v.is_active === false);
+
   if (loading) return <LoadingScreen label="Araçlar yükleniyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
   if (!vehicles || vehicles.length === 0) {
@@ -63,52 +65,102 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
 
   return (
     <div style={styles.page}>
-      <h1 style={styles.heading}>Araçlar</h1>
+      <div style={styles.header}>
+        <h1 style={styles.heading}>Araçlar</h1>
+        {activeVehicles.length < 3 && (
+          <button style={styles.addButton} onClick={() => setShowAddVehicle(true)}>
+            + Araç Ekle
+          </button>
+        )}
+      </div>
 
-      <div style={styles.list}>
-        {vehicles.map((vehicle) => {
-          let summary;
-          try {
-            summary = computeVehicleSummary({
-              vehicle: { id: vehicle.id, shortName: vehicle.short_name },
-              period: 'month',
-              boundary,
-              income: incomeRecords,
-              expenses: expenseRecords,
-              fixedExpenseVersions: fixedVersions,
-              monthAnchorDate: monthAnchor,
-              totalVehicleCount: vehicles.length,
-              milesInPeriod: sumMilesInPeriod(
-                mileageEntries.filter((m) => m.vehicleId === vehicle.id),
-                boundary.start,
-                boundary.end
-              ),
-            });
-          } catch (calcError) {
-            // A calculation error for ONE vehicle must never blank the
-            // whole tab — show a per-card error instead.
+      {showAddVehicle && (
+        <AddVehicleForm
+          familyId={familyId}
+          onClose={() => setShowAddVehicle(false)}
+          onSaved={() => { setShowAddVehicle(false); retry(); }}
+        />
+      )}
+
+      <div style={styles.section}>
+        <h2 style={styles.sectionTitle}>Aktif Araçlar ({activeVehicles.length}/3)</h2>
+        <div style={styles.list}>
+          {activeVehicles.map((vehicle) => {
+            let summary;
+            try {
+              summary = computeVehicleSummary({
+                vehicle: { id: vehicle.id, shortName: vehicle.short_name },
+                period: 'month',
+                boundary,
+                income: incomeRecords,
+                expenses: expenseRecords,
+                fixedExpenseVersions: fixedVersions,
+                monthAnchorDate: monthAnchor,
+                totalVehicleCount: vehicles.length,
+                milesInPeriod: sumMilesInPeriod(
+                  mileageEntries.filter((m) => m.vehicleId === vehicle.id),
+                  boundary.start,
+                  boundary.end
+                ),
+              });
+            } catch (calcError) {
+              return (
+                <div key={vehicle.id} style={styles.cardError}>
+                  {vehicle.short_name}: hesaplama hatası ({(calcError as Error).message})
+                </div>
+              );
+            }
             return (
-              <div key={vehicle.id} style={styles.cardError}>
-                {vehicle.short_name}: hesaplama hatası ({(calcError as Error).message})
+              <div
+                key={vehicle.id}
+                style={styles.vehicleCard}
+                onClick={() => setSelectedVehicleId(vehicle.id)}
+              >
+                <div style={styles.vehicleHeader}>
+                  <h3>{vehicle.short_name}</h3>
+                  <button
+                    style={styles.archiveBtn}
+                    onClick={(e) => { e.stopPropagation(); handleArchive(vehicle.id); }}
+                  >
+                    Arşivle
+                  </button>
+                </div>
+                <VehicleCard shortName={vehicle.short_name} summary={summary} showFixedShare />
               </div>
             );
-          }
-          return (
-            <button
-              key={vehicle.id}
-              style={styles.cardButton}
-              onClick={() => setSelectedVehicleId(vehicle.id)}
-            >
-              <VehicleCard shortName={vehicle.short_name} summary={summary} showFixedShare />
-            </button>
-          );
-        })}
+          })}
+        </div>
       </div>
+
+      {archivedVehicles.length > 0 && (
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Arşivlenmiş Araçlar</h2>
+          <div style={styles.list}>
+            {archivedVehicles.map((vehicle) => (
+              <div
+                key={vehicle.id}
+                style={styles.archivedCard}
+                onClick={() => setSelectedVehicleId(vehicle.id)}
+              >
+                <div style={styles.vehicleHeader}>
+                  <h3>{vehicle.short_name}</h3>
+                  <button
+                    style={styles.restoreBtn}
+                    onClick={(e) => { e.stopPropagation(); handleRestore(vehicle.id); }}
+                  >
+                    Geri Yükle
+                  </button>
+                </div>
+                <p style={styles.archivedNote}>Geçmiş veriler korunuyor</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {selectedVehicle && (
         <VehicleDetailModal
-          vehicleName={selectedVehicle.short_name}
-          vehicleId={selectedVehicle.id}
+          vehicle={selectedVehicle}
           income={incomeRecords.filter((r) => r.vehicleId === selectedVehicle.id)}
           expenses={expenseRecords.filter((r) => r.vehicleId === selectedVehicle.id)}
           mileageEntries={mileageEntries.filter((m) => m.vehicleId === selectedVehicle.id)}
@@ -117,17 +169,129 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
       )}
     </div>
   );
+
+  async function handleArchive(vehicleId: string) {
+    if (!confirm('Bu aracı arşivlemek istiyor musunuz? Geçmiş veriler korunacak.')) return;
+    const { error } = await supabase.rpc('archive_vehicle', { p_vehicle_id: vehicleId });
+    if (error) {
+      alert('Hata: ' + error.message);
+    } else {
+      retry();
+    }
+  }
+
+  async function handleRestore(vehicleId: string) {
+    const { error } = await supabase.rpc('restore_vehicle', { p_vehicle_id: vehicleId });
+    if (error) {
+      alert('Hata: ' + error.message);
+    } else {
+      retry();
+    }
+  }
+}
+
+function AddVehicleForm({ familyId, onClose, onSaved }: { familyId: string; onClose: () => void; onSaved: () => void }) {
+  const [fullName, setFullName] = useState('');
+  const [shortName, setShortName] = useState('');
+  const [make, setMake] = useState('');
+  const [model, setModel] = useState('');
+  const [year, setYear] = useState('');
+  const [fuelType, setFuelType] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    if (!fullName.trim() || !shortName.trim()) {
+      return setError('Araç adı gereklidir.');
+    }
+    setSaving(true);
+    const { error: insertError } = await supabase.from('vehicles').insert({
+      family_id: familyId,
+      full_name: fullName.trim(),
+      short_name: shortName.trim(),
+      make: make.trim() || null,
+      model: model.trim() || null,
+      year: year ? Number(year) : null,
+      fuel_type: fuelType || null,
+    });
+    setSaving(false);
+    if (insertError) {
+      setError(insertError.message);
+    } else {
+      onSaved();
+    }
+  }
+
+  return (
+    <div style={styles.modalOverlay} onClick={onClose}>
+      <div style={styles.modal} onClick={e => e.stopPropagation()}>
+        <h3 style={styles.modalTitle}>Yeni Araç Ekle</h3>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          <input
+            style={styles.input}
+            placeholder="Tam Araç Adı"
+            value={fullName}
+            onChange={e => setFullName(e.target.value)}
+          />
+          <input
+            style={styles.input}
+            placeholder="Kısa Ad"
+            value={shortName}
+            onChange={e => setShortName(e.target.value)}
+          />
+          <input
+            style={styles.input}
+            placeholder="Marka"
+            value={make}
+            onChange={e => setMake(e.target.value)}
+          />
+          <input
+            style={styles.input}
+            placeholder="Model"
+            value={model}
+            onChange={e => setModel(e.target.value)}
+          />
+          <input
+            style={styles.input}
+            type="number"
+            placeholder="Yıl"
+            value={year}
+            onChange={e => setYear(e.target.value)}
+          />
+          <select
+            style={styles.input}
+            value={fuelType}
+            onChange={e => setFuelType(e.target.value)}
+          >
+            <option value="">Yakıt Türü Seçin</option>
+            <option value="gasoline">Benzin</option>
+            <option value="hybrid">Hibrit</option>
+            <option value="plug_in_hybrid">Plug-in Hibrit</option>
+            <option value="electric">Elektrik</option>
+            <option value="diesel">Dizel</option>
+            <option value="other">Diğer</option>
+          </select>
+          {error && <p style={styles.error}>{error}</p>}
+          <div style={styles.modalActions}>
+            <button type="button" onClick={onClose} style={styles.cancelBtn}>İptal</button>
+            <button type="submit" style={styles.submitBtn} disabled={saving}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
 
 function VehicleDetailModal({
-  vehicleName,
+  vehicle,
   income,
   expenses,
   mileageEntries,
   onClose,
 }: {
-  vehicleName: string;
-  vehicleId: string;
+  vehicle: any;
   income: IncomeRecord[];
   expenses: ExpenseRecord[];
   mileageEntries: MileageEntry[];
@@ -142,7 +306,7 @@ function VehicleDetailModal({
     <div style={styles.modalOverlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>{vehicleName}</h2>
+          <h2 style={styles.modalTitle}>{vehicle.short_name}</h2>
           <button style={styles.closeButton} onClick={onClose}>
             Geri
           </button>
@@ -158,7 +322,7 @@ function VehicleDetailModal({
               <div key={idx} style={styles.historyRow}>
                 <span>{item.type}</span>
                 <span>{item.date}</span>
-                <span style={{ color: item.amount >= 0 ? '#22C55E' : '#F87171' }}>
+                <span style={{ color: item.amount >= 0 ? '#A855F7' : '#F87171' }}>
                   {item.amount >= 0 ? '+' : ''}
                   {item.amount.toLocaleString('en-US')}$
                 </span>
@@ -173,31 +337,45 @@ function VehicleDetailModal({
 
 const styles: Record<string, React.CSSProperties> = {
   page: { padding: '16px 16px 96px', color: 'white' },
-  heading: { fontSize: 20, fontWeight: 700, marginBottom: 16 },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  heading: { fontSize: 20, fontWeight: 700, margin: 0 },
+  addButton: { border: 0, borderRadius: 12, padding: '10px 16px', background: 'linear-gradient(135deg,#A855F7,#6366F1)', color: '#fff', fontWeight: 900, fontSize: 13 },
+  section: { marginBottom: 24 },
+  sectionTitle: { fontSize: 14, fontWeight: 700, color: '#A7ABC0', marginBottom: 12 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
-  cardButton: { background: 'none', border: 'none', padding: 0, textAlign: 'left', width: '100%' },
+  vehicleCard: { background: '#120E2A', borderRadius: 16, padding: 16, border: '1px solid rgba(168,85,247,.2)' },
+  vehicleHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  archivedCard: { background: 'rgba(20,14,43,.6)', borderRadius: 16, padding: 16, border: '1px solid rgba(148,163,184,.1)' },
+  archivedNote: { fontSize: 12, color: '#6F748A', margin: '8px 0 0 0' },
+  archiveBtn: { border: 0, borderRadius: 8, padding: '6px 12px', background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontSize: 11 },
+  restoreBtn: { border: 0, borderRadius: 8, padding: '6px 12px', background: 'rgba(52,211,153,.1)', color: '#34D399', fontSize: 11 },
   cardError: { background: '#3F1D1D', borderRadius: 12, padding: 14, color: '#FCA5A5', fontSize: 13 },
   modalOverlay: {
     position: 'fixed',
     inset: 0,
     background: 'rgba(0,0,0,0.6)',
     display: 'flex',
-    alignItems: 'flex-end',
+    alignItems: 'center',
+    justifyContent: 'center',
     zIndex: 100,
   },
   modal: {
-    background: '#0F172A',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    width: '100%',
-    maxHeight: '80vh',
-    overflowY: 'auto',
+    background: '#080A17',
+    borderRadius: 20,
+    padding: 24,
+    width: '90%',
+    maxWidth: 400,
   },
+  modalTitle: { fontSize: 18, fontWeight: 700, margin: '0 0 16px', color: '#fff' },
+  form: { display: 'flex', flexDirection: 'column', gap: 12 },
+  input: { width: '100%', minHeight: 48, padding: 12, borderRadius: 12, border: '1px solid rgba(148,163,184,.14)', background: '#070916', color: '#fff', fontSize: 14 },
+  error: { color: '#FB7185', fontSize: 12 },
+  modalActions: { display: 'flex', gap: 10, marginTop: 8 },
+  cancelBtn: { flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(148,163,184,.2)', background: 'transparent', color: '#fff' },
+  submitBtn: { flex: 1, padding: 12, borderRadius: 12, border: 0, background: '#34D399', color: '#03130D', fontWeight: 900 },
   modalHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  modalTitle: { fontSize: 18, fontWeight: 700, margin: 0 },
   closeButton: { background: 'none', border: 'none', color: '#38BDF8', fontSize: 14 },
-  modalSubtitle: { fontSize: 12, color: '#64748B', marginTop: 4 },
+  modalSubtitle: { fontSize: 12, color: '#7F8499', marginTop: 4 },
   history: { marginTop: 16, display: 'flex', flexDirection: 'column', gap: 8 },
-  historyRow: { display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid #1E293B', paddingBottom: 8 },
+  historyRow: { display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid rgba(148,163,184,.14)', paddingBottom: 8 },
 };

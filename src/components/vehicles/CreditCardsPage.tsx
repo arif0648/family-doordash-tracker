@@ -1,225 +1,227 @@
-import React, { useEffect, useState, useCallback, FormEvent } from 'react';
+import React, { useState, useEffect, FormEvent } from 'react';
+import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
+import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
-import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
+import { CreditCardRow } from '../../types/database';
 
-interface CreditCardRow {
-  id: string;
-  card_name: string;
-  last_four: string | null;
-  credit_limit: number | null;
-  current_balance: number;
-  due_date: string | null;
-}
-
-export function CreditCardsPage({ familyId, userId }: { familyId: string; userId: string }) {
-  const [cards, setCards] = useState<CreditCardRow[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [showForm, setShowForm] = useState(false);
-
-  const fetchCards = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    // RLS already restricts this to the current user's own cards (Bölüm
-    // credit_cards_select_own) — no explicit .eq('user_id', ...) is strictly
-    // required, but we add it anyway for clarity and defense-in-depth.
-    const { data, error: fetchError } = await supabase
-      .from('credit_cards')
-      .select('*')
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false });
-
-    if (fetchError) {
-      setError(fetchError.message);
-      setLoading(false);
-      return;
-    }
-    setCards(data ?? []);
-    setLoading(false);
-  }, [userId]);
+export function CreditCardsPage({ familyId }: { familyId: string }) {
+  const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const [show, setShow] = useState(true);
+  const [showPayment, setShowPayment] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCards();
+    if (creditCards.length > 0) setShow(false);
+  }, [creditCards]);
 
-    const channel = supabase
-      .channel(`credit-cards-${userId}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'credit_cards', filter: `user_id=eq.${userId}` },
-        fetchCards
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [userId, fetchCards]);
-
-  if (loading) return <LoadingScreen label="Kredi kartları yükleniyor…" />;
-  if (error) return <ErrorScreen message={error} onRetry={fetchCards} />;
+  if (loading) return <LoadingScreen label="Kartlar yükleniyor…" />;
+  if (error) return <ErrorScreen message={error} onRetry={retry} />;
 
   return (
-    <div style={styles.page}>
-      <div style={styles.headerRow}>
-        <h1 style={styles.heading}>Kredi Kartlarım</h1>
-        <button style={styles.addButton} onClick={() => setShowForm((s) => !s)}>
-          {showForm ? 'İptal' : '+ Ekle'}
+    <main style={S.page}>
+      <div style={S.header}>
+        <div>
+          <span style={S.kicker}>BORÇLAR</span>
+          <h1 style={S.h1}>Kredi Kartları</h1>
+          <p style={S.sub}>Aile hesabına bağlı kart borçları ve ödemeler.</p>
+        </div>
+        <button style={S.add} onClick={() => setShow(v => !v)}>
+          {show ? 'Kapat' : '＋ Kart'}
         </button>
       </div>
-      <p style={styles.privacyNote}>Bu bilgiler sadece size özeldir, diğer aile üyeleri göremez.</p>
 
-      {showForm && (
-        <CreditCardForm
-          familyId={familyId}
-          userId={userId}
-          onSaved={() => {
-            setShowForm(false);
-            fetchCards();
-          }}
-        />
-      )}
+      {show && <CardForm familyId={familyId} onSaved={() => { setShow(false); retry(); }} />}
 
-      {cards.length === 0 ? (
-        <EmptyState message="Henüz veri yok" icon="💳" />
-      ) : (
-        <div style={styles.list}>
-          {cards.map((card) => (
-            <CreditCardItem key={card.id} card={card} onChanged={fetchCards} />
+      {creditCards.length > 0 ? (
+        <div style={S.list}>
+          {creditCards.map(c => (
+            <Card
+              key={c.id}
+              card={c}
+              onChanged={retry}
+              onPayment={() => setShowPayment(c.id)}
+            />
           ))}
         </div>
+      ) : (
+        <p style={S.emptyTip}>İlk kredi kartını eklemek için yukarıdaki formu doldur.</p>
       )}
-    </div>
+
+      {showPayment && (
+        <PaymentForm
+          cardId={showPayment}
+          onClose={() => setShowPayment(null)}
+          onSaved={() => { setShowPayment(null); retry(); }}
+        />
+      )}
+    </main>
   );
 }
 
-function CreditCardForm({
-  familyId,
-  userId,
-  onSaved,
-}: {
-  familyId: string;
-  userId: string;
-  onSaved: () => void;
-}) {
-  const [cardName, setCardName] = useState('');
-  const [lastFour, setLastFour] = useState('');
-  const [limit, setLimit] = useState('');
+function CardForm({ familyId, onSaved }: { familyId: string; onSaved: () => void }) {
+  const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
-  const [dueDate, setDueDate] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [due, setDue] = useState('');
+  const [limit, setLimit] = useState('');
+  const [minimum, setMinimum] = useState('');
+  const [save, setSave] = useState(false);
+  const [err, setErr] = useState('');
 
-  async function handleSubmit(e: FormEvent) {
+  async function submit(e: FormEvent) {
     e.preventDefault();
-    setError(null);
-
-    if (!cardName.trim()) return setError('Kart adı zorunludur.');
-    if (lastFour && !/^\d{4}$/.test(lastFour)) return setError('Son 4 hane tam olarak 4 rakam olmalı.');
-
-    setSaving(true);
-    const { error: insertError } = await supabase.from('credit_cards').insert({
+    setErr('');
+    if (!name.trim()) return setErr('Kart adı gerekli.');
+    const user = (await supabase.auth.getUser()).data.user;
+    if (!user) return setErr('Oturum yok.');
+    setSave(true);
+    const { error } = await supabase.from('credit_cards').insert({
       family_id: familyId,
-      user_id: userId,
-      card_name: cardName.trim(),
-      last_four: lastFour || null,
-      credit_limit: limit ? parseFloat(limit) : null,
-      current_balance: balance ? parseFloat(balance) : 0,
-      due_date: dueDate || null,
+      user_id: user.id,
+      card_name: name.trim(),
+      current_balance: Number(balance) || 0,
+      due_date: due || null,
+      credit_limit: limit ? Number(limit) : null,
+      minimum_payment: minimum ? Number(minimum) : null,
     });
-    setSaving(false);
-
-    if (insertError) {
-      setError('Kaydedilemedi: ' + insertError.message);
-      return;
-    }
+    setSave(false);
+    if (error) return setErr(error.message);
     onSaved();
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <input style={styles.input} placeholder="Kart adı (örn. Chase Sapphire)" value={cardName} onChange={(e) => setCardName(e.target.value)} />
-      <input style={styles.input} placeholder="Son 4 hane" value={lastFour} onChange={(e) => setLastFour(e.target.value)} maxLength={4} />
-      <input style={styles.input} type="number" placeholder="Limit ($)" value={limit} onChange={(e) => setLimit(e.target.value)} />
-      <input style={styles.input} type="number" placeholder="Güncel Bakiye ($)" value={balance} onChange={(e) => setBalance(e.target.value)} />
-      <input style={styles.input} type="date" value={dueDate} onChange={(e) => setDueDate(e.target.value)} />
-      {error && <p style={styles.error}>{error}</p>}
-      <button type="submit" style={styles.saveButton} disabled={saving}>
-        {saving ? 'Kaydediliyor…' : 'Kaydet'}
-      </button>
+    <form onSubmit={submit} style={S.form}>
+      <input style={S.input} placeholder="Kart adı" value={name} onChange={e => setName(e.target.value)} />
+      <input style={S.input} type="number" step="0.01" placeholder="Kart borcu ($)" value={balance} onChange={e => setBalance(e.target.value)} />
+      <input style={S.input} type="number" step="0.01" placeholder="Kredi limiti ($)" value={limit} onChange={e => setLimit(e.target.value)} />
+      <input style={S.input} type="number" step="0.01" placeholder="Asgari ödeme ($)" value={minimum} onChange={e => setMinimum(e.target.value)} />
+      <label style={S.dateLabel}>Son ödeme tarihi<input style={S.input} type="date" value={due} onChange={e => setDue(e.target.value)} /></label>
+      {err && <p style={S.error}>{err}</p>}
+      <button style={S.save} disabled={save}>{save ? 'Kaydediliyor…' : 'Kartı Kaydet'}</button>
     </form>
   );
 }
 
-function CreditCardItem({ card, onChanged }: { card: CreditCardRow; onChanged: () => void }) {
-  const [deleting, setDeleting] = useState(false);
+function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: () => void; onPayment: () => void }) {
+  const days = card.due_date ? Math.round((new Date(`${card.due_date}T12:00:00`).getTime() - new Date(new Date().toDateString()).getTime()) / 86400000) : null;
+  const urgent = days !== null && days >= 0 && days <= 7;
+  const overdue = days !== null && days < 0;
+  const [error, setError] = useState<string | null>(null);
 
-  async function handleDelete() {
-    setDeleting(true);
-    await supabase.from('credit_cards').delete().eq('id', card.id);
-    setDeleting(false);
+  async function del() {
+    if (!confirm(`${card.card_name} silinsin mi?`)) return;
+    const { error: delError } = await supabase.from('credit_cards').delete().eq('id', card.id);
+    if (delError) {
+      setError(delError.message);
+      return;
+    }
     onChanged();
   }
 
-  const utilization = card.credit_limit ? Math.round((card.current_balance / card.credit_limit) * 100) : null;
+  return (
+    <article style={{ ...S.card, borderColor: overdue ? 'rgba(251,113,133,.42)' : urgent ? 'rgba(244,114,182,.42)' : 'rgba(168,85,247,.18)' }}>
+      <div style={S.cardTop}>
+        <div>
+          <span style={S.chip}>CARD</span>
+          <h2>{card.card_name}</h2>
+          {card.payment_status && <span style={S.status}>{card.payment_status}</span>}
+        </div>
+        <div style={S.actions}>
+          <button onClick={onPayment} style={S.payBtn}>Öde</button>
+          <button onClick={del} style={S.del}>Sil</button>
+        </div>
+      </div>
+      {error && <p style={{ ...S.error, marginTop: 8 }}>{error}</p>}
+      <div style={S.balance}>${Number(card.current_balance).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+      {card.credit_limit && <div style={S.limit}>Limit: ${card.credit_limit.toLocaleString('en-US')}</div>}
+      {card.due_date && (
+        <div style={overdue ? S.dueOverdue : urgent ? S.dueUrgent : S.due}>
+          <span>Son ödeme</span>
+          <strong>{new Date(`${card.due_date}T12:00:00`).toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' })}</strong>
+          {overdue && <b>{Math.abs(days)} gün gecikmiş</b>}
+          {urgent && !overdue && <b>{days === 0 ? 'BUGÜN' : `${days} gün kaldı`}</b>}
+        </div>
+      )}
+    </article>
+  );
+}
+
+function PaymentForm({ cardId, onClose, onSaved }: { cardId: string; onClose: () => void; onSaved: () => void }) {
+  const [amount, setAmount] = useState('');
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [note, setNote] = useState('');
+  const [save, setSave] = useState(false);
+  const [err, setErr] = useState('');
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    setErr('');
+    const amountNum = Number(amount);
+    if (!Number.isFinite(amountNum) || amountNum <= 0) return setErr('Geçerli bir tutar girin.');
+    setSave(true);
+    const { error } = await supabase.rpc('record_credit_card_payment', {
+      p_credit_card_id: cardId,
+      p_amount: amountNum,
+      p_payment_date: date,
+      p_note: note || null,
+    });
+    setSave(false);
+    if (error) return setErr(error.message);
+    onSaved();
+  }
 
   return (
-    <div style={styles.card}>
-      <div style={styles.cardHeader}>
-        <p style={styles.cardName}>
-          {card.card_name} {card.last_four && `•••• ${card.last_four}`}
-        </p>
-        <button style={styles.deleteButton} onClick={handleDelete} disabled={deleting}>
-          Sil
-        </button>
+    <div style={S.modalOverlay} onClick={onClose}>
+      <div style={S.modal} onClick={e => e.stopPropagation()}>
+        <h3 style={S.modalTitle}>Ödeme Yap</h3>
+        <form onSubmit={submit} style={S.modalForm}>
+          <label style={S.label}>Ödeme Tutarı ($)</label>
+          <input style={S.input} type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} />
+          <label style={S.label}>Ödeme Tarihi</label>
+          <input style={S.input} type="date" value={date} onChange={e => setDate(e.target.value)} />
+          <label style={S.label}>Not</label>
+          <input style={S.input} value={note} onChange={e => setNote(e.target.value)} />
+          {err && <p style={S.error}>{err}</p>}
+          <div style={S.modalActions}>
+            <button type="button" onClick={onClose} style={S.cancelBtn}>İptal</button>
+            <button type="submit" style={S.submitBtn} disabled={save}>{save ? 'Kaydediliyor…' : 'Ödemeyi Kaydet'}</button>
+          </div>
+        </form>
       </div>
-      <p style={styles.cardBalance}>${card.current_balance.toLocaleString('en-US')}</p>
-      {card.credit_limit && (
-        <p style={styles.cardMeta}>
-          Limit: ${card.credit_limit.toLocaleString('en-US')} {utilization !== null && `(%${utilization} kullanım)`}
-        </p>
-      )}
-      {card.due_date && <p style={styles.cardMeta}>Son ödeme: {card.due_date}</p>}
     </div>
   );
 }
 
-const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 16px 96px', color: 'white' },
-  headerRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  heading: { fontSize: 20, fontWeight: 700, margin: 0 },
-  addButton: {
-    padding: '8px 16px',
-    borderRadius: 10,
-    border: 'none',
-    background: '#22C55E',
-    color: '#0B1120',
-    fontWeight: 700,
-    fontSize: 13,
-  },
-  privacyNote: { fontSize: 12, color: '#64748B', marginTop: 4, marginBottom: 16 },
-  form: { display: 'flex', flexDirection: 'column', gap: 8, background: '#151B2C', borderRadius: 14, padding: 14, marginBottom: 16 },
-  input: {
-    padding: '12px 14px',
-    borderRadius: 10,
-    border: '1px solid #1E293B',
-    background: '#0F172A',
-    color: 'white',
-    fontSize: 14,
-  },
-  error: { color: '#F87171', fontSize: 13 },
-  saveButton: {
-    padding: '12px 0',
-    borderRadius: 10,
-    border: 'none',
-    background: '#22C55E',
-    color: '#0B1120',
-    fontWeight: 700,
-  },
+const S: Record<string, React.CSSProperties> = {
+  page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', maxWidth: 680, margin: '0 auto', color: '#fff' },
+  header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
+  kicker: { fontSize: 9, letterSpacing: 2, color: '#C084FC', fontWeight: 900 },
+  h1: { fontSize: 29, margin: '4px 0' },
+  sub: { fontSize: 12, color: '#7F8499', margin: 0 },
+  add: { border: 0, borderRadius: 14, padding: '13px 15px', background: 'linear-gradient(135deg,#A855F7,#6366F1)', color: '#fff', fontWeight: 900 },
+  form: { display: 'flex', flexDirection: 'column', gap: 10, padding: 17, borderRadius: 22, background: 'rgba(18,14,42,.95)', border: '1px solid rgba(168,85,247,.25)', marginBottom: 14 },
+  input: { width: '100%', minHeight: 52, padding: 14, borderRadius: 14, border: '1px solid rgba(148,163,184,.14)', background: '#080A17', color: '#fff', fontSize: 15 },
+  dateLabel: { fontSize: 11, color: '#8D92A7' },
+  save: { minHeight: 52, border: 0, borderRadius: 15, background: '#34D399', color: '#03130D', fontWeight: 900 },
+  error: { color: '#FB7185', fontSize: 12 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
-  card: { background: '#151B2C', borderRadius: 16, padding: 16 },
-  cardHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
-  cardName: { fontSize: 14, fontWeight: 600, margin: 0 },
-  deleteButton: { background: 'none', border: 'none', color: '#F87171', fontSize: 12 },
-  cardBalance: { fontSize: 24, fontWeight: 800, margin: '8px 0 4px' },
-  cardMeta: { fontSize: 12, color: '#64748B', margin: '2px 0' },
+  card: { padding: 18, borderRadius: 23, background: 'linear-gradient(145deg,rgba(21,16,48,.95),rgba(7,9,20,.98))', border: '1px solid' },
+  cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
+  chip: { fontSize: 8, letterSpacing: 2, color: '#A78BFA' },
+  status: { fontSize: 10, padding: '4px 8px', borderRadius: 8, background: 'rgba(168,85,247,.2)', color: '#C084FC', marginLeft: 8 },
+  balance: { fontSize: 32, fontWeight: 900, letterSpacing: -1, margin: '14px 0' },
+  limit: { fontSize: 12, color: '#7F8499', marginTop: 4 },
+  due: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 13, background: 'rgba(255,255,255,.035)', color: '#8F93A8', fontSize: 11 },
+  dueUrgent: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 13, background: 'rgba(244,114,182,.08)', color: '#F9A8D4', fontSize: 11 },
+  dueOverdue: { display: 'flex', alignItems: 'center', gap: 10, padding: '11px 12px', borderRadius: 13, background: 'rgba(251,113,133,.12)', color: '#FDA4AF', fontSize: 11 },
+  actions: { display: 'flex', gap: 8 },
+  payBtn: { border: 0, borderRadius: 10, padding: '8px 12px', background: 'rgba(52,211,153,.15)', color: '#34D399', fontWeight: 800, fontSize: 11 },
+  del: { border: 0, background: 'transparent', color: '#7F8499', fontSize: 11 },
+  modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
+  modal: { background: '#080A17', borderRadius: 20, padding: 24, width: '90%', maxWidth: 400 },
+  modalTitle: { fontSize: 18, margin: '0 0 16px', color: '#fff' },
+  modalForm: { display: 'flex', flexDirection: 'column', gap: 12 },
+  label: { fontSize: 12, color: '#A7ABC0' },
+  emptyTip: { textAlign: 'center', color: '#7F8499', fontSize: 13, padding: '18px 8px' },
+  modalActions: { display: 'flex', gap: 10, marginTop: 8 },
+  cancelBtn: { flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(148,163,184,.2)', background: 'transparent', color: '#fff' },
+  submitBtn: { flex: 1, padding: 12, borderRadius: 12, border: 0, background: '#34D399', color: '#03130D', fontWeight: 900 },
 };

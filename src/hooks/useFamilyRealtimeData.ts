@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
-import { IncomeRow, ExpenseRow, MileageLogRow, FixedExpenseRow, Vehicle } from '../types/database';
-
-/**
- * useFamilyRealtimeData
- *
- * TEK ve MERKEZİ realtime data hook'u (Bölüm 15 / Master Instruction 14).
- * Dashboard, Vehicles, Reports, Leaderboard ekranlarının HİÇBİRİ kendi
- * subscription'ını açmaz — hepsi bu hook'u tüketir. Bu, "duplicate realtime
- * subscription" ve "infinite render loop" hatalarını yapısal olarak
- * engeller: subscription tam olarak bir kez, familyId değiştiğinde açılır/
- * kapanır, ve component unmount olduğunda temizlenir.
- */
+import {
+  IncomeRow,
+  ExpenseRow,
+  MileageLogRow,
+  FixedExpenseRow,
+  Vehicle,
+  CreditCardRow,
+  AppointmentRow,
+  NotificationRow,
+  MonthlyFinancialSummaryRow,
+  WorkSessionRow,
+  Profile,
+  WeeklyGoalRow,
+} from '../types/database';
+import { playIncomeSound, playExpenseSound, speak } from '../lib/sound';
 
 interface FamilyData {
   vehicles: Vehicle[];
@@ -19,6 +22,13 @@ interface FamilyData {
   expenses: ExpenseRow[];
   mileageLog: MileageLogRow[];
   fixedExpenses: FixedExpenseRow[];
+  creditCards: CreditCardRow[];
+  appointments: AppointmentRow[];
+  notifications: NotificationRow[];
+  monthlySummaries: MonthlyFinancialSummaryRow[];
+  workSessions: WorkSessionRow[];
+  profiles: Profile[];
+  goals: WeeklyGoalRow[];
   loading: boolean;
   error: string | null;
 }
@@ -30,77 +40,109 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     expenses: [],
     mileageLog: [],
     fixedExpenses: [],
+    creditCards: [],
+    appointments: [],
+    notifications: [],
+    monthlySummaries: [],
+    workSessions: [],
+    profiles: [],
+    goals: [],
     loading: true,
     error: null,
   });
-
-  // Guards against setting state after unmount / stale closures.
-  const mountedRef = useRef(true);
+  const mounted = useRef(true);
   const [retryCount, setRetryCount] = useState(0);
 
   const fetchAll = useCallback(async () => {
     if (!familyId) return;
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const [vehiclesRes, incomeRes, expensesRes, mileageRes, fixedRes] = await Promise.all([
+      const [v, i, e, m, f, c, a, n, ms, ws] = await Promise.all([
         supabase.from('vehicles').select('*').eq('family_id', familyId),
         supabase.from('income').select('*').eq('family_id', familyId),
         supabase.from('expenses').select('*').eq('family_id', familyId),
         supabase.from('mileage_log').select('*').eq('family_id', familyId),
-        supabase.from('fixed_expenses').select('*').eq('family_id', familyId),
+        supabase.from('fixed_expenses').select('*').eq('family_id', familyId).order('effective_from', { ascending: false }),
+        supabase.from('credit_cards').select('*').eq('family_id', familyId),
+        supabase.from('appointments').select('*').eq('family_id', familyId).order('start_at', { ascending: true }),
+        supabase.from('notifications').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(50),
+        supabase.from('monthly_financial_summaries').select('*').eq('family_id', familyId).order('year', { ascending: false }).order('month', { ascending: false }).limit(12),
+        supabase.from('work_sessions').select('*').eq('family_id', familyId).order('started_at', { ascending: false }).limit(100),
       ]);
-
-      const firstError =
-        vehiclesRes.error || incomeRes.error || expensesRes.error || mileageRes.error || fixedRes.error;
-
-      if (firstError) throw firstError;
-      if (!mountedRef.current) return;
-
+      const err = v.error || i.error || e.error || m.error || f.error || c.error || a.error || n.error || ms.error || ws.error;
+      if (err) throw err;
+      const income = i.data ?? [];
+      const expenses = e.data ?? [];
+      const userIds = [...new Set([...income, ...expenses].map((r) => r.user_id).filter(Boolean))];
+      const p = userIds.length
+        ? await supabase.from('profiles').select('*').in('user_id', userIds)
+        : { data: [] as Profile[], error: null };
+      if (p.error) throw p.error;
+      const { data: goals, error: goalsError } = await supabase.rpc('get_family_weekly_goals', { p_family_id: familyId });
+      if (goalsError) throw goalsError;
+      if (!mounted.current) return;
       setState({
-        vehicles: vehiclesRes.data ?? [],
-        income: incomeRes.data ?? [],
-        expenses: expensesRes.data ?? [],
-        mileageLog: mileageRes.data ?? [],
-        fixedExpenses: fixedRes.data ?? [],
+        vehicles: v.data ?? [],
+        income,
+        expenses,
+        mileageLog: m.data ?? [],
+        fixedExpenses: f.data ?? [],
+        creditCards: c.data ?? [],
+        appointments: a.data ?? [],
+        notifications: n.data ?? [],
+        monthlySummaries: ms.data ?? [],
+        workSessions: ws.data ?? [],
+        profiles: p.data ?? [],
+        goals: (goals as WeeklyGoalRow[]) ?? [],
         loading: false,
         error: null,
       });
     } catch (err) {
-      if (!mountedRef.current) return;
-      setState((s) => ({
-        ...s,
-        loading: false,
-        error: (err as Error).message ?? 'Bilinmeyen bir hata oluştu.',
-      }));
+      if (!mounted.current) return;
+      const message =
+        err instanceof Error ? err.message :
+        typeof err === 'string' ? err :
+        (err as any)?.message ? (err as any).message :
+        'Bilinmeyen hata';
+      setState((s) => ({ ...s, loading: false, error: message }));
     }
   }, [familyId]);
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => {
-      mountedRef.current = false;
-    };
+    mounted.current = true;
+    return () => { mounted.current = false; };
   }, []);
 
   useEffect(() => {
     if (!familyId) return;
-    fetchAll();
+    void fetchAll();
 
-    // Exactly ONE realtime channel for this family, covering all four
-    // tables. Any change re-fetches (simple + correct; avoids hand-rolled
-    // merge-patch bugs). Channel is torn down on unmount / familyId change.
+    const onRemote = (kind: 'income' | 'expense') => {
+      if (kind === 'income') {
+        playIncomeSound();
+        speak('Yeni kazanç eklendi.', true);
+      } else {
+        playExpenseSound();
+        speak('Yeni gider eklendi.', true);
+      }
+      void fetchAll();
+    };
+
     const channel = supabase
       .channel(`family-${familyId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'income', filter: `family_id=eq.${familyId}` }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mileage_log', filter: `family_id=eq.${familyId}` }, fetchAll)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixed_expenses', filter: `family_id=eq.${familyId}` }, fetchAll)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'income', filter: `family_id=eq.${familyId}` }, () => onRemote('income'))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` }, () => onRemote('expense'))
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mileage_log', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixed_expenses', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'monthly_financial_summaries', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_sessions', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'family_member_goals', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
       .subscribe();
 
-    return () => {
-      // Bölüm 15 — component unmount olduğunda subscription cleanup.
-      supabase.removeChannel(channel);
-    };
+    return () => { void supabase.removeChannel(channel); };
   }, [familyId, fetchAll, retryCount]);
 
   return { ...state, retry: () => setRetryCount((c) => c + 1) };

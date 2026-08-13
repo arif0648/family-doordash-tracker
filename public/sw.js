@@ -1,22 +1,52 @@
-// sw.js — minimal service worker: receives push events and shows a
-// notification. Requires a real deployed Supabase Edge Function
-// (supabase/functions/send-push) with real VAPID private key to actually
-// send anything — that server-side delivery is NOT VERIFIED in this
-// sandbox (no network/credentials available here).
+const CACHE_NAME = 'barbin-v3';
 
-self.addEventListener('push', (event) => {
-  if (!event.data) return;
-  const data = event.data.json();
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Family DoorDash Tracker', {
-      body: data.body || '',
-      icon: '/icon-192.png',
-      badge: '/icon-192.png',
-    })
+    caches.open(CACHE_NAME).then((cache) =>
+      cache.addAll(['/', '/index.html'])
+    ).catch(() => {})
+  );
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((names) =>
+      Promise.all(names.filter((n) => n !== CACHE_NAME).map((n) => caches.delete(n)))
+    ).then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close();
-  event.waitUntil(clients.openWindow('/'));
+self.addEventListener('fetch', (event) => {
+  if (event.request.method !== 'GET') return;
+
+  // Navigation (HTML pages): always try network first, fall back to cache
+  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (response && response.ok) {
+            const clone = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // Static assets: cache first, network fallback
+  event.respondWith(
+    caches.match(event.request).then((cached) => {
+      if (cached) return cached;
+      return fetch(event.request).then((response) => {
+        if (response && response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      });
+    })
+  );
 });

@@ -4,6 +4,18 @@ import App from './App';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import './index.css';
 
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      for (const r of regs) r.unregister();
+    }).finally(() => {
+      navigator.serviceWorker.register('/sw.js?v=4').catch(() => {
+        // PWA registration is best-effort; the app still works without it.
+      });
+    });
+  });
+}
+
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {

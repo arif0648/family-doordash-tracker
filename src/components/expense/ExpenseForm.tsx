@@ -2,11 +2,11 @@ import React, { useState, FormEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Vehicle, ExpenseCategory } from '../../types/database';
 import { playExpenseSound, speak } from '../../lib/sound';
+import { toPacificDateString } from '../../lib/timezone';
 
 interface Props {
   familyId: string;
   vehicles: Vehicle[];
-  userSettings: { sound_enabled: boolean; speech_enabled: boolean } | null;
   onSaved?: () => void;
 }
 
@@ -17,41 +17,38 @@ const CATEGORY_LABELS: Record<'benzin' | 'arac_gideri' | 'market' | 'diger', str
   diger: 'Diğer',
 };
 
-export function ExpenseForm({ familyId, vehicles, userSettings, onSaved }: Props) {
+export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
   const [categoryTab, setCategoryTab] = useState<'benzin' | 'arac_gideri' | 'market' | 'diger'>('benzin');
-  const [digerScope, setDigerScope] = useState<'aile' | 'arac'>('aile');
   const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
   const [amount, setAmount] = useState('');
-  const [note, setNote] = useState('');
-  const [recordDate, setRecordDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [recordDate, setRecordDate] = useState(() => toPacificDateString(new Date()));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const requiresVehicle =
-    categoryTab === 'benzin' || categoryTab === 'arac_gideri' || (categoryTab === 'diger' && digerScope === 'arac');
+  const requiresVehicle = categoryTab === 'benzin' || categoryTab === 'arac_gideri';
+  const resolvedCategory: ExpenseCategory = categoryTab === 'diger' ? 'diger_aile' : categoryTab;
 
-  const resolvedCategory: ExpenseCategory =
-    categoryTab === 'diger' ? (digerScope === 'arac' ? 'diger_arac' : 'diger_aile') : categoryTab;
-
-  const noteRequired = categoryTab === 'diger';
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
 
-    const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum < 0) return setError('Geçerli bir tutar girin.');
+    const amountNum = parseFloat(amount.replace(',', '.'));
+    if (isNaN(amountNum) || amountNum < 0) return setError('Geçerli bir tutar girin (örn. 12.50).');
     if (requiresVehicle && !vehicleId) return setError('Araç seçimi zorunludur.');
-    if (noteRequired && !note.trim()) return setError('"Diğer" kategorisi için açıklama zorunludur.');
+    
 
+    const currentUser = (await supabase.auth.getUser()).data.user;
+    if (!currentUser) return setError('Oturum bulunamadı.');
     setSaving(true);
     const { error: insertError } = await supabase.from('expenses').insert({
       family_id: familyId,
+      user_id: currentUser.id,
       category: resolvedCategory,
       vehicle_id: requiresVehicle ? vehicleId : null,
       amount: amountNum,
       record_date: recordDate,
-      note: note.trim() || null,
+      note: null,
     });
     setSaving(false);
 
@@ -61,16 +58,16 @@ export function ExpenseForm({ familyId, vehicles, userSettings, onSaved }: Props
     }
 
     playExpenseSound();
-    speak(`${amountNum} dolar ${CATEGORY_LABELS[categoryTab]} gideri kaydedildi.`, userSettings?.speech_enabled ?? false);
+    speak(`${amountNum} dolar ${CATEGORY_LABELS[categoryTab]} gideri kaydedildi.`);
 
     setAmount('');
-    setNote('');
     onSaved?.();
   }
 
   return (
-    <form onSubmit={handleSubmit} style={styles.form}>
-      <h2 style={styles.title}>Gider Ekle</h2>
+    <div style={styles.form}>
+      <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:10}}>
+      <div><span style={{fontSize:10,letterSpacing:2,color:'#F472B6',fontWeight:900}}>GİDER</span><h2 style={styles.title}>Gider Ekle</h2><p style={{margin:0,color:'#7F8499',fontSize:12}}>Aile bütçesine anında yansır.</p></div>
 
       <div style={styles.tabs}>
         {(Object.keys(CATEGORY_LABELS) as (keyof typeof CATEGORY_LABELS)[]).map((cat) => (
@@ -89,31 +86,6 @@ export function ExpenseForm({ familyId, vehicles, userSettings, onSaved }: Props
         ))}
       </div>
 
-      {categoryTab === 'diger' && (
-        <div style={styles.subTabs}>
-          <button
-            type="button"
-            onClick={() => setDigerScope('aile')}
-            style={{
-              ...styles.subTab,
-              borderColor: digerScope === 'aile' ? '#22C55E' : '#1E293B',
-            }}
-          >
-            Aile Geneli
-          </button>
-          <button
-            type="button"
-            onClick={() => setDigerScope('arac')}
-            style={{
-              ...styles.subTab,
-              borderColor: digerScope === 'arac' ? '#22C55E' : '#1E293B',
-            }}
-          >
-            Araca Özel
-          </button>
-        </div>
-      )}
-
       {requiresVehicle && (
         <>
           <label style={styles.label}>Araç</label>
@@ -130,12 +102,11 @@ export function ExpenseForm({ familyId, vehicles, userSettings, onSaved }: Props
       <label style={styles.label}>Tutar ($)</label>
       <input
         style={styles.input}
-        type="number"
-        min="0"
-        step="0.01"
+        type="text"
+        inputMode="decimal"
         placeholder="0.00"
         value={amount}
-        onChange={(e) => setAmount(e.target.value)}
+        onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'))}
       />
 
       <label style={styles.label}>Tarih</label>
@@ -146,53 +117,25 @@ export function ExpenseForm({ familyId, vehicles, userSettings, onSaved }: Props
         onChange={(e) => setRecordDate(e.target.value)}
       />
 
-      <label style={styles.label}>
-        Not {noteRequired ? '(zorunlu)' : '(opsiyonel)'}
-      </label>
-      <input style={styles.input} type="text" value={note} onChange={(e) => setNote(e.target.value)} />
-
       {error && <p style={styles.error}>{error}</p>}
 
       <button type="submit" style={styles.saveButton} disabled={saving}>
         {saving ? 'Kaydediliyor…' : 'Kaydet'}
       </button>
-    </form>
+      </form>
+    </div>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  form: { display: 'flex', flexDirection: 'column', gap: 8, padding: 16, color: 'white' },
-  title: { fontSize: 18, fontWeight: 700, marginBottom: 4 },
-  tabs: { display: 'flex', gap: 6, background: '#151B2C', borderRadius: 12, padding: 4 },
-  tab: { flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', fontSize: 12, fontWeight: 600 },
-  subTabs: { display: 'flex', gap: 8, marginTop: 8 },
-  subTab: {
-    flex: 1,
-    padding: '10px 0',
-    borderRadius: 10,
-    border: '1px solid #1E293B',
-    background: 'transparent',
-    color: 'white',
-    fontSize: 13,
-  },
-  label: { fontSize: 12, color: '#94A3B8', marginTop: 8 },
-  input: {
-    padding: '12px 14px',
-    borderRadius: 10,
-    border: '1px solid #1E293B',
-    background: '#151B2C',
-    color: 'white',
-    fontSize: 15,
-  },
-  error: { color: '#F87171', fontSize: 13, marginTop: 8 },
-  saveButton: {
-    marginTop: 16,
-    padding: '14px 0',
-    borderRadius: 12,
-    border: 'none',
-    background: '#22C55E',
-    color: '#0B1120',
-    fontWeight: 700,
-    fontSize: 15,
-  },
+  form: { display:'flex', flexDirection:'column', gap:8, padding:'12px 14px calc(110px + env(safe-area-inset-bottom))', color:'white' },
+  title: { fontSize:20, fontWeight:800, margin:'6px 0', letterSpacing:-.5 },
+  tabs: { display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:4, background:'rgba(20,14,43,.9)', border:'1px solid rgba(168,85,247,.2)', borderRadius:14, padding:4 },
+  tab: { minHeight:42, borderRadius:10, border:'none', fontSize:11, fontWeight:800, cursor:'pointer' },
+  subTabs: { display:'flex', gap:8 },
+  subTab: { flex:1, minHeight:46, borderRadius:13, background:'rgba(9,10,23,.8)', color:'white', fontSize:13 },
+  label: { fontSize:11, color:'#A7ABC0', marginTop:2 },
+  input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid rgba(148,163,184,.16)', background:'rgba(5,7,18,.78)', color:'white', fontSize:15, minHeight:46, boxSizing:'border-box' },
+  error: { color:'#FB7185', fontSize:12, marginTop:4 },
+  saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'none', background:'linear-gradient(135deg,#34D399,#10B981)', color:'#04120D', fontWeight:900, fontSize:14, boxShadow:'0 8px 20px rgba(16,185,129,.22)' },
 };

@@ -2,18 +2,30 @@ import React, { useMemo } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { computeFamilySummary, computeVehicleSummary, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
-import { monthBoundary, toPacificDateString } from '../../lib/timezone';
+import { monthBoundary, toPacificDateString, weekBoundary } from '../../lib/timezone';
 import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { toCsv, downloadCsv } from '../../lib/csvExport';
 import { Leaderboard } from '../leaderboard/Leaderboard';
+import { LeaderboardCard } from '../home/LeaderboardCard';
+import { MarketRatesStrip } from '../home/MarketRatesStrip';
+import { supabase } from '../../lib/supabaseClient';
 
 export function ReportsPage({ familyId }: { familyId: string }) {
-  const { vehicles, income, expenses, mileageLog, fixedExpenses, loading, error, retry } =
+  const { vehicles, income, expenses, mileageLog, fixedExpenses, goals, loading, error, retry } =
     useFamilyRealtimeData(familyId);
 
   const now = new Date();
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
+  const todayStr = toPacificDateString(now);
+  const weekB = weekBoundary(now);
+
+  const [trend, setTrend] = React.useState<any>(null);
+  React.useEffect(() => {
+    if (familyId) {
+      supabase.rpc('get_financial_trend', { p_family_id: familyId }).then(({ data }) => setTrend(data?.[0]));
+    }
+  }, [familyId]);
 
   if (loading) return <LoadingScreen label="Raporlar hazırlanıyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
@@ -88,6 +100,9 @@ export function ReportsPage({ familyId }: { familyId: string }) {
     <div style={styles.page}>
       <h1 style={styles.heading}>Raporlar</h1>
 
+      <MarketRatesStrip />
+
+      <h2 style={styles.sectionTitle}>Finansal Özet</h2>
       {!hasAnyData ? (
         <EmptyState message="Henüz veri yok." icon="📊" />
       ) : (
@@ -99,8 +114,25 @@ export function ReportsPage({ familyId }: { familyId: string }) {
             <Stat label="Toplam Mil" value={totalMiles} isMiles />
           </div>
 
+          {trend && (
+            <section style={styles.trendCard}>
+              <div>
+                <span style={styles.trendKicker}>AYLIK TREND</span>
+                <div style={{ ...styles.trendStatus, color: trend.trend_status === 'IMPROVING' ? '#34D399' : trend.trend_status === 'DECLINING' ? '#FB7185' : '#60A5FA' }}>
+                  {trend.trend_status === 'IMPROVING' ? '↗ İLERİ' : trend.trend_status === 'DECLINING' ? '↘ GERİLEME' : '= STABİL'}
+                </div>
+                <div style={styles.trendMeta}>
+                  Geçen ay: ${trend.previous_month_net?.toFixed(2) || '—'} • Bu ay: ${trend.current_month_net?.toFixed(2) || '—'} • Net değişim: {typeof trend.net_change === 'number' ? (trend.net_change >= 0 ? '+' : '') + trend.net_change.toFixed(2) : '—'}
+                </div>
+              </div>
+            </section>
+          )}
+
           <h2 style={styles.sectionTitle}>Araç Karşılaştırması</h2>
-          <Leaderboard title="AYIN 1.'Sİ" vehicleSummaries={vehicleSummaries} vehicleNames={vehicleNames} hasAnyRealActivity={hasAnyData} />
+          <Leaderboard title="AYIN 1.'Sİ" vehicleSummaries={vehicleSummaries} hasAnyRealActivity={hasAnyData} />
+
+          <h2 style={styles.sectionTitle}>Aile Sıralaması</h2>
+          <LeaderboardCard income={incomeRecords} goals={goals} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
 
           <h2 style={styles.sectionTitle}>Dışa Aktar (CSV)</h2>
           <div style={styles.exportRow}>
@@ -115,7 +147,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
 }
 
 function Stat({ label, value, highlight, isMiles }: { label: string; value: number; highlight?: boolean; isMiles?: boolean }) {
-  const color = highlight ? (value >= 0 ? '#22C55E' : '#F87171') : '#E2E8F0';
+  const color = highlight ? (value >= 0 ? '#A855F7' : '#F87171') : '#E2E8F0';
   return (
     <div style={styles.statCard}>
       <p style={styles.statLabel}>{label}</p>
@@ -127,22 +159,26 @@ function Stat({ label, value, highlight, isMiles }: { label: string; value: numb
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 16px 96px', color: 'white' },
-  heading: { fontSize: 20, fontWeight: 700, marginBottom: 16 },
-  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
-  statCard: { background: '#151B2C', borderRadius: 16, padding: 14 },
-  statLabel: { fontSize: 12, color: '#64748B', marginBottom: 6 },
+  page: { padding: '16px 14px calc(110px + env(safe-area-inset-bottom))', color: 'white' },
+  heading: { fontSize: 20, fontWeight: 800, marginBottom: 16 },
+  grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 },
+  statCard: { background: '#120E2A', borderRadius: 16, padding: 14 },
+  statLabel: { fontSize: 12, color: '#7F8499', marginBottom: 6 },
   statValue: { fontSize: 18, fontWeight: 700, margin: 0 },
-  sectionTitle: { fontSize: 15, fontWeight: 700, marginTop: 24, marginBottom: 10 },
+  sectionTitle: { fontSize: 15, fontWeight: 800, marginTop: 20, marginBottom: 10 },
+  trendCard: { padding: 16, borderRadius: 18, background: 'linear-gradient(145deg,rgba(25,18,56,.96),rgba(7,9,21,.98))', border: '1px solid rgba(168,85,247,.15)', boxShadow: '0 8px 20px rgba(0,0,0,.2)', marginBottom: 16 },
+  trendKicker: { fontSize: 10, letterSpacing: 2, color: '#8F93A8', fontWeight: 900 },
+  trendStatus: { fontSize: 22, fontWeight: 900, margin: '6px 0' },
+  trendMeta: { fontSize: 12, color: '#777C91' },
   exportRow: { display: 'flex', gap: 8 },
   exportButton: {
     flex: 1,
     padding: '12px 0',
     borderRadius: 12,
-    border: '1px solid #1E293B',
-    background: '#151B2C',
+    border: '1px solid rgba(148,163,184,.14)',
+    background: '#120E2A',
     color: 'white',
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
   },
 };
