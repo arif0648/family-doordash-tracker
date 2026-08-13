@@ -1,17 +1,10 @@
 import React from 'react';
 import { CreditCardRow } from '../../types/database';
 import { NavLink } from 'react-router-dom';
+import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 
 interface CreditCardsDashboardProps {
   cards: CreditCardRow[];
-}
-
-function daysUntil(date: string | null): number | null {
-  if (!date) return null;
-  const d = new Date(`${date}T12:00:00`);
-  const n = new Date();
-  n.setHours(12, 0, 0, 0);
-  return Math.round((d.getTime() - n.getTime()) / 86400000);
 }
 
 function formatDate(date: string | null): string {
@@ -20,32 +13,14 @@ function formatDate(date: string | null): string {
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' });
 }
 
-const statusTheme: Record<string, { label: string; badge: string; glow: string; accent: string }> = {
-  PAID: { label: 'ÖDENDİ', badge: 'rgba(52,211,153,.16)', glow: 'rgba(52,211,153,.25)', accent: '#34D399' },
-  DUE_SOON: { label: 'YAKLAŞIYOR', badge: 'rgba(59,130,246,.16)', glow: 'rgba(59,130,246,.25)', accent: '#60A5FA' },
-  URGENT: { label: 'ACİL', badge: 'rgba(245,158,11,.16)', glow: 'rgba(245,158,11,.35)', accent: '#FBBF24' },
-  OVERDUE: { label: 'GEÇİKMİŞ', badge: 'rgba(220,38,38,.18)', glow: 'rgba(220,38,38,.35)', accent: '#FDA4AF' },
-};
-
-function cardUrgency(c: CreditCardRow): { days: number | null; theme: (typeof statusTheme)[string]; order: number } {
-  const days = c.due_date ? daysUntil(c.due_date) : null;
-  const status = c.payment_status ?? '';
-  if (statusTheme[status]) return { days, theme: statusTheme[status], order: 0 };
-  if (days === null) return { days, theme: statusTheme.PAID, order: 3 };
-  if (days < 0) return { days, theme: statusTheme.OVERDUE, order: 1 };
-  if (days <= 3) return { days, theme: statusTheme.URGENT, order: 2 };
-  if (days <= 7) return { days, theme: statusTheme.DUE_SOON, order: 3 };
-  return { days, theme: statusTheme.PAID, order: 4 };
-}
-
 export function CreditCardsDashboard({ cards }: CreditCardsDashboardProps) {
   if (cards.length === 0) return null;
 
   const sorted = [...cards]
     .filter((c) => c.is_active !== false)
     .sort((a, b) => {
-      const ua = cardUrgency(a).order;
-      const ub = cardUrgency(b).order;
+      const ua = computeCreditCardStatus(a).order;
+      const ub = computeCreditCardStatus(b).order;
       if (ua !== ub) return ua - ub;
       const da = a.due_date ?? '9999-12-31';
       const db = b.due_date ?? '9999-12-31';
@@ -83,7 +58,7 @@ export function CreditCardsDashboard({ cards }: CreditCardsDashboardProps) {
 
       <div style={S.list}>
         {sorted.map((c) => {
-          const { days, theme } = cardUrgency(c);
+          const { days, ...theme } = computeCreditCardStatus(c);
           const balance = Number(c.current_balance || 0);
           const limit = c.credit_limit ? Number(c.credit_limit) : 0;
           const minPay = c.minimum_payment ? Number(c.minimum_payment) : null;

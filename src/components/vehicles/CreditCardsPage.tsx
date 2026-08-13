@@ -3,6 +3,7 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
 import { CreditCardRow } from '../../types/database';
+import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 
 export function CreditCardsPage({ familyId }: { familyId: string }) {
   const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
@@ -101,7 +102,8 @@ function CardForm({ familyId, onSaved }: { familyId: string; onSaved: () => void
 }
 
 function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: () => void; onPayment: () => void }) {
-  const days = card.due_date ? Math.round((new Date(`${card.due_date}T12:00:00`).getTime() - new Date(new Date().toDateString()).getTime()) / 86400000) : null;
+  const status = computeCreditCardStatus(card);
+  const days = status.days;
   const urgent = days !== null && days >= 0 && days <= 7;
   const overdue = days !== null && days < 0;
   const [error, setError] = useState<string | null>(null);
@@ -120,9 +122,8 @@ function Card({ card, onChanged, onPayment }: { card: CreditCardRow; onChanged: 
     <article style={{ ...S.card, borderColor: overdue ? 'rgba(251,113,133,.42)' : urgent ? 'rgba(244,114,182,.42)' : 'rgba(168,85,247,.18)' }}>
       <div style={S.cardTop}>
         <div>
-          <span style={S.chip}>CARD</span>
+          <span style={{ ...S.chip, color: status.accent }}>{status.label}</span>
           <h2>{card.card_name}</h2>
-          {card.payment_status && <span style={S.status}>{card.payment_status}</span>}
         </div>
         <div style={S.actions}>
           <button onClick={onPayment} style={S.payBtn}>Öde</button>
