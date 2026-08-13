@@ -173,6 +173,9 @@ begin
   if tg_op = 'DELETE' then
     v_record_date := old.record_date;
     v_family_id := old.family_id;
+  elsif tg_table_name = 'credit_card_payments' then
+    v_record_date := new.payment_date;
+    v_family_id := new.family_id;
   else
     v_record_date := new.record_date;
     v_family_id := new.family_id;
