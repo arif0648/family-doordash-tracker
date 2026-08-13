@@ -3,6 +3,7 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import {
   computeVehicleSummary,
+  VehicleSummary,
   IncomeRecord,
   ExpenseRecord,
   FixedExpenseVersion,
@@ -10,6 +11,7 @@ import {
 import { monthBoundary, toPacificDateString } from '../../lib/timezone';
 import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { VehicleCard } from '../home/VehicleCard';
+import { VehicleComparison } from '../home/VehicleComparison';
 import { supabase } from '../../lib/supabaseClient';
 
 export function VehiclesPage({ familyId }: { familyId: string }) {
@@ -62,6 +64,28 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
   }));
 
   const selectedVehicle = vehicles.find((v) => v.id === selectedVehicleId) ?? null;
+
+  const vehicleSummaries = activeVehicles.map((vehicle) => {
+    try {
+      return computeVehicleSummary({
+        vehicle: { id: vehicle.id, shortName: vehicle.short_name },
+        period: 'month',
+        boundary,
+        income: incomeRecords,
+        expenses: expenseRecords,
+        fixedExpenseVersions: fixedVersions,
+        monthAnchorDate: monthAnchor,
+        totalVehicleCount: vehicles.length,
+        milesInPeriod: sumMilesInPeriod(
+          mileageEntries.filter((m) => m.vehicleId === vehicle.id),
+          boundary.start,
+          boundary.end
+        ),
+      });
+    } catch {
+      return null;
+    }
+  }).filter(Boolean) as VehicleSummary[];
 
   return (
     <div style={styles.page}>
@@ -131,6 +155,13 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
           })}
         </div>
       </div>
+
+      {vehicleSummaries.length > 0 && (
+        <div style={styles.section}>
+          <h2 style={styles.sectionTitle}>Araç Karşılaştırma</h2>
+          <VehicleComparison summaries={vehicleSummaries} />
+        </div>
+      )}
 
       {archivedVehicles.length > 0 && (
         <div style={styles.section}>

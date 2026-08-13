@@ -4,6 +4,18 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { toPacificDateString } from '../../lib/timezone';
 
+function category(label: string): string {
+  const map: Record<string, string> = {
+    'Ev Kirası': 'Barınma',
+    'Toplam Araç Kredileri': 'Araç',
+    'Araç Sigortası (Toplam)': 'Sigorta',
+    'Avukat Ödemesi': 'Borç/Hukuk',
+    'Diğer Kredi': 'Kredi',
+    'Telefon Faturası': 'Fatura',
+  };
+  return map[label] || 'Aile';
+}
+
 export function FixedExpensesPage({ familyId }: { familyId: string }) {
   const { fixedExpenses, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [label, setLabel] = useState('');
@@ -96,18 +108,20 @@ export function FixedExpensesPage({ familyId }: { familyId: string }) {
       {message && <div style={styles.message}>{message}</div>}
 
       {active.length === 0 ? <EmptyState message="Henüz sabit gider yok." icon="🏠" /> : (
-        <div style={styles.list}>
+        <div style={styles.cards}>
           {active.map((item) => (
-            <div key={item.id} style={styles.row}>
-              <div style={{ minWidth: 0 }}>
-                <strong style={styles.itemLabel}>{item.label}</strong>
-                <span style={styles.itemMeta}>Aylık sabit ödeme</span>
+            <div key={item.id} style={styles.card}>
+              <div style={styles.cardInfo}>
+                <strong style={styles.cardLabel}>{item.label}</strong>
+                <span style={styles.cardCat}>Kategori: {category(item.label)}</span>
               </div>
-              <div style={styles.actions}>
-                <button type="button" style={styles.small} onClick={() => changeAmount(item, -25)}>-25</button>
-                <strong style={styles.amount}>${Number(item.monthly_amount).toFixed(2)}</strong>
-                <button type="button" style={styles.small} onClick={() => changeAmount(item, 25)}>+25</button>
-                <button type="button" style={styles.delete} onClick={() => remove(item)} aria-label={`${item.label} sil`}>×</button>
+              <div style={styles.cardRight}>
+                <span style={styles.cardAmount}>${Number(item.monthly_amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+                <div style={styles.cardActions}>
+                  <button type="button" style={styles.small} onClick={() => changeAmount(item, -25)}>-25</button>
+                  <button type="button" style={styles.small} onClick={() => changeAmount(item, 25)}>+25</button>
+                  <button type="button" style={styles.delete} onClick={() => remove(item)} aria-label={`${item.label} sil`}>×</button>
+                </div>
               </div>
             </div>
           ))}
@@ -135,6 +149,14 @@ const styles: Record<string, React.CSSProperties> = {
   itemLabel: { display: 'block', fontSize: 15, fontWeight: 800, color: '#fff' },
   itemMeta: { display: 'block', color: '#94A3B8', fontSize: 11, marginTop: 4 },
   actions: { display: 'flex', alignItems: 'center', gap: 6 },
+  cards: { display: 'flex', flexDirection: 'column', gap: 10 },
+  card: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 16, borderRadius: 20, background: 'linear-gradient(145deg, rgba(20,25,38,.96), rgba(7,9,21,.98))', border: '1px solid rgba(255,255,255,.07)' },
+  cardInfo: {},
+  cardLabel: { display: 'block', fontSize: 15, fontWeight: 800, color: '#fff' },
+  cardCat: { display: 'block', color: '#8A90A6', fontSize: 11, marginTop: 4 },
+  cardRight: { textAlign: 'right' },
+  cardAmount: { display: 'block', color: '#F43F5E', fontSize: 18, fontWeight: 900, marginBottom: 6 },
+  cardActions: { display: 'flex', justifyContent: 'flex-end', gap: 6 },
   small: { border: '1px solid rgba(168,85,247,.35)', background: 'rgba(168,85,247,.12)', color: '#C084FC', borderRadius: 11, padding: '7px 9px', fontSize: 11, fontWeight: 800 },
   amount: { minWidth: 72, textAlign: 'right', fontSize: 14 },
   delete: { border: 0, background: 'transparent', color: '#F87171', fontSize: 20, padding: '0 3px' },

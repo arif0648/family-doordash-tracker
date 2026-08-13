@@ -1,9 +1,7 @@
 import React, { useMemo } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
-import { FixedExpensesSummary } from './FixedExpensesSummary';
 import { VehicleCard } from './VehicleCard';
-import { VehicleComparison } from './VehicleComparison';
 import { MarketRatesMini } from './MarketRatesMini';
 import { computeFamilySummary, computeVehicleSummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString } from '../../lib/timezone';
@@ -104,8 +102,8 @@ export function HomePage({ familyId }: { familyId: string }) {
         ))}
       </div>
 
-      <FixedExpensesSummary expenses={fixedExpenses} />
-      <VehicleComparison summaries={vehicleSummaries} />
+      <NavLink to="/sabit-giderler" style={S.link}>Aile Sabit Giderleri (Aylık) ›</NavLink>
+      <NavLink to="/araclar" style={S.link}>Araç Karşılaştırması ›</NavLink>
     </main>
   );
 }
