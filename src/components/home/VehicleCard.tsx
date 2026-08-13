@@ -11,7 +11,7 @@ export function VehicleCard({
   showFixedShare: boolean;
 }) {
   const netColor = summary.net >= 0 ? '#A855F7' : '#F87171';
-  const netSign = summary.net >= 0 ? '+' : '';
+  const netSign = summary.net >= 0 ? '+' : '−';
 
   return (
     <div style={styles.card}>
@@ -34,7 +34,7 @@ export function VehicleCard({
 
 function Metric({ label, value, positive }: { label: string; value: number; positive?: boolean }) {
   const color = positive ? '#A855F7' : value < 0 ? '#F87171' : '#A7ABC0';
-  const sign = value > 0 ? '+' : '';
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
   return (
     <div>
       <p style={styles.metricLabel}>{label}</p>

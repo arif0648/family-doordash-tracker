@@ -31,7 +31,7 @@ export function CreditCardsPage({ familyId }: { familyId: string }) {
         </button>
       </div>
 
-      {show && <CardForm familyId={familyId} onSaved={() => { setShow(false); retry(); }} />}
+      {show && <CardForm familyId={familyId} existingCards={creditCards} onSaved={() => { setShow(false); retry(); }} />}
 
       {creditCards.length > 0 ? (
         <div style={S.list}>
@@ -59,7 +59,7 @@ export function CreditCardsPage({ familyId }: { familyId: string }) {
   );
 }
 
-function CardForm({ familyId, onSaved }: { familyId: string; onSaved: () => void }) {
+function CardForm({ familyId, existingCards, onSaved }: { familyId: string; existingCards: CreditCardRow[]; onSaved: () => void }) {
   const [name, setName] = useState('');
   const [balance, setBalance] = useState('');
   const [due, setDue] = useState('');
@@ -71,14 +71,18 @@ function CardForm({ familyId, onSaved }: { familyId: string; onSaved: () => void
   async function submit(e: FormEvent) {
     e.preventDefault();
     setErr('');
-    if (!name.trim()) return setErr('Kart adı gerekli.');
+    const trimmed = name.trim();
+    if (!trimmed) return setErr('Kart adı gerekli.');
+    const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
+    const duplicate = existingCards.find(c => c.card_name.toLowerCase().replace(/\s+/g, ' ') === normalized);
+    if (duplicate && !confirm(`${trimmed} isminde bir kart zaten var. Yine de eklensin mi?`)) return;
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return setErr('Oturum yok.');
     setSave(true);
     const { error } = await supabase.from('credit_cards').insert({
       family_id: familyId,
       user_id: user.id,
-      card_name: name.trim(),
+      card_name: trimmed,
       current_balance: Number(balance) || 0,
       due_date: due || null,
       credit_limit: limit ? Number(limit) : null,

@@ -176,6 +176,7 @@ export function computeFamilySummary(args: {
 
 export interface VehicleSummary {
   vehicleId: string;
+  shortName: string;
   income: number;
   gas: number;
   vehicleExpense: number;
@@ -235,6 +236,7 @@ export function computeVehicleSummary(args: {
 
   return {
     vehicleId: vehicle.id,
+    shortName: vehicle.shortName,
     income: roundCurrency(vIncome),
     gas: roundCurrency(gas),
     vehicleExpense: roundCurrency(vehicleExpense),

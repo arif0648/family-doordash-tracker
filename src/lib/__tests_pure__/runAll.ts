@@ -316,8 +316,8 @@ console.log('\n=== Leaderboard — veri yokken sahte kazanan gösterme ===');
 
   const resultWithData = computeLeaderboard({
     vehicleSummaries: [
-      { vehicleId: 'kia', income: 1000, gas: 100, vehicleExpense: 50, otherVehicle: 0, fixedShare: 2220, net: -1370, milesDriven: 230 },
-      { vehicleId: 'toyota', income: 0, gas: 0, vehicleExpense: 0, otherVehicle: 0, fixedShare: 2220, net: -2220, milesDriven: 0 },
+      { vehicleId: 'kia', shortName: 'Kia Sportage', income: 1000, gas: 100, vehicleExpense: 50, otherVehicle: 0, fixedShare: 2220, net: -1370, milesDriven: 230 },
+      { vehicleId: 'toyota', shortName: 'Toyota Camry', income: 0, gas: 0, vehicleExpense: 0, otherVehicle: 0, fixedShare: 2220, net: -2220, milesDriven: 0 },
     ],
     hasAnyRealActivity: true,
   });

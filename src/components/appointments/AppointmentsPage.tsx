@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
+import { translateError } from '../../lib/errorMessage';
 import { AppointmentRow, AppointmentType, AppointmentStatus } from '../../types/database';
 
 const APPOINTMENT_TYPES: { value: AppointmentType; label: string }[] = [
@@ -114,7 +115,17 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
     if (!window.confirm('Bu randevuyu iptal etmek istediğinizden emin misiniz?')) return;
     const { error } = await supabase.rpc('cancel_appointment', { p_appointment_id: appointment.id });
     if (error) {
-      setFormError(error.message);
+      setFormError(translateError(error.message));
+      return;
+    }
+    retry();
+  }
+
+  async function handleDelete(appointment: AppointmentRow) {
+    if (!window.confirm('Bu randevuyu kalıcı olarak silmek istediğinizden emin misiniz?')) return;
+    const { error } = await supabase.from('appointments').delete().eq('id', appointment.id);
+    if (error) {
+      setFormError(translateError(error.message));
       return;
     }
     retry();
@@ -255,35 +266,35 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
               {todayAppointments.length > 0 && (
                 <section style={S.section}>
                   <h3 style={S.sectionTitle}>BUGÜN</h3>
-                  {todayAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} />)}
+                  {todayAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} onDelete={handleDelete} />)}
                 </section>
               )}
 
               {tomorrowAppointments.length > 0 && (
                 <section style={S.section}>
                   <h3 style={S.sectionTitle}>YARIN</h3>
-                  {tomorrowAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} />)}
+                  {tomorrowAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} onDelete={handleDelete} />)}
                 </section>
               )}
 
               {weekAppointments.length > 0 && (
                 <section style={S.section}>
                   <h3 style={S.sectionTitle}>7 GÜN İÇİNDE</h3>
-                  {weekAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} />)}
+                  {weekAppointments.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} onDelete={handleDelete} />)}
                 </section>
               )}
 
               {upcoming.filter(a => !todayAppointments.includes(a) && !tomorrowAppointments.includes(a) && !weekAppointments.includes(a)).length > 0 && (
                 <section style={S.section}>
                   <h3 style={S.sectionTitle}>SONRAKİ</h3>
-                  {upcoming.filter(a => !todayAppointments.includes(a) && !tomorrowAppointments.includes(a) && !weekAppointments.includes(a)).map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} />)}
+                  {upcoming.filter(a => !todayAppointments.includes(a) && !tomorrowAppointments.includes(a) && !weekAppointments.includes(a)).map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} onDelete={handleDelete} />)}
                 </section>
               )}
 
               {past.length > 0 && (
                 <section style={S.section}>
                   <h3 style={S.sectionTitle}>GEÇMİŞ</h3>
-                  {past.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} />)}
+                  {past.map(a => <AppointmentCard key={a.id} appointment={a} onEdit={openEdit} onCancel={handleCancel} onComplete={handleComplete} onDelete={handleDelete} />)}
                 </section>
               )}
             </>
@@ -294,11 +305,12 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
   );
 }
 
-function AppointmentCard({ appointment, onEdit, onCancel, onComplete }: {
+function AppointmentCard({ appointment, onEdit, onCancel, onComplete, onDelete }: {
   appointment: AppointmentRow;
   onEdit: (a: AppointmentRow) => void;
   onCancel: (a: AppointmentRow) => void;
   onComplete: (a: AppointmentRow) => void;
+  onDelete: (a: AppointmentRow) => void;
 }) {
   const typeLabel = APPOINTMENT_TYPES.find(t => t.value === appointment.type)?.label || appointment.type;
   const dateStr = new Date(appointment.start_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -319,12 +331,14 @@ function AppointmentCard({ appointment, onEdit, onCancel, onComplete }: {
         </div>
       </div>
       <div style={S.cardActions}>
-        {appointment.status === 'upcoming' && (
+        {appointment.status === 'upcoming' ? (
           <>
             <button onClick={() => onComplete(appointment)} style={S.completeButton}>✓</button>
             <button onClick={() => onEdit(appointment)} style={S.editButton}>✎</button>
             <button onClick={() => onCancel(appointment)} style={S.deleteButton}>✕</button>
           </>
+        ) : (
+          <button onClick={() => onDelete(appointment)} style={S.deleteButton}>🗑</button>
         )}
       </div>
     </article>

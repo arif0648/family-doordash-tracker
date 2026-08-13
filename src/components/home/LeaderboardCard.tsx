@@ -1,11 +1,11 @@
 import React from 'react';
 import { IncomeRecord } from '../../lib/financialEngine';
-import { WeeklyGoalRow } from '../../types/database';
+import { Profile } from '../../types/database';
 import { PeriodBoundary } from '../../lib/timezone';
 
 interface LeaderboardCardProps {
   income: IncomeRecord[];
-  goals: WeeklyGoalRow[];
+  profiles: Profile[];
   today: PeriodBoundary;
   week: PeriodBoundary;
   month: PeriodBoundary;
@@ -16,7 +16,7 @@ interface Winner {
   amount: number;
 }
 
-function getWinner(income: IncomeRecord[], boundary: PeriodBoundary, goals: WeeklyGoalRow[]): Winner | null {
+function getWinner(income: IncomeRecord[], boundary: PeriodBoundary, profiles: Profile[]): Winner | null {
   const map = new Map<string, number>();
   income
     .filter((r) => r.recordDate >= boundary.start && r.recordDate <= boundary.end)
@@ -27,7 +27,7 @@ function getWinner(income: IncomeRecord[], boundary: PeriodBoundary, goals: Week
   const sorted = [...map.entries()].sort((a, b) => b[1] - a[1]);
   const [userId, amount] = sorted[0] ?? [null, 0];
   if (!userId || amount === 0) return null;
-  const member = goals.find((g) => g.user_id === userId);
+  const member = profiles.find((p) => p.user_id === userId);
   const name = member?.display_name || 'Bilinmeyen';
   return { name, amount };
 }
@@ -46,12 +46,12 @@ const GRADIENTS = [
 
 const EMPTY_GRADIENT = 'linear-gradient(135deg, rgba(55,65,81,.9), rgba(31,41,55,.9))';
 
-export function LeaderboardCard({ income, goals, today, week, month }: LeaderboardCardProps) {
+export function LeaderboardCard({ income, profiles, today, week, month }: LeaderboardCardProps) {
   const boundary = { today, week, month };
   const winners = [
-    getWinner(income, boundary.today, goals),
-    getWinner(income, boundary.week, goals),
-    getWinner(income, boundary.month, goals),
+    getWinner(income, boundary.today, profiles),
+    getWinner(income, boundary.week, profiles),
+    getWinner(income, boundary.month, profiles),
   ];
 
   return (

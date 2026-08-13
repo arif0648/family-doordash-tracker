@@ -12,7 +12,7 @@ import { NavLink, useSearchParams } from 'react-router-dom';
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
 
 export function HomePage({ familyId, userId }: { familyId: string; userId: string }) {
-  const { income, expenses, fixedExpenses, creditCards, goals, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const { income, expenses, fixedExpenses, creditCards, goals, profiles, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
@@ -83,7 +83,7 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
 
       <CreditCardsDashboard cards={creditCards} />
       <WeeklyGoalCard goals={goals} userId={userId} />
-      <LeaderboardCard income={inc} goals={goals} today={{ start: todayStr, end: todayStr }} week={weekB} month={monthB} />
+      <LeaderboardCard income={inc} profiles={profiles} today={{ start: todayStr, end: todayStr }} week={weekB} month={monthB} />
 
       <NavLink to="/sabit-giderler" style={S.fixedLink}>
         <div>

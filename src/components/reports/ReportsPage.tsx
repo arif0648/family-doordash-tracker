@@ -11,7 +11,7 @@ import { MarketRatesStrip } from '../home/MarketRatesStrip';
 import { supabase } from '../../lib/supabaseClient';
 
 export function ReportsPage({ familyId }: { familyId: string }) {
-  const { vehicles, income, expenses, mileageLog, fixedExpenses, goals, loading, error, retry } =
+  const { vehicles, income, expenses, mileageLog, fixedExpenses, profiles, loading, error, retry } =
     useFamilyRealtimeData(familyId);
 
   const now = new Date();
@@ -132,7 +132,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
           <Leaderboard title="AYIN 1.'Sİ" vehicleSummaries={vehicleSummaries} hasAnyRealActivity={hasAnyData} />
 
           <h2 style={styles.sectionTitle}>Aile Sıralaması</h2>
-          <LeaderboardCard income={incomeRecords} goals={goals} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
+          <LeaderboardCard income={incomeRecords} profiles={profiles} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
 
           <h2 style={styles.sectionTitle}>Dışa Aktar (CSV)</h2>
           <div style={styles.exportRow}>
