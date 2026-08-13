@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barbin-v3';
+const CACHE_NAME = 'barbin-v4';
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -19,6 +19,13 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
+
+  const url = new URL(event.request.url);
+
+  // Never cache Supabase REST/Realtime traffic so the UI always reflects current data
+  if (url.hostname.endsWith('supabase.co')) {
+    return;
+  }
 
   // Navigation (HTML pages): always try network first, fall back to cache
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {
