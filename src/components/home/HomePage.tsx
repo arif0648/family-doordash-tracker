@@ -1,18 +1,21 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { CreditCardsDashboard } from './CreditCardsDashboard';
-import { WeeklyGoalCard } from './WeeklyGoalCard';
+import { WeeklyGoalBar } from './WeeklyGoalBar';
 import { MarketRatesMini } from './MarketRatesMini';
 import { LeaderboardCard } from './LeaderboardCard';
+import { Upcoming7Days } from './Upcoming7Days';
+import { QuickAddButton } from './QuickAddButton';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString, weekBoundary, monthBoundary } from '../../lib/timezone';
 import { NavLink, useSearchParams } from 'react-router-dom';
+import { supabase } from '../../lib/supabaseClient';
 
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
 
-export function HomePage({ familyId, userId }: { familyId: string; userId: string }) {
-  const { income, expenses, fixedExpenses, creditCards, goals, profiles, loading, error, retry } = useFamilyRealtimeData(familyId);
+export function HomePage({ familyId }: { familyId: string }) {
+  const { income, expenses, fixedExpenses, creditCards, appointments, goals, profiles, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
@@ -24,6 +27,13 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
   const exp: ExpenseRecord[] = expenses.map((r) => ({ id: r.id, category: r.category, vehicleId: r.vehicle_id, amount: Number(r.amount) || 0, recordDate: r.record_date }));
   const fixed: FixedExpenseVersion[] = fixedExpenses.map((f) => ({ id: f.id, label: f.label, monthlyAmount: f.monthly_amount, effectiveFrom: f.effective_from, effectiveTo: f.effective_to }));
 
+  const [trend, setTrend] = useState<any>(null);
+  useEffect(() => {
+    if (familyId) {
+      supabase.rpc('get_financial_trend', { p_family_id: familyId }).then(({ data }) => setTrend(data?.[0]));
+    }
+  }, [familyId]);
+
   if (loading) return <LoadingScreen label="Aile verileri yükleniyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
 
@@ -31,8 +41,9 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
   const todayStr = toPacificDateString(now);
   const weekB = weekBoundary(now);
   const monthB = monthBoundary(now);
-  const cardDebt = creditCards.reduce((s, c) => s + Number(c.current_balance || 0), 0);
   const net = summary.net;
+
+  const trendPct = trend?.net_change && trend?.previous_month_net ? (trend.net_change / Math.abs(trend.previous_month_net)) * 100 : 0;
 
   return (
     <main style={S.page}>
@@ -53,7 +64,7 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
             style={{
               ...S.period,
               border: 0,
-              background: period === p ? 'linear-gradient(135deg,rgba(168,85,247,.42),rgba(99,102,241,.28))' : 'transparent',
+              background: period === p ? 'linear-gradient(135deg,rgba(56,189,248,.42),rgba(37,99,235,.28))' : 'transparent',
               color: period === p ? '#fff' : '#898DA0',
             }}
           >
@@ -62,27 +73,37 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
         ))}
       </div>
 
-      <section style={{ ...S.netCard, borderColor: net >= 0 ? 'rgba(52,211,153,.38)' : 'rgba(127,29,29,.55)' }}>
-        <div>
+      <section style={{ ...S.netCard, borderColor: net >= 0 ? 'rgba(16,185,129,.35)' : 'rgba(244,63,94,.35)' }}>
+        <div style={S.netLeft}>
           <span style={S.cardKicker}>{net >= 0 ? 'ARTIDAYIZ' : 'EKSİDEYİZ'}</span>
-          <div style={{ ...S.net, color: net >= 0 ? '#34D399' : '#9F1239' }}>
-            {net >= 0 ? '+' : '−'}${Math.abs(net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+          <div style={{ ...S.net, color: net >= 0 ? '#10B981' : '#F43F5E' }}>
+            {net >= 0 ? '+' : '−'}${Math.abs(net).toLocaleString('en-US', { minimumFractionDigits: 0 })}
           </div>
           <div style={S.netMeta}>
-            Gelir ${summary.totalIncome.toFixed(2)} • Gider ${(summary.gas + summary.vehicleExpense + summary.market + summary.otherFamily + summary.otherVehicle).toFixed(2)} • Sabit ${summary.fixedExpense.toFixed(2)} • Kart borcu ${cardDebt.toFixed(2)}
+            Gelir ${summary.totalIncome.toLocaleString('en-US')} • Gider ${(summary.gas + summary.vehicleExpense + summary.market + summary.otherFamily + summary.otherVehicle).toLocaleString('en-US')} • Sabit ${summary.fixedExpense.toLocaleString('en-US')}
           </div>
         </div>
-        <div style={S.orb}>{net >= 0 ? '↗' : '↘'}</div>
+        <div style={S.netRight}>
+          <span style={S.trendKicker}>AYLIK TREND</span>
+          <div style={{ ...S.trendValue, color: trendPct >= 0 ? '#10B981' : '#F43F5E' }}>
+            {trendPct >= 0 ? '↗' : '↘'} {Math.abs(trendPct).toFixed(0)}%
+          </div>
+          <div style={S.trendMeta}>
+            Geçen ay ${(trend?.previous_month_net || 0).toLocaleString('en-US')}
+          </div>
+        </div>
       </section>
 
-      <div style={S.actions}>
-        <NavLink to="/kazanc" style={S.incomeBtn}>＋ Kazanç</NavLink>
-        <NavLink to="/gider" style={S.expenseBtn}>− Gider</NavLink>
-      </div>
-
-      <CreditCardsDashboard cards={creditCards} />
-      <WeeklyGoalCard goals={goals} userId={userId} />
       <LeaderboardCard income={inc} profiles={profiles} today={{ start: todayStr, end: todayStr }} week={weekB} month={monthB} />
+
+      <Upcoming7Days
+        creditCards={creditCards}
+        fixedExpenses={fixedExpenses}
+        appointments={appointments}
+      />
+
+      <CreditCardsDashboard cards={creditCards} maxCards={2} />
+      <WeeklyGoalBar goals={goals} />
 
       <NavLink to="/sabit-giderler" style={S.fixedLink}>
         <div>
@@ -91,25 +112,28 @@ export function HomePage({ familyId, userId }: { familyId: string; userId: strin
         </div>
         <b>›</b>
       </NavLink>
+
+      <QuickAddButton />
     </main>
   );
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', color: '#fff' },
+  page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', color: '#E8EAF2', paddingBottom: 'calc(140px + env(safe-area-inset-bottom))' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 14 },
-  h1: { fontSize: 30, letterSpacing: 2, margin: '8px 0 6px', textAlign: 'center', textTransform: 'uppercase', fontWeight: 900, color: '#C4B5FD', textShadow: '0 -1px 0 #7C3AED, 0 1px 0 #5B21B6, 0 2px 0 #4C1D95, 0 3px 0 #3730A3, 0 5px 10px rgba(0,0,0,.4)' },
-  sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  live: { fontSize: 9, letterSpacing: 1, fontWeight: 900, color: '#34D399', padding: '8px 10px', border: '1px solid rgba(52,211,153,.2)', borderRadius: 999, background: 'rgba(52,211,153,.07)' },
-  periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, padding: 5, borderRadius: 17, background: 'rgba(18,14,39,.86)', border: '1px solid rgba(168,85,247,.16)', marginBottom: 10 },
+  h1: { fontSize: 26, letterSpacing: 2, margin: '8px 0 6px', textAlign: 'center', textTransform: 'uppercase', fontWeight: 900, color: '#E8EAF2' },
+  sub: { fontSize: 12, color: '#8A90A6', margin: 0 },
+  live: { fontSize: 9, letterSpacing: 1, fontWeight: 900, color: '#10B981', padding: '8px 10px', border: '1px solid rgba(16,185,129,.2)', borderRadius: 999, background: 'rgba(16,185,129,.07)' },
+  periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, padding: 5, borderRadius: 17, background: '#141926', border: '1px solid rgba(255,255,255,.07)', marginBottom: 10 },
   period: { padding: '12px 4px', textAlign: 'center', borderRadius: 12, color: '#898DA0', textDecoration: 'none', fontSize: 12, fontWeight: 800 },
-  netCard: { padding: 24, borderRadius: 24, background: 'radial-gradient(circle at 100% 0%,rgba(168,85,247,.18),transparent 45%),linear-gradient(145deg,rgba(25,18,56,.96),rgba(7,9,21,.98))', border: '1px solid', boxShadow: '0 24px 65px rgba(0,0,0,.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  cardKicker: { fontSize: 11, letterSpacing: 2, color: '#8F93A8', fontWeight: 900 },
-  net: { fontSize: 52, fontWeight: 900, letterSpacing: -2, margin: '6px 0' },
-  netMeta: { fontSize: 12, color: '#777C91', maxWidth: 360, lineHeight: 1.5 },
-  orb: { width: 64, height: 64, borderRadius: 22, display: 'grid', placeItems: 'center', fontSize: 28, color: '#C084FC', background: 'rgba(168,85,247,.09)', border: '1px solid rgba(168,85,247,.24)', boxShadow: '0 0 40px rgba(168,85,247,.16)' },
-  actions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 },
-  incomeBtn: { padding: '13px 4px', borderRadius: 14, textAlign: 'center', textDecoration: 'none', color: '#04120D', fontWeight: 900, fontSize: 14, background: 'linear-gradient(135deg,#34D399,#10B981)' },
-  expenseBtn: { padding: '13px 4px', borderRadius: 14, textAlign: 'center', textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: 14, background: 'linear-gradient(135deg,#F472B6,#EC4899)' },
-  fixedLink: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 16, background: 'rgba(18,14,39,.86)', border: '1px solid rgba(168,85,247,.16)', color: '#D8B4FE', textDecoration: 'none', marginBottom: 10 },
+  netCard: { padding: 20, borderRadius: 24, background: '#141926', border: '1px solid', boxShadow: '0 24px 65px rgba(0,0,0,.4)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, gap: 14 },
+  netLeft: { flex: 1, minWidth: 0 },
+  netRight: { textAlign: 'right', minWidth: 90 },
+  cardKicker: { fontSize: 10, letterSpacing: 2, color: '#8A90A6', fontWeight: 900 },
+  net: { fontSize: 38, fontWeight: 900, letterSpacing: -1, margin: '6px 0' },
+  netMeta: { fontSize: 11, color: '#8A90A6', lineHeight: 1.4 },
+  trendKicker: { fontSize: 9, letterSpacing: 1.5, color: '#8A90A6', fontWeight: 900 },
+  trendValue: { fontSize: 22, fontWeight: 900, margin: '4px 0' },
+  trendMeta: { fontSize: 10, color: '#8A90A6' },
+  fixedLink: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: 14, borderRadius: 16, background: '#141926', border: '1px solid rgba(255,255,255,.07)', color: '#E8EAF2', textDecoration: 'none', marginBottom: 10 },
 };

@@ -5,6 +5,7 @@ import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 
 interface CreditCardsDashboardProps {
   cards: CreditCardRow[];
+  maxCards?: number;
 }
 
 function formatDate(date: string | null): string {
@@ -13,10 +14,10 @@ function formatDate(date: string | null): string {
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' });
 }
 
-export function CreditCardsDashboard({ cards }: CreditCardsDashboardProps) {
+export function CreditCardsDashboard({ cards, maxCards }: CreditCardsDashboardProps) {
   if (cards.length === 0) return null;
 
-  const sorted = [...cards]
+  const sortedAll = [...cards]
     .filter((c) => c.is_active !== false)
     .sort((a, b) => {
       const ua = computeCreditCardStatus(a).order;
@@ -26,6 +27,7 @@ export function CreditCardsDashboard({ cards }: CreditCardsDashboardProps) {
       const db = b.due_date ?? '9999-12-31';
       return da.localeCompare(db);
     });
+  const sorted = maxCards ? sortedAll.slice(0, maxCards) : sortedAll;
 
   const total = sorted.reduce((s, c) => s + Number(c.current_balance || 0), 0);
   const totalLimit = sorted.reduce((s, c) => s + Number(c.credit_limit || 0), 0);
