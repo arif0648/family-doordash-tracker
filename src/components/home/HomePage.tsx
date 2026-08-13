@@ -1,16 +1,15 @@
 import React, { useMemo } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
-import { VehicleCard } from './VehicleCard';
 import { MarketRatesMini } from './MarketRatesMini';
-import { computeFamilySummary, computeVehicleSummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
+import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString } from '../../lib/timezone';
 import { NavLink, useSearchParams } from 'react-router-dom';
 
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
 
 export function HomePage({ familyId }: { familyId: string }) {
-  const { income, expenses, fixedExpenses, mileageLog, vehicles, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const { income, expenses, fixedExpenses, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
@@ -27,24 +26,6 @@ export function HomePage({ familyId }: { familyId: string }) {
 
   const summary = computeFamilySummary({ period, boundary, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
   const net = summary.net;
-
-  const vehicleSummaries = vehicles.map((v) => {
-    const miles = mileageLog
-      .filter((m) => m.vehicle_id === v.id && m.record_date >= boundary.start && m.record_date <= boundary.end)
-      .reduce((s, m) => s + Number(m.miles_driven), 0);
-    return computeVehicleSummary({
-      vehicle: { ...v, shortName: v.short_name },
-      period,
-      boundary,
-      income: inc,
-      expenses: exp,
-      fixedExpenseVersions: fixed,
-      monthAnchorDate: monthAnchor,
-      totalVehicleCount: Math.max(vehicles.length, 1),
-      milesInPeriod: miles,
-    });
-  });
-
   const isPositive = net >= 0;
 
   return (
@@ -95,15 +76,8 @@ export function HomePage({ familyId }: { familyId: string }) {
         </NavLink>
       </div>
 
-      <h2 style={S.sectionTitle}>Araç Performansı</h2>
-      <div style={S.vehicleGrid}>
-        {vehicleSummaries.map((s, i) => (
-          <VehicleCard key={s.vehicleId} vehicle={vehicles[i]} summary={s} />
-        ))}
-      </div>
-
       <NavLink to="/sabit-giderler" style={S.link}>Aile Sabit Giderleri (Aylık) ›</NavLink>
-      <NavLink to="/araclar" style={S.link}>Araç Karşılaştırması ›</NavLink>
+      <NavLink to="/araclar" style={S.link}>Araç Performansı ve Karşılaştırma ›</NavLink>
     </main>
   );
 }
@@ -122,6 +96,5 @@ const S: Record<string, React.CSSProperties> = {
   statValue: { fontSize: 20, fontWeight: 900 },
   actions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 },
   btn: { padding: '16px 4px', borderRadius: 16, textAlign: 'center', textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: 14, boxShadow: '0 8px 24px rgba(0,0,0,.25)' },
-  sectionTitle: { fontSize: 17, fontWeight: 900, margin: '0 0 12px' },
-  vehicleGrid: { display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 14 },
+  link: { display: 'block', padding: 16, borderRadius: 16, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.07)', color: '#E8EAF2', textDecoration: 'none', fontSize: 14, fontWeight: 800, marginBottom: 10 },
 };
