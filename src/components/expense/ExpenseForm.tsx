@@ -4,6 +4,7 @@ import { Vehicle, ExpenseCategory } from '../../types/database';
 import { playExpenseSound, speak } from '../../lib/sound';
 import { translateError } from '../../lib/errorMessage';
 import { toPacificDateString } from '../../lib/timezone';
+import { MAX_AMOUNT } from '../../lib/format';
 
 interface Props {
   familyId: string;
@@ -36,6 +37,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
 
     const amountNum = parseFloat(amount.replace(',', '.'));
     if (isNaN(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir tutar girin (örn. 12.50).');
+    if (amountNum > MAX_AMOUNT) return setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     if (requiresVehicle && !vehicleId) return setError('Araç seçimi zorunludur.');
     
 

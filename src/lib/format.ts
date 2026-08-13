@@ -1,3 +1,5 @@
+export const MAX_AMOUNT = 1_000_000;
+
 export function formatMoney(amount: number, showDecimals = false): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

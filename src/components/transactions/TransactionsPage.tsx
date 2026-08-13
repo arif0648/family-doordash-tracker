@@ -4,6 +4,7 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
 import { IncomeRow, ExpenseRow } from '../../types/database';
+import { translateError } from '../../lib/errorMessage';
 
 interface TransactionRow {
   kind: 'income' | 'expense';
@@ -25,6 +26,8 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
   const [vehicle, setVehicle] = useState('all');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
+  const [editing, setEditing] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState('');
   const navigate = useNavigate();
 
   if (loading) return <LoadingScreen label="İşlemler yükleniyor…" />;
@@ -78,15 +81,22 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
     navigate('/kazanc/duzenle', { state: { editingIncome: row.raw as IncomeRow } });
   }
 
-  async function editExpense(row: TransactionRow) {
-    const newAmount = window.prompt('Yeni tutar ($)', String(row.amount));
-    if (newAmount === null) return;
-    const n = Number(newAmount);
-    if (!Number.isFinite(n) || n < 0) return setNote('Geçerli bir tutar girin.');
+  function editExpense(row: TransactionRow) {
+    setEditing(row.id);
+    setEditValue(String(row.amount));
+  }
 
+  async function saveExpense(row: TransactionRow) {
+    const n = Number(editValue);
+    if (!Number.isFinite(n) || n < 0) return setNote('Geçerli bir tutar girin.');
+    if (n > 1_000_000) return setNote('Tutar çok yüksek.');
     const { error } = await supabase.from('expenses').update({ amount: n }).eq('id', row.id);
-    setNote(error ? error.message : 'Kayıt güncellendi.');
-    if (!error) retry();
+    setNote(error ? translateError(error.message) : 'Kayıt güncellendi.');
+    if (!error) {
+      setEditing(null);
+      setEditValue('');
+      retry();
+    }
   }
 
   return (
@@ -137,8 +147,18 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
                     {r.kind === 'income' ? '+' : '−'}${r.amount.toLocaleString('en-US')}
                   </div>
                   <div style={S.actions}>
-                    <button onClick={() => r.kind === 'income' ? editIncome(r) : editExpense(r)} style={S.editBtn}>Düzenle</button>
-                    <button onClick={() => del(r)} style={S.deleteBtn}>Sil</button>
+                    {editing === r.id ? (
+                      <>
+                        <input style={S.editInput} type="text" inputMode="decimal" value={editValue} onChange={e => setEditValue(e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'))} />
+                        <button onClick={() => saveExpense(r)} style={S.editBtn}>Kaydet</button>
+                        <button onClick={() => setEditing(null)} style={S.deleteBtn}>İptal</button>
+                      </>
+                    ) : (
+                      <>
+                        <button onClick={() => r.kind === 'income' ? editIncome(r) : editExpense(r)} style={S.editBtn}>Düzenle</button>
+                        <button onClick={() => del(r)} style={S.deleteBtn}>Sil</button>
+                      </>
+                    )}
                   </div>
                 </article>
               ))}
@@ -168,6 +188,7 @@ const S: Record<string, React.CSSProperties> = {
   rowSub: { fontSize: 11, color: '#7F8499', marginTop: 2 },
   amount: { fontSize: 15, fontWeight: 700, minWidth: 80, textAlign: 'right' },
   actions: { display: 'flex', gap: 6 },
+  editInput: { width: 70, padding: 8, borderRadius: 8, border: '1px solid rgba(148,163,184,.2)', background: '#141926', color: '#fff', fontSize: 13, textAlign: 'right' },
   editBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(168,85,247,.14)', color: '#D8B4FE', fontWeight: 800, fontSize: 11 },
   deleteBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontWeight: 800, fontSize: 11 },
 };

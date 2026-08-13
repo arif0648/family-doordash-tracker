@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { CreditCardRow } from '../../types/database';
 import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 import { translateError } from '../../lib/errorMessage';
+import { MAX_AMOUNT } from '../../lib/format';
 
 export function CreditCardsPage({ familyId }: { familyId: string }) {
   const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
@@ -78,6 +79,10 @@ function CardForm({ familyId, existingCards, onSaved }: { familyId: string; exis
     const normalized = trimmed.toLowerCase().replace(/\s+/g, ' ');
     const duplicate = existingCards.find(c => c.card_name.toLowerCase().replace(/\s+/g, ' ') === normalized);
     if (duplicate && !confirm(`${trimmed} isminde bir kart zaten var. Yine de eklensin mi?`)) return;
+    const b = Number(balance) || 0;
+    const l = limit ? Number(limit) : null;
+    const m = minimum ? Number(minimum) : null;
+    if (b > MAX_AMOUNT || (l && l > MAX_AMOUNT) || (m && m > MAX_AMOUNT)) return setErr(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     const user = (await supabase.auth.getUser()).data.user;
     if (!user) return setErr('Oturum yok.');
     setSave(true);
@@ -85,10 +90,10 @@ function CardForm({ familyId, existingCards, onSaved }: { familyId: string; exis
       family_id: familyId,
       user_id: user.id,
       card_name: trimmed,
-      current_balance: Number(balance) || 0,
+      current_balance: b,
       due_date: due || null,
-      credit_limit: limit ? Number(limit) : null,
-      minimum_payment: minimum ? Number(minimum) : null,
+      credit_limit: l,
+      minimum_payment: m,
     });
     setSave(false);
     if (error) return setErr(translateError(error.message));
@@ -179,6 +184,7 @@ function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: stri
     setErr('');
     const amountNum = Number(amount);
     if (!Number.isFinite(amountNum) || amountNum <= 0) return setErr('Geçerli bir tutar girin.');
+    if (amountNum > MAX_AMOUNT) return setErr(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     setSave(true);
     const { error } = await supabase.rpc('record_credit_card_payment', {
       p_credit_card_id: cardId,

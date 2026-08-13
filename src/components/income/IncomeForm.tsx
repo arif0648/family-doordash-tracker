@@ -4,6 +4,7 @@ import { Vehicle, MileageLogRow, IncomeRow } from '../../types/database';
 import { validateNewClosingMileage, MileageEntry } from '../../lib/mileageEngine';
 import { playIncomeSound, speak } from '../../lib/sound';
 import { toPacificDateString } from '../../lib/timezone';
+import { MAX_AMOUNT } from '../../lib/format';
 
 interface Props {
   familyId: string;
@@ -74,6 +75,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     const mileageNum = parseFloat(closingMileage.replace(',', '.'));
     if (!vehicleId) return setError('Araç seçimi zorunludur.');
     if (!Number.isFinite(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir kazanç tutarı girin.');
+    if (amountNum > MAX_AMOUNT) return setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     if (!Number.isFinite(mileageNum) || closingMileage.trim() === '' || mileageNum < 0) return setError('Kapanış mili zorunludur. Aracın gösterge kilometresini girin (örn. 94150).');
     setSaving(true);
 

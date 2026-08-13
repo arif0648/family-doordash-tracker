@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { translateError } from '../../lib/errorMessage';
+import { MAX_AMOUNT } from '../../lib/format';
 import { FixedExpenseRow } from '../../types/database';
 import { toPacificDateString } from '../../lib/timezone';
 
@@ -18,6 +19,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     e.preventDefault(); setError(null);
     const n=Number(amount);
     if(!label.trim()||!Number.isFinite(n)||n<0){setError('Gider adı ve geçerli tutar girin.');return;}
+    if(n > MAX_AMOUNT){setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);return;}
     const user=(await supabase.auth.getUser()).data.user;
     if(!user){setError('Oturum bulunamadı.');return;}
     setSaving(true);
@@ -29,6 +31,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
 
   async function save(row:FixedExpenseRow, next:string){
     const n=Number(next); if(!Number.isFinite(n)||n<0){setError('Geçerli bir tutar girin.');return;}
+    if(n > MAX_AMOUNT){setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);return;}
     if(n === Number(row.monthly_amount)) return;
     const {error:saveError}=await supabase.from('fixed_expenses').update({monthly_amount:n}).eq('id',row.id).eq('family_id',familyId);
     if(saveError){setError(translateError(saveError.message));} else {setError(null); onChanged();}
