@@ -324,13 +324,14 @@ export function computeVehicleIncomeLeaderboard(args: {
   });
 
   const vehicleNameMap = Object.fromEntries(
-    vehicles.map((v) => [v.id, v.short_name ?? (v as any).shortName ?? v.id])
+    vehicles.map((v) => [v.id, v.short_name ?? (v as any).shortName ?? 'Araç'])
   );
 
   const ranking = [...vehicleMap.entries()]
+    .filter(([vehicleId]) => Boolean(vehicleNameMap[vehicleId]))
     .map(([vehicleId, amount]) => ({
       vehicleId,
-      shortName: vehicleNameMap[vehicleId] || vehicleId,
+      shortName: vehicleNameMap[vehicleId],
       amount: roundCurrency(amount),
     }))
     .sort((a, b) => b.amount - a.amount);
@@ -339,6 +340,72 @@ export function computeVehicleIncomeLeaderboard(args: {
 
   const [winner, second] = ranking;
   return { hasData: true, winner, second: second ?? null, ranking };
+}
+
+
+export interface VehicleGoalProgressEntry {
+  vehicleId: string;
+  shortName: string;
+  amount: number;
+  target: number;
+  remaining: number;
+  percent: number;
+  ownerUserId: string | null;
+}
+
+/**
+ * Builds per-vehicle weekly goal progress without adding a new DB mapping.
+ * A vehicle is associated with the family member who has historically earned
+ * the most income with that vehicle. That member's weekly goal becomes the
+ * vehicle target. If no owner can be inferred yet, the family-average member
+ * goal is used as a safe fallback (normally $1,400).
+ */
+export function computeVehicleGoalProgress(args: {
+  income: IncomeRecord[];
+  vehicles: Array<{ id: string; short_name?: string; shortName?: string }>;
+  goals: Array<{ user_id: string; weekly_goal: number }>;
+  boundary: PeriodBoundary;
+}): VehicleGoalProgressEntry[] {
+  const { income, vehicles, goals, boundary } = args;
+  const goalMap = new Map(goals.map((g) => [g.user_id, Number(g.weekly_goal) || 0]));
+  const positiveGoals = goals.map((g) => Number(g.weekly_goal) || 0).filter((v) => v > 0);
+  const fallbackTarget = positiveGoals.length
+    ? roundCurrency(positiveGoals.reduce((a, b) => a + b, 0) / positiveGoals.length)
+    : 0;
+
+  const ownership = new Map<string, Map<string, number>>();
+  for (const row of income) {
+    if (!row.vehicleId || !row.userId) continue;
+    const byUser = ownership.get(row.vehicleId) ?? new Map<string, number>();
+    byUser.set(row.userId, (byUser.get(row.userId) ?? 0) + row.amount);
+    ownership.set(row.vehicleId, byUser);
+  }
+
+  const weekIncome = new Map<string, number>();
+  for (const row of filterIncomeByPeriod(income, boundary)) {
+    if (!row.vehicleId) continue;
+    weekIncome.set(row.vehicleId, (weekIncome.get(row.vehicleId) ?? 0) + row.amount);
+  }
+
+  return vehicles.map((vehicle) => {
+    const byUser = ownership.get(vehicle.id);
+    const ownerUserId = byUser
+      ? [...byUser.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+      : null;
+    const target = ownerUserId ? (goalMap.get(ownerUserId) ?? fallbackTarget) : fallbackTarget;
+    const amount = roundCurrency(weekIncome.get(vehicle.id) ?? 0);
+    const remaining = roundCurrency(Math.max(target - amount, 0));
+    const percent = target > 0 ? Math.min(Math.round((amount / target) * 100), 100) : 0;
+    return {
+      vehicleId: vehicle.id,
+      shortName: vehicle.short_name ?? vehicle.shortName ?? 'Araç',
+      amount,
+      target: roundCurrency(target),
+      remaining,
+      percent,
+      ownerUserId,
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------

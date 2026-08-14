@@ -15,6 +15,7 @@ import {
   computeVehicleSummary,
   computeLeaderboard,
   computeVehicleIncomeLeaderboard,
+  computeVehicleGoalProgress,
   totalFixedExpenseAsOf,
   IncomeRecord,
   ExpenseRecord,
@@ -274,5 +275,40 @@ describe('Leaderboard — veri yokken sahte kazanan yok', () => {
   it('hasAnyRealActivity=false -> hasData=false', () => {
     const result = computeLeaderboard({ vehicleSummaries: [], hasAnyRealActivity: false });
     expect(result.hasData).toBe(false);
+  });
+});
+
+
+describe('Vehicle weekly goal progress — aile hedefi + araç hedefleri', () => {
+  const goals = [
+    { user_id: 'u1', weekly_goal: 1400 },
+    { user_id: 'u2', weekly_goal: 1400 },
+    { user_id: 'u3', weekly_goal: 1400 },
+  ];
+  const vehicles = [
+    { id: 'kia', shortName: 'Kia Sportage' },
+    { id: 'toyota', shortName: 'Toyota Corolla' },
+    { id: 'honda', shortName: 'Honda Accord' },
+  ];
+
+  it('aracı geçmiş gelirde en çok kullanan üyenin hedefini araç hedefi yapar', () => {
+    const income: IncomeRecord[] = [
+      { id: 'old1', userId: 'u1', vehicleId: 'kia', amount: 500, recordDate: '2026-07-20' },
+      { id: 'old2', userId: 'u2', vehicleId: 'toyota', amount: 500, recordDate: '2026-07-20' },
+      { id: 'old3', userId: 'u3', vehicleId: 'honda', amount: 500, recordDate: '2026-07-20' },
+      { id: 'w1', userId: 'u1', vehicleId: 'kia', amount: 700, recordDate: '2026-08-05' },
+      { id: 'w2', userId: 'u2', vehicleId: 'toyota', amount: 350, recordDate: '2026-08-05' },
+    ];
+    const rows = computeVehicleGoalProgress({ income, vehicles, goals, boundary: { start: '2026-08-03', end: '2026-08-09' } });
+    expect(rows.find((r) => r.vehicleId === 'kia')?.target).toBe(1400);
+    expect(rows.find((r) => r.vehicleId === 'kia')?.percent).toBe(50);
+    expect(rows.find((r) => r.vehicleId === 'toyota')?.percent).toBe(25);
+    expect(rows.find((r) => r.vehicleId === 'honda')?.percent).toBe(0);
+  });
+
+  it('henüz araç-sürücü geçmişi yoksa ailedeki ortalama kişi hedefini kullanır', () => {
+    const rows = computeVehicleGoalProgress({ income: [], vehicles, goals, boundary: { start: '2026-08-03', end: '2026-08-09' } });
+    expect(rows.every((r) => r.target === 1400)).toBe(true);
+    expect(goals.reduce((s, g) => s + g.weekly_goal, 0)).toBe(4200);
   });
 });

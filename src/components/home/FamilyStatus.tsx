@@ -18,8 +18,8 @@ export function FamilyStatus({ net }: FamilyStatusProps) {
       </div>
       <p style={S.text}>
         {positive
-          ? `Bu dönemde gelirimiz giderlerimizin üzerinde (${formatMoney(abs)}).`
-          : `Bu dönemde giderlerimiz geliri ${formatMoney(abs)} aşıyor.`}
+          ? `Bu ay takip edilen gelirler giderlerin üzerinde (${formatMoney(abs)}).`
+          : `Bu ay takip edilen giderler geliri ${formatMoney(abs)} aşıyor.`}
       </p>
     </section>
   );

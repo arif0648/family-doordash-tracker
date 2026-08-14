@@ -42,14 +42,14 @@ describe('ErrorBoundary', () => {
 describe('WeeklyGoalCard', () => {
   it('weekly goal 0 veya null ise divide-by-zero yapmaz', () => {
     const goals = [{ user_id: 'u1', display_name: 'Ali', weekly_goal: 0, week_income: 0, remaining: 0, percent: 0 }];
-    render(<WeeklyGoalCard goals={goals} userId="u1" />);
+    render(<WeeklyGoalCard goals={goals} income={[]} vehicles={[]} now={new Date('2026-08-05T12:00:00-07:00')} />);
     expect(screen.getByText(/%0 Tamamlandı/i)).toBeInTheDocument();
     expect(screen.getByText(/\$0\.00 kaldı/i)).toBeInTheDocument();
   });
 
   it('hedef %50 tamamlandığında gösterir', () => {
     const goals = [{ user_id: 'u1', display_name: 'Ali', weekly_goal: 1400, week_income: 700, remaining: 700, percent: 50 }];
-    render(<WeeklyGoalCard goals={goals} userId="u1" />);
+    render(<WeeklyGoalCard goals={goals} income={[]} vehicles={[]} now={new Date('2026-08-05T12:00:00-07:00')} />);
     expect(screen.getByText(/%50 Tamamlandı/i)).toBeInTheDocument();
   });
 });

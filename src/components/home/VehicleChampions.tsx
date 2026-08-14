@@ -6,11 +6,8 @@ import { formatMoney } from '../../lib/format';
 
 type ChampionPeriod = 'today' | 'week' | 'month';
 
-const labels: Record<ChampionPeriod, string> = {
-  today: 'Gün',
-  week: 'Hafta',
-  month: 'Ay',
-};
+const labels: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
+const emptyLabels: Record<ChampionPeriod, string> = { today: 'Günün', week: 'Haftanın', month: 'Ayın' };
 
 interface VehicleChampionsProps {
   income: IncomeRecord[];
@@ -72,7 +69,7 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
       ) : (
         <div style={S.empty}>
           <span style={S.emptyIcon}>🚀</span>
-          <span>{labels[period]}ün lideri henüz belli değil.</span>
+          <span>{emptyLabels[period]} lideri henüz belli değil.</span>
           <span>İlk kazançla yarış başlıyor.</span>
         </div>
       )}

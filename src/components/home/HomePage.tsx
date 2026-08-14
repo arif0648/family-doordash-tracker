@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { WorkTimeCard } from './WorkTimeCard';
@@ -7,10 +7,9 @@ import { Upcoming7Days } from './Upcoming7Days';
 import { FixedExpensesSummary } from './FixedExpensesSummary';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
 import { VehicleChampions } from './VehicleChampions';
-import { VehicleContributions } from './VehicleContributions';
 import { FamilyStatus } from './FamilyStatus';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
-import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary } from '../../lib/timezone';
+import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary, monthBoundary } from '../../lib/timezone';
 import { formatMoney } from '../../lib/format';
 import { NavLink, useSearchParams } from 'react-router-dom';
 
@@ -18,42 +17,28 @@ const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', mont
 
 interface HomePageProps {
   familyId: string;
-  userId: string;
 }
 
-export function HomePage({ familyId, userId }: HomePageProps) {
+export function HomePage({ familyId }: HomePageProps) {
   const { income, expenses, fixedExpenses, vehicles, creditCards, appointments, workSessions, goals, loading, error, retry } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
-  const now = useMemo(() => new Date(), []);
+  const [now, setNow] = useState(() => new Date());
   const boundary = useMemo(() => boundaryForPeriod(period, now), [period, now]);
   const monthAnchor = toPacificDateString(now);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const inc: IncomeRecord[] = income.map((r) => ({ id: r.id, userId: r.user_id, vehicleId: r.vehicle_id, amount: Number(r.amount) || 0, recordDate: r.record_date }));
   const exp: ExpenseRecord[] = expenses.map((r) => ({ id: r.id, category: r.category, vehicleId: r.vehicle_id, amount: Number(r.amount) || 0, recordDate: r.record_date }));
   const fixed: FixedExpenseVersion[] = fixedExpenses.map((f) => ({ id: f.id, label: f.label, monthlyAmount: f.monthly_amount, effectiveFrom: f.effective_from, effectiveTo: f.effective_to }));
 
-  if (loading) return <LoadingScreen label="Aile verileri yükleniyor…" />;
-  if (error) return <ErrorScreen message={error} onRetry={retry} />;
-
-  const selectedSummary = computeFamilySummary({ period, boundary, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
-
-  const todayB = todayBoundary(now);
-  const weekB = weekBoundary(now);
-  const todaySummary = computeFamilySummary({ period: 'today', boundary: todayB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
-  const weekSummary = computeFamilySummary({ period: 'week', boundary: weekB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
-
-  const todayLabel = new Date().toLocaleDateString('tr-TR', {
-    timeZone: 'America/Los_Angeles',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-    weekday: 'long',
-  });
-
   useEffect(() => {
-    if (params.get('focus') !== 'work') return;
+    if (loading || params.get('focus') !== 'work') return;
     const el = document.getElementById('work-card');
     if (!el) return;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -62,13 +47,36 @@ export function HomePage({ familyId, userId }: HomePageProps) {
       el.style.outline = '2px solid var(--accent)';
       el.style.outlineOffset = '4px';
       el.style.borderRadius = 'var(--radius-card)';
+      const next = new URLSearchParams(params);
+      next.delete('focus');
+      setParams(next, { replace: true });
       setTimeout(() => {
         el.style.outline = '';
         el.style.outlineOffset = '';
         el.style.borderRadius = '';
       }, 1500);
     });
-  }, [params]);
+  }, [loading, params, setParams]);
+
+  if (loading) return <LoadingScreen label="Aile verileri yükleniyor…" />;
+  if (error) return <ErrorScreen message={error} onRetry={retry} />;
+
+  const selectedSummary = computeFamilySummary({ period, boundary, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
+
+  const todayB = todayBoundary(now);
+  const weekB = weekBoundary(now);
+  const monthB = monthBoundary(now);
+  const todaySummary = computeFamilySummary({ period: 'today', boundary: todayB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
+  const weekSummary = computeFamilySummary({ period: 'week', boundary: weekB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
+  const monthSummary = computeFamilySummary({ period: 'month', boundary: monthB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
+
+  const todayLabel = now.toLocaleDateString('tr-TR', {
+    timeZone: 'America/Los_Angeles',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+    weekday: 'long',
+  });
 
   const net = selectedSummary.net;
   const isPositive = net >= 0;
@@ -115,11 +123,10 @@ export function HomePage({ familyId, userId }: HomePageProps) {
         </div>
       </section>
 
-      <FamilyStatus net={net} />
+      <FamilyStatus net={monthSummary.net} />
 
-      <WeeklyGoalCard goals={goals} userId={userId} />
+      <WeeklyGoalCard goals={goals} income={inc} vehicles={vehicles} now={now} />
 
-      <VehicleContributions income={inc} vehicles={vehicles} now={now} />
 
       <VehicleChampions income={inc} vehicles={vehicles} now={now} />
 
