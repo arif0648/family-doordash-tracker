@@ -79,5 +79,5 @@ const S: Record<string, React.CSSProperties> = {
   meta: { flex: 1, display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 },
   right: { display: 'flex', alignItems: 'center', gap: 8 },
   payBtn: { border: 0, borderRadius: 8, padding: '4px 8px', background: 'rgba(52,211,153,.15)', color: '#34D399', fontWeight: 800, fontSize: 11 },
-  link: { display: 'block', textAlign: 'right', fontSize: 11, color: '#C084FC', textDecoration: 'none', marginTop: 8 },
+  link: { display: 'block', textAlign: 'right', fontSize: 11, color: 'var(--accent)', textDecoration: 'none', marginTop: 8 },
 };

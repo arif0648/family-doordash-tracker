@@ -84,15 +84,22 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         supabase.from('work_sessions').select('*').eq('family_id', familyId).order('started_at', { ascending: false }).limit(100),
         supabase.from('family_member_goals').select('user_id,vehicle_id,weekly_goal').eq('family_id', familyId),
       ]);
-      const err = v.error || i.error || e.error || m.error || f.error || c.error || a.error || n.error || ms.error || ws.error || goalRows.error;
-      if (err) throw err;
+      // Finance data is the critical core. Optional dashboard modules must not
+      // blank Home, Reports and Transactions when one newer table is missing,
+      // temporarily unavailable or has a narrower RLS policy.
+      const coreError = v.error || i.error || e.error || m.error || f.error || c.error;
+      if (coreError) throw coreError;
+      if (import.meta.env.DEV) {
+        const optionalErrors = [a.error, n.error, ms.error, ws.error, goalRows.error].filter(Boolean);
+        if (optionalErrors.length) console.warn('[family data] optional modules unavailable', optionalErrors);
+      }
       const income = i.data ?? [];
       const expenses = e.data ?? [];
       const userIds = [...new Set([...income, ...expenses].map((r) => r.user_id).filter(Boolean))];
       const p = userIds.length
         ? await supabase.from('profiles').select('*').in('user_id', userIds)
         : { data: [] as Profile[], error: null };
-      if (p.error) throw p.error;
+      if (p.error && import.meta.env.DEV) console.warn('[family data] profiles unavailable', p.error);
       if (!mounted.current) return;
       const normalizedVehicles = (v.data ?? []).map(normalizeVehicle);
       setState((previous) => ({
@@ -102,12 +109,12 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         mileageLog: m.data ?? [],
         fixedExpenses: f.data ?? [],
         creditCards: c.data ?? [],
-        appointments: a.data ?? [],
-        notifications: n.data ?? [],
-        monthlySummaries: ms.data ?? [],
-        workSessions: ws.data ?? [],
-        profiles: p.data ?? [],
-        goals: (goalRows.data ?? []).map((g) => ({ ...g, display_name: '', week_income: 0, remaining: 0, percent: 0 })) as WeeklyGoalRow[],
+        appointments: a.error ? previous.appointments : (a.data ?? []),
+        notifications: n.error ? previous.notifications : (n.data ?? []),
+        monthlySummaries: ms.error ? previous.monthlySummaries : (ms.data ?? []),
+        workSessions: ws.error ? previous.workSessions : (ws.data ?? []),
+        profiles: p.error ? previous.profiles : (p.data ?? []),
+        goals: goalRows.error ? previous.goals : (goalRows.data ?? []).map((g) => ({ ...g, display_name: '', week_income: 0, remaining: 0, percent: 0 })) as WeeklyGoalRow[],
         loading: false,
         error: null,
         realtimeStatus: previous.realtimeStatus,
@@ -119,7 +126,9 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         typeof err === 'string' ? err :
         (err as any)?.message ? (err as any).message :
         'Bilinmeyen hata';
-      setState((s) => ({ ...s, loading: false, error: message }));
+      setState((s) => background
+        ? { ...s, loading: false, realtimeStatus: 'offline' }
+        : { ...s, loading: false, error: message });
     }
   }, [familyId]);
 

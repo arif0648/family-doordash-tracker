@@ -13,6 +13,7 @@ const OUNCE_GRAMS = 31.1034768;
 const QUARTER_FINE_GOLD_GRAMS = 1.608;
 
 const FETCH_TIMEOUT = 10_000;
+const MARKET_CACHE_KEY = 'barbin-market-rates-v3';
 
 async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
   const controller = new AbortController();
@@ -69,6 +70,10 @@ async function fetchGoldUsd(): Promise<number | null> {
       url: 'https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd',
       parse: (d: any) => Number(d?.['pax-gold']?.usd),
     },
+    {
+      url: 'https://api.gold-api.com/price/XAU',
+      parse: (d: any) => Number(d?.price),
+    },
   ];
 
   for (const { url, parse } of sources) {
@@ -103,36 +108,50 @@ async function fetchRates() {
   throw new Error('Piyasa verisi alınamadı: ' + errors.join(', '));
 }
 
+function readCachedRates(): Pick<MarketRates, 'usdTry' | 'quarterGoldTry' | 'updatedAt' | 'available'> | null {
+  try {
+    const value = JSON.parse(localStorage.getItem(MARKET_CACHE_KEY) ?? 'null');
+    const updatedAt = value?.updatedAt ? new Date(value.updatedAt) : null;
+    const usdTry = Number(value?.usdTry);
+    const quarterGoldTry = Number(value?.quarterGoldTry);
+    if (!updatedAt || !Number.isFinite(updatedAt.getTime())) return null;
+    return {
+      usdTry: Number.isFinite(usdTry) && usdTry > 0 ? usdTry : null,
+      quarterGoldTry: Number.isFinite(quarterGoldTry) && quarterGoldTry > 0 ? quarterGoldTry : null,
+      updatedAt,
+      available: (Number.isFinite(usdTry) && usdTry > 0) || (Number.isFinite(quarterGoldTry) && quarterGoldTry > 0),
+    };
+  } catch { return null; }
+}
+
 export function useMarketRates(refreshMs = 300_000): MarketRates {
-  const [state, setState] = useState<MarketRates>({
-    usdTry: null,
-    quarterGoldTry: null,
-    updatedAt: null,
-    loading: true,
+  const cached = readCachedRates();
+  const [state, setState] = useState<MarketRates>(() => ({
+    usdTry: cached?.usdTry ?? null,
+    quarterGoldTry: cached?.quarterGoldTry ?? null,
+    updatedAt: cached?.updatedAt ?? null,
+    loading: !cached?.available,
     error: null,
-    available: false,
-  });
+    available: cached?.available ?? false,
+  }));
 
   useEffect(() => {
     let alive = true;
-    let consecutiveErrors = 0;
-    const MAX_CONSECUTIVE_ERRORS = 3;
-
     const load = async () => {
       try {
         const rates = await fetchRates();
         if (alive) {
-          setState({
+          const next = {
             ...rates,
             updatedAt: new Date(),
             loading: false,
             error: rates.error,
             available: true,
-          });
-          consecutiveErrors = 0;
+          };
+          localStorage.setItem(MARKET_CACHE_KEY, JSON.stringify(next));
+          setState(next);
         }
       } catch (err) {
-        consecutiveErrors++;
         const errorMessage = err instanceof Error ? err.message : 'Bilinmeyen hata';
         if (alive) {
           setState((s) => ({
@@ -142,26 +161,20 @@ export function useMarketRates(refreshMs = 300_000): MarketRates {
             available: s.available,
           }));
         }
-        if (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS) {
-          console.warn(`Market rates API failed ${consecutiveErrors} times consecutively.`);
-        }
       }
     };
 
-    load();
-
-    const getInterval = () => (consecutiveErrors >= MAX_CONSECUTIVE_ERRORS ? refreshMs * 5 : refreshMs);
-    const id = window.setInterval(() => {
-      if (consecutiveErrors < MAX_CONSECUTIVE_ERRORS || state.available === false) {
-        load();
-      }
-    }, getInterval());
+    void load();
+    const id = window.setInterval(load, refreshMs);
+    const visible = () => { if (document.visibilityState === 'visible') void load(); };
+    document.addEventListener('visibilitychange', visible);
 
     return () => {
       alive = false;
       window.clearInterval(id);
+      document.removeEventListener('visibilitychange', visible);
     };
-  }, [refreshMs, state.available]);
+  }, [refreshMs]);
 
   return state;
 }

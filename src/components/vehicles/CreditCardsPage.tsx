@@ -220,10 +220,10 @@ function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: stri
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '16px 14px var(--page-bottom-space)', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  kicker: { fontSize: 9, letterSpacing: 2, color: '#C084FC', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.5, color: 'var(--muted)', fontWeight: 750 },
   h1: { fontSize: 29, margin: '4px 0' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  add: { border: '1px solid rgba(141,114,220,.22)', borderRadius: 13, padding: '11px 14px', background: 'rgba(141,114,220,.12)', color: '#c5b8eb', fontWeight: 750 },
+  add: { border: '1px solid rgba(67,198,232,.2)', borderRadius: 13, padding: '11px 14px', background: 'rgba(67,198,232,.08)', color: '#9de4f4', fontWeight: 750 },
   form: { display: 'flex', flexDirection: 'column', gap: 10, padding: 16, borderRadius: 20, background: '#101823', border: '1px solid var(--border)', marginBottom: 14, boxShadow: 'var(--shadow-card)' },
   input: { width: '100%', minHeight: 50, padding: 13, borderRadius: 13, border: '1px solid var(--border)', background: '#090e16', color: 'var(--text)', fontSize: 15 },
   dateLabel: { fontSize: 11, color: '#8D92A7' },

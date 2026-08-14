@@ -331,7 +331,7 @@ function AppointmentCard({ appointment, onEdit, onCancel, onComplete, onDelete }
     <article style={S.card}>
       <div style={{ flex: 1 }}>
         <div style={S.cardHeader}>
-          <span style={{ ...S.typeBadge, background: 'rgba(141,114,220,.1)', color: '#aa96e3' }}>{typeLabel}</span>
+          <span style={{ ...S.typeBadge, background: 'rgba(67,198,232,.07)', color: '#9de4f4' }}>{typeLabel}</span>
           <span style={{ ...S.statusBadge, color: STATUS_COLORS[appointment.status] }}>{appointment.status === 'upcoming' ? 'Yaklaşan' : appointment.status === 'completed' ? 'Tamamlandı' : 'İptal'}</span>
         </div>
         <h4 style={S.cardTitle}>{appointment.title}</h4>
@@ -358,7 +358,7 @@ function AppointmentCard({ appointment, onEdit, onCancel, onComplete, onDelete }
 
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', maxWidth: 680, margin: '0 auto', color: '#fff' },
-  kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.5, color: 'var(--muted)', fontWeight: 750 },
   h1: { fontSize: 29, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
   error: { marginTop: 14, padding: 12, borderRadius: 14, background: 'rgba(251,113,133,.1)', border: '1px solid rgba(251,113,133,.2)', color: '#FDA4AF', fontSize: 12 },

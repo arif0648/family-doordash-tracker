@@ -132,7 +132,7 @@ const styles: Record<string, React.CSSProperties> = {
     marginTop: 8,
     cursor: 'pointer',
   },
-  error: { color: '#FB7185', fontSize: 12, textAlign: 'center', marginTop: 4 },
+  error: { color: 'var(--negative)', fontSize: 12, textAlign: 'center', marginTop: 4 },
   links: { display: 'flex', justifyContent: 'space-between', marginTop: 14 },
-  link: { color: '#C084FC', fontSize: 12, textDecoration: 'none', fontWeight: 700 },
+  link: { color: 'var(--accent)', fontSize: 12, textDecoration: 'none', fontWeight: 700 },
 };

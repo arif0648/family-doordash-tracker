@@ -143,7 +143,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
         </div>
       </div>
 
-      <div style={S.summary}>Net (filtreli): <b style={{ color: total >= 0 ? '#10B981' : '#F43F5E' }}>{total >= 0 ? '+' : '−'}${Math.abs(total).toLocaleString('en-US')}</b></div>
+      <div style={S.summary}>Net (filtreli): <b style={{ color: total >= 0 ? 'var(--positive)' : 'var(--negative)' }}>{total >= 0 ? '+' : '−'}${Math.abs(total).toLocaleString('en-US')}</b></div>
 
       {grouped.length === 0 ? (
         <EmptyState message="Henüz işlem yok." icon="◌" />
@@ -189,10 +189,10 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
 
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '16px 14px var(--page-bottom-space)', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
-  kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.5, color: 'var(--muted)', fontWeight: 750 },
   h1: { fontSize: 29, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  note: { marginTop: 12, padding: 11, borderRadius: 13, background: 'rgba(141,114,220,.055)', border: '1px solid rgba(141,114,220,.14)', color: 'var(--text-secondary)', fontSize: 12 },
+  note: { marginTop: 12, padding: 11, borderRadius: 13, background: 'rgba(67,198,232,.045)', border: '1px solid rgba(67,198,232,.12)', color: 'var(--text-secondary)', fontSize: 12 },
   filters: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 },
   filterInput: { width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: '#0c121b', color: 'var(--text)', fontSize: 13 },
   dateRow: { display: 'flex', alignItems: 'center', gap: 8 },

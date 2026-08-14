@@ -5,7 +5,7 @@
  * çalıştırıldı (44/44 PASS).
  */
 import { describe, it, expect } from 'vitest';
-import { recalculateChain, validateNewClosingMileage, sumMilesInPeriod, MileageEntry, MileageChainError } from '../lib/mileageEngine';
+import { recalculateChain, validateNewClosingMileage, previewMileageEntry, sumMilesInPeriod, MileageEntry, MileageChainError } from '../lib/mileageEngine';
 import { toPacificDateString, weekBoundary, monthBoundary } from '../lib/timezone';
 
 describe('TEST C — Mileage zinciri 94150 -> 94380 -> 94610', () => {
@@ -62,6 +62,27 @@ describe('Negatif mileage koruması', () => {
         { id: 'm2', vehicleId: 'kia', recordDate: '2026-08-02', createdAt: '2026-08-02T10:00:00Z', closingMileage: 94000, milesDriven: 0 },
       ])
     ).toThrow(MileageChainError);
+  });
+});
+
+describe('Kapanış mili kullanıcı önizlemesi', () => {
+  const existing: MileageEntry[] = [
+    { id: 'm1', vehicleId: 'kia', recordDate: '2026-08-01', createdAt: '2026-08-01T10:00:00Z', closingMileage: 94150, milesDriven: 0 },
+    { id: 'm2', vehicleId: 'kia', recordDate: '2026-08-03', createdAt: '2026-08-03T10:00:00Z', closingMileage: 94610, milesDriven: 460 },
+  ];
+
+  it('kullanıcı yalnızca yeni kapanışı girince farkı otomatik hesaplar', () => {
+    const preview = previewMileageEntry(existing, 94800, '2026-08-04');
+    expect(preview.valid).toBe(true);
+    expect(preview.previousClosingMileage).toBe(94610);
+    expect(preview.milesDriven).toBe(190);
+  });
+
+  it('geriye tarihli kaydı önceki ve sonraki kapanış arasında doğrular', () => {
+    expect(previewMileageEntry(existing, 94300, '2026-08-02')).toMatchObject({
+      valid: true, previousClosingMileage: 94150, nextClosingMileage: 94610, milesDriven: 150,
+    });
+    expect(previewMileageEntry(existing, 94700, '2026-08-02').valid).toBe(false);
   });
 });
 

@@ -17,7 +17,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
 };
 
 const TYPE_COLORS: Record<NotificationType, string> = {
-  CREDIT_CARD: '#8d72dc',
+  CREDIT_CARD: '#E8BD58',
   PAYMENT: '#34D399',
   APPOINTMENT: '#60A5FA',
   VEHICLE: '#F59E0B',
@@ -196,7 +196,7 @@ function PaymentCard({ card, overdue }: { card: CreditCardRow; overdue: boolean 
         background: overdue ? 'rgba(251,113,133,.07)' : '#101823',
       }}
     >
-      <div style={{ ...S.alertIcon, background: overdue ? 'rgba(251,113,133,.12)' : 'rgba(141,114,220,.1)', color: overdue ? '#FDA4AF' : '#aa96e3' }}>▭</div>
+      <div style={{ ...S.alertIcon, background: overdue ? 'rgba(240,111,127,.12)' : 'rgba(232,189,88,.09)', color: overdue ? '#F5A0AA' : '#E8BD58' }}>▭</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={S.alertTitle}>{card.card_name}</div>
         <div style={S.alertMeta}>
@@ -258,10 +258,10 @@ function NotificationCard({ notification, onMarkRead }: { notification: Notifica
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
-  kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.5, color: 'var(--muted)', fontWeight: 750 },
   h1: { fontSize: 26, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  settingsLink: { fontSize: 12, color: '#C084FC', textDecoration: 'none', fontWeight: 700 },
+  settingsLink: { fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 700 },
   error: { marginTop: 14, padding: 12, borderRadius: 14, background: 'rgba(251,113,133,.1)', border: '1px solid rgba(251,113,133,.2)', color: '#FDA4AF', fontSize: 12 },
   tabs: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, padding: 4, borderRadius: 15, background: '#0e151f', border: '1px solid var(--border)', marginBottom: 14 },
   tab: { position: 'relative', padding: '10px 4px', textAlign: 'center', borderRadius: 12, border: 0, background: 'transparent', color: '#898DA0', fontSize: 11, fontWeight: 800, cursor: 'pointer' },
@@ -284,5 +284,5 @@ const S: Record<string, React.CSSProperties> = {
   alertTitle: { fontSize: 14, fontWeight: 800, color: '#fff' },
   alertMeta: { fontSize: 12, color: '#7F8499', marginTop: 2 },
   alertAmount: { fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap' },
-  goArrow: { color: '#C084FC', fontSize: 20, marginLeft: 4 },
+  goArrow: { color: 'var(--accent)', fontSize: 20, marginLeft: 4 },
 };

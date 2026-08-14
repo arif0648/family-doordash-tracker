@@ -1,7 +1,7 @@
-import React, { useState, FormEvent, useEffect } from 'react';
+import React, { useState, FormEvent, useEffect, useMemo } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Vehicle, MileageLogRow, IncomeRow } from '../../types/database';
-import { validateNewClosingMileage, MileageEntry } from '../../lib/mileageEngine';
+import { previewMileageEntry, MileageEntry } from '../../lib/mileageEngine';
 import { playIncomeSound } from '../../lib/sound';
 import { toPacificDateString } from '../../lib/timezone';
 import { MAX_AMOUNT } from '../../lib/format';
@@ -25,6 +25,24 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const vehicleMileageChain = useMemo<MileageEntry[]>(() => mileageLog
+    .filter((m) => m.vehicle_id === vehicleId && m.id !== editingIncome?.mileage_log_id)
+    .map((m) => ({
+      id: m.id, vehicleId: m.vehicle_id, recordDate: m.record_date, createdAt: m.created_at,
+      closingMileage: m.closing_mileage, milesDriven: m.miles_driven,
+    })), [mileageLog, vehicleId, editingIncome?.mileage_log_id]);
+
+  const mileagePreview = useMemo(() => {
+    const numeric = Number(closingMileage.replace(',', '.'));
+    if (!closingMileage.trim() || !Number.isFinite(numeric)) return null;
+    return previewMileageEntry(vehicleMileageChain, numeric, recordDate);
+  }, [vehicleMileageChain, closingMileage, recordDate]);
+
+  useEffect(() => {
+    if (!mileagePreview || mileagePreview.valid) setWarning(null);
+    else setWarning(mileagePreview.reason ?? 'Kilometre zinciri geçersiz.');
+  }, [mileagePreview]);
 
   // Initialize form when editing
   useEffect(() => {
@@ -54,19 +72,8 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
       setWarning('Kilometre negatif olamaz.');
       return;
     }
-    let chain: MileageEntry[] = mileageLog
-      .filter((m) => m.vehicle_id === vehicleId)
-      .map((m) => ({
-        id: m.id, vehicleId: m.vehicle_id, recordDate: m.record_date, createdAt: m.created_at,
-        closingMileage: m.closing_mileage, milesDriven: m.miles_driven,
-      }));
-    // When editing, exclude the current mileage entry so the new value is compared
-    // against the surrounding chain, not against its own previous value.
-    if (editingIncome?.mileage_log_id) {
-      chain = chain.filter((m) => m.id !== editingIncome.mileage_log_id);
-    }
-    const result = validateNewClosingMileage(chain, numeric);
-    if ('reason' in result) setWarning(result.reason);
+    const result = previewMileageEntry(vehicleMileageChain, numeric, recordDate);
+    if (!result.valid) setWarning(result.reason ?? 'Kilometre zinciri geçersiz.');
   }
 
   async function handleSubmit(e: FormEvent) {
@@ -129,6 +136,10 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
         <input style={styles.moneyInput} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.')); setError(null); setSuccess(null); }} />
         <label style={styles.label}>Kapanış Mili</label>
         <input style={styles.input} type="text" inputMode="decimal" placeholder="Aracın gösterge kilometresi (örn. 94150)" value={closingMileage} onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); setClosingMileage(v); setError(null); setSuccess(null); checkMileage(v); }} />
+        <div style={styles.mileagePreview} aria-live="polite">
+          <span>Önceki kapanış <b>{mileagePreview?.previousClosingMileage?.toLocaleString('en-US') ?? 'İlk kayıt'}</b></span>
+          <span>Hesaplanan mesafe <b>{mileagePreview?.valid ? `${mileagePreview.milesDriven.toLocaleString('en-US')} mil` : '—'}</b></span>
+        </div>
         <label style={styles.label}>Tarih</label>
         <input style={styles.input} type="date" value={recordDate} onChange={e => setRecordDate(e.target.value)} />
         <label style={styles.label}>Not</label>
@@ -151,15 +162,16 @@ const styles: Record<string, React.CSSProperties> = {
   shell:{padding:'12px 14px var(--page-bottom-space)',maxWidth:680,margin:'0 auto'},
   form:{borderRadius:20,padding:15,display:'flex',flexDirection:'column',gap:8},
   hero:{padding:'2px 2px 4px'},
-  eyebrow:{fontSize:9,letterSpacing:1.5,color:'#aa96e3',fontWeight:750},
+  eyebrow:{fontSize:9,letterSpacing:1.5,color:'var(--muted)',fontWeight:750},
   title:{margin:'4px 0 3px',fontSize:20,color:'var(--text)',fontWeight:750,letterSpacing:-.4},
   subtitle:{margin:0,color:'#8F93A8',fontSize:11},
   label:{fontSize:11,color:'#A7ABC0',marginTop:2},
   input:{width:'100%',padding:'12px 14px',borderRadius:12,border:'1px solid var(--border)',background:'#090e16',color:'var(--text)',fontSize:15,minHeight:46,boxSizing:'border-box'},
   moneyInput:{width:'100%',padding:'14px',borderRadius:14,border:'1px solid rgba(53,201,121,.24)',background:'#090e16',color:'#65d99a',fontSize:18,fontWeight:750,minHeight:52,boxSizing:'border-box'},
+  mileagePreview:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:8,padding:'9px 10px',borderRadius:11,background:'rgba(255,255,255,.025)',border:'1px solid var(--border)',color:'var(--text-secondary)',fontSize:10},
   warning:{color:'#FBBF24',fontSize:12},
-  error:{color:'#FB7185',fontSize:12},
-  success:{color:'#34D399',fontSize:12},
+  error:{color:'var(--negative)',fontSize:12},
+  success:{color:'var(--positive)',fontSize:12},
   buttonRow:{display:'flex',gap:8,marginTop:6},
   saveButton:{flex:1,minHeight:48,border:'1px solid rgba(53,201,121,.25)',borderRadius:14,background:'rgba(53,201,121,.88)',color:'#04120D',fontWeight:800,fontSize:14},
   cancelButton:{flex:1,minHeight:48,border:'1px solid var(--border)',borderRadius:14,background:'rgba(255,255,255,.045)',color:'var(--text)',fontWeight:750,fontSize:14}

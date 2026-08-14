@@ -1,8 +1,8 @@
 import React from 'react';
-import { useMarketData } from '../../lib/marketData';
+import { useMarketRates } from '../../lib/marketRates';
 
 export function MarketRatesStrip({ realtimeStatus }: { realtimeStatus: 'connecting' | 'live' | 'offline' }) {
-  const { usdTry, quarterGoldTry, updatedAt } = useMarketData();
+  const { usdTry, quarterGoldTry, updatedAt, loading, error } = useMarketRates();
   const ageMinutes = updatedAt ? Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / 60_000)) : null;
 
   return (
@@ -24,7 +24,10 @@ export function MarketRatesStrip({ realtimeStatus }: { realtimeStatus: 'connecti
           </strong>
         </div>
       </div>
-      <span style={{ ...styles.live, color: realtimeStatus === 'live' ? 'var(--positive)' : 'var(--text-secondary)' }}>● {realtimeStatus === 'live' ? 'Canlı' : realtimeStatus === 'offline' ? 'Çevrimdışı' : 'Bağlanıyor'}{ageMinutes !== null ? <small style={styles.age}>{ageMinutes === 0 ? 'şimdi' : `${ageMinutes} dk`}</small> : null}</span>
+      <span style={{ ...styles.live, color: error ? 'var(--negative)' : loading ? 'var(--text-secondary)' : 'var(--positive)' }}>
+        ● {error && !updatedAt ? 'Alınamadı' : loading ? 'Güncelleniyor' : updatedAt ? 'Güncel' : realtimeStatus === 'offline' ? 'Çevrimdışı' : 'Bekleniyor'}
+        {ageMinutes !== null ? <small style={styles.age}>{ageMinutes === 0 ? 'şimdi' : `${ageMinutes} dk önce`}</small> : null}
+      </span>
     </section>
   );
 }
@@ -37,7 +40,7 @@ const styles: Record<string, React.CSSProperties> = {
   item: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 },
   icon: {
     width: 28, height: 28, borderRadius: 9, display: 'grid', placeItems: 'center',
-    background: 'rgba(141,114,220,.1)', color: '#aa96e3', fontWeight: 750,
+    background: 'rgba(60,200,237,.08)', color: '#75d7ee', fontWeight: 750,
   },
   label: { display: 'block', color: '#94A3B8', fontSize: 9, textTransform: 'uppercase', letterSpacing: .6 },
   value: { display: 'block', color: 'var(--text)', fontSize: 12, marginTop: 1, whiteSpace: 'nowrap' },

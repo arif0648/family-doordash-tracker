@@ -15,7 +15,7 @@ export function VehicleComparison({ summaries }: { summaries: VehicleSummary[] }
               <div style={S.barTrack}>
                 <div style={{ ...S.barFill, width: `${pct}%` }} />
               </div>
-              <div style={{ ...S.value, color: s.net >= 0 ? '#10B981' : '#F43F5E' }}>
+              <div style={{ ...S.value, color: s.net >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
                 {s.net >= 0 ? '' : '−'}${Math.abs(s.net).toLocaleString('en-US', { minimumFractionDigits: 0 })}
               </div>
             </div>

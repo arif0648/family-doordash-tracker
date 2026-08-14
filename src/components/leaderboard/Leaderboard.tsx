@@ -36,7 +36,7 @@ export function Leaderboard({
                 <div style={styles.info}>
                   <div style={styles.name}>{entry.shortName}</div>
                 </div>
-                <div style={{ ...styles.net, color: positive ? '#34D399' : '#FDA4AF' }}>
+                <div style={{ ...styles.net, color: positive ? 'var(--positive)' : 'var(--negative)' }}>
                   {positive ? '+' : '−'}${Math.abs(entry.net).toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                 </div>
               </div>

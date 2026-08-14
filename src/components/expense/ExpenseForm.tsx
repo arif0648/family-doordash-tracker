@@ -81,7 +81,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
             onClick={() => setCategoryTab(cat)}
             style={{
               ...styles.tab,
-              background: categoryTab === cat ? '#22C55E' : 'transparent',
+              background: categoryTab === cat ? 'var(--positive)' : 'transparent',
               color: categoryTab === cat ? '#0B1120' : '#94A3B8',
             }}
           >
@@ -141,7 +141,7 @@ const styles: Record<string, React.CSSProperties> = {
   subTab: { flex:1, minHeight:44, borderRadius:12, background:'#0b111a', color:'var(--text)', fontSize:13 },
   label: { fontSize:11, color:'#A7ABC0', marginTop:2 },
   input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid var(--border)', background:'#090e16', color:'var(--text)', fontSize:15, minHeight:46, boxSizing:'border-box' },
-  error: { color:'#FB7185', fontSize:12, marginTop:4 },
-  success: { color:'#34D399', fontSize:12, marginTop:4 },
+  error: { color:'var(--negative)', fontSize:12, marginTop:4 },
+  success: { color:'var(--positive)', fontSize:12, marginTop:4 },
   saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'1px solid rgba(53,201,121,.25)', background:'rgba(53,201,121,.88)', color:'#04120D', fontWeight:800, fontSize:14 },
 };

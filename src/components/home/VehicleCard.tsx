@@ -14,7 +14,7 @@ export function VehicleCard({ vehicle, summary }: { vehicle: Vehicle; summary: V
   const isPositive = summary.net >= 0;
 
   return (
-    <div style={{ ...S.card, borderColor: isPositive ? 'rgba(16,185,129,.25)' : 'rgba(244,63,94,.25)' }}>
+    <div style={{ ...S.card, borderColor: isPositive ? 'rgba(66,209,131,.2)' : 'rgba(240,111,127,.2)' }}>
       <div style={S.top}>
         <div style={S.icon}>◇</div>
         <div style={S.header}>
@@ -29,11 +29,11 @@ export function VehicleCard({ vehicle, summary }: { vehicle: Vehicle; summary: V
       </div>
       <div style={S.row}>
         <span style={S.label}>Toplam Gelir</span>
-        <span style={{ ...S.value, color: '#10B981' }}>${summary.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+        <span style={{ ...S.value, color: 'var(--positive)' }}>${summary.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
       </div>
       <div style={S.row}>
         <span style={S.label}>Net</span>
-        <span style={{ ...S.value, color: isPositive ? '#10B981' : '#F43F5E' }}>
+        <span style={{ ...S.value, color: isPositive ? 'var(--positive)' : 'var(--negative)' }}>
           {isPositive ? '' : '−'}${Math.abs(summary.net).toLocaleString('en-US', { minimumFractionDigits: 2 })}
         </span>
       </div>

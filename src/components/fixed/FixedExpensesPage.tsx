@@ -143,7 +143,7 @@ const styles: Record<string, React.CSSProperties> = {
   glass: { display: 'grid', gridTemplateColumns: '1.4fr .8fr auto', gap: 8, padding: 14, borderRadius: 18, background: '#101823', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)', marginBottom: 12 },
   input: { width: '100%', minWidth: 0, border: '1px solid var(--border)', background: 'var(--control-bg)', color: 'var(--text)', borderRadius: 12, padding: '13px 14px', fontSize: 14, outline: 'none' },
   primary: { border: '1px solid rgba(60,200,237,.2)', borderRadius: 13, padding: '13px 18px', background: 'rgba(60,200,237,.1)', color: '#bdeafa', fontWeight: 750, fontSize: 13 },
-  message: { color: '#C084FC', fontSize: 12, marginBottom: 8 },
+  message: { color: 'var(--accent)', fontSize: 12, marginBottom: 8 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
   row: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '14px 14px', borderRadius: 18, background: 'rgba(255,255,255,.05)', border: '1px solid rgba(255,255,255,.08)' },
   itemLabel: { display: 'block', fontSize: 15, fontWeight: 800, color: '#fff' },

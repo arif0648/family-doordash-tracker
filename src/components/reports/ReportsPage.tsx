@@ -101,7 +101,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
             <section style={styles.trendCard}>
               <div>
                 <span style={styles.trendKicker}>AYLIK TREND</span>
-                <div style={{ ...styles.trendStatus, color: trend.trend_status === 'IMPROVING' ? '#34D399' : trend.trend_status === 'DECLINING' ? '#FB7185' : '#60A5FA' }}>
+                <div style={{ ...styles.trendStatus, color: trend.trend_status === 'IMPROVING' ? 'var(--positive)' : trend.trend_status === 'DECLINING' ? 'var(--negative)' : 'var(--accent)' }}>
                   {trend.trend_status === 'IMPROVING' ? '↗ İLERİ' : trend.trend_status === 'DECLINING' ? '↘ GERİLEME' : '= STABİL'}
                 </div>
                 <div style={styles.trendMeta}>

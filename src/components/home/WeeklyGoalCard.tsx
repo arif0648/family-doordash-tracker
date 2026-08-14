@@ -77,7 +77,7 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
           <div key={vehicle.vehicleId} style={S.vehicleRow}>
             <div style={S.vehicleTopline}>
               <strong style={S.vehicleName}>{vehicle.shortName}</strong>
-              <span style={S.vehicleAmounts}>{formatMoney(vehicle.amount, true)} / {formatMoney(vehicle.target, true)} · {formatMoney(vehicle.remaining, true)} kaldı</span>
+              <span style={S.vehicleAmounts}>{formatMoney(vehicle.amount, true)} yapıldı · {formatMoney(vehicle.remaining, true)} kaldı</span>
               <span style={S.vehiclePct}>%{vehicle.percent}</span>
             </div>
             <div style={S.vehicleTrack}>
@@ -97,7 +97,7 @@ const S: Record<string, React.CSSProperties> = {
   kicker: { fontSize: 11, letterSpacing: .2, color: 'var(--text-secondary)', fontWeight: 700 },
   title: { fontSize: 20, fontWeight: 780, margin: '3px 0 1px', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
   percentText: { fontSize: 10, color: 'var(--text-secondary)', fontWeight: 650 },
-  badge: { padding: '5px 8px', borderRadius: 10, background: 'rgba(53,201,121,.09)', color: '#79dda7', fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap', border: '1px solid rgba(53,201,121,.12)' },
+  badge: { padding: '5px 8px', borderRadius: 10, background: 'rgba(66,209,131,.08)', color: '#86e6b3', fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap', border: '1px solid rgba(66,209,131,.14)' },
   track: { position: 'relative', height: 6, borderRadius: 12, background: 'rgba(255,255,255,.055)', overflow: 'hidden', marginBottom: 4 },
   fill: { height: '100%', borderRadius: 12, background: 'linear-gradient(90deg, var(--positive), var(--accent))', transition: 'width 0.6s ease' },
   summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 7 },
@@ -110,7 +110,7 @@ const S: Record<string, React.CSSProperties> = {
   vehicleTopline: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   vehicleName: { minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'var(--text)', fontWeight: 700 },
   vehiclePct: { width: 29, textAlign: 'right', fontSize: 10, fontWeight: 750, color: 'var(--positive)', fontVariantNumeric: 'tabular-nums' },
-  vehicleAmounts: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 8.5, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
+  vehicleAmounts: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 9.5, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   vehicleTrack: { height: 3, marginTop: 5, borderRadius: 999, background: 'rgba(255,255,255,.055)', overflow: 'hidden' },
   vehicleFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--accent), var(--positive))', transition: 'width 0.45s ease' },
   milestoneText: { marginTop: 10, fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' },

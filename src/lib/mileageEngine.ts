@@ -86,6 +86,55 @@ export function validateNewClosingMileage(
   return { valid: true, milesDriven: roundMiles(newClosingMileage - last.closingMileage) };
 }
 
+export interface MileagePreview {
+  valid: boolean;
+  previousClosingMileage: number | null;
+  nextClosingMileage: number | null;
+  milesDriven: number;
+  reason?: string;
+}
+
+/**
+ * Previews a new entry at its actual record date. This matters for backdated
+ * income: comparing only with the chain tip can reject a valid older entry or
+ * hide that it would exceed the next closing mileage.
+ */
+export function previewMileageEntry(
+  existingChain: MileageEntry[],
+  newClosingMileage: number,
+  recordDate: string
+): MileagePreview {
+  const ordered = chainOrder(existingChain);
+  const before = ordered.filter((entry) => entry.recordDate <= recordDate);
+  const after = ordered.filter((entry) => entry.recordDate > recordDate);
+  const previous = before[before.length - 1] ?? null;
+  const next = after[0] ?? null;
+  const previousClosingMileage = previous?.closingMileage ?? null;
+  const nextClosingMileage = next?.closingMileage ?? null;
+
+  if (!Number.isFinite(newClosingMileage) || newClosingMileage < 0) {
+    return { valid: false, previousClosingMileage, nextClosingMileage, milesDriven: 0, reason: 'Geçerli bir kapanış mili girin.' };
+  }
+  if (previous && newClosingMileage < previous.closingMileage) {
+    return {
+      valid: false, previousClosingMileage, nextClosingMileage, milesDriven: 0,
+      reason: `Yeni kilometre (${newClosingMileage}), önceki kapanıştan (${previous.closingMileage}) düşük olamaz.`,
+    };
+  }
+  if (next && newClosingMileage > next.closingMileage) {
+    return {
+      valid: false, previousClosingMileage, nextClosingMileage, milesDriven: 0,
+      reason: `Yeni kilometre (${newClosingMileage}), sonraki kapanıştan (${next.closingMileage}) yüksek olamaz.`,
+    };
+  }
+  return {
+    valid: true,
+    previousClosingMileage,
+    nextClosingMileage,
+    milesDriven: previous ? roundMiles(newClosingMileage - previous.closingMileage) : 0,
+  };
+}
+
 /** Sum of miles_driven for entries whose recordDate falls within [start, end] inclusive. */
 export function sumMilesInPeriod(
   entries: MileageEntry[],

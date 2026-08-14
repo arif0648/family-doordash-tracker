@@ -359,7 +359,7 @@ const styles: Record<string, React.CSSProperties> = {
   page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   heading: { fontSize: 20, fontWeight: 700, margin: 0 },
-  addButton: { border: '1px solid rgba(141,114,220,.22)', borderRadius: 12, padding: '10px 14px', background: 'rgba(141,114,220,.12)', color: '#c5b8eb', fontWeight: 750, fontSize: 13 },
+  addButton: { border: '1px solid rgba(67,198,232,.2)', borderRadius: 12, padding: '10px 14px', background: 'rgba(67,198,232,.08)', color: '#9de4f4', fontWeight: 750, fontSize: 13 },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#A7ABC0', marginBottom: 12 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
