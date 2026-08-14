@@ -2,12 +2,13 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { setSoundEnabled, setSpeechEnabled } from '../../lib/sound';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
-import { UserSettingsRow } from '../../types/database';
+import { UserSettingsRow, Vehicle } from '../../types/database';
 
 export function ProfilePage({ userId, email, familyId }: { userId: string; email: string; familyId: string }) {
   const [settings, setSettings] = useState<UserSettingsRow | null>(null);
-  const [goalInput, setGoalInput] = useState<string>('1400');
-  const [savingGoal, setSavingGoal] = useState(false);
+  const [vehicles, setVehicles] = useState<Vehicle[]>([]);
+  const [vehicleGoals, setVehicleGoals] = useState<Record<string, string>>({});
+  const [savingGoal, setSavingGoal] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -22,9 +23,10 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [settingsRes, goalRes] = await Promise.all([
+    const [settingsRes, vehiclesRes, goalRes] = await Promise.all([
       supabase.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
-      supabase.from('family_member_goals').select('weekly_goal').eq('family_id', familyId).eq('user_id', userId).maybeSingle(),
+      supabase.from('vehicles').select('*').eq('family_id', familyId).eq('is_active', true).order('created_at'),
+      supabase.from('family_member_goals').select('vehicle_id,weekly_goal').eq('family_id', familyId).not('vehicle_id', 'is', null),
     ]);
 
     if (settingsRes.error) {
@@ -33,8 +35,10 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
       return;
     }
 
-    const g = goalRes.data ? Number(goalRes.data.weekly_goal) : null;
-    setGoalInput(g != null ? String(g) : '1400');
+    if (vehiclesRes.error || goalRes.error) { setError(vehiclesRes.error?.message ?? goalRes.error?.message ?? 'Hedefler yüklenemedi.'); setLoading(false); return; }
+    setVehicles((vehiclesRes.data ?? []) as Vehicle[]);
+    const goalMap = Object.fromEntries((goalRes.data ?? []).map((g) => [g.vehicle_id, String(g.weekly_goal)]));
+    setVehicleGoals(Object.fromEntries((vehiclesRes.data ?? []).map((v) => [v.id, goalMap[v.id] ?? '1400'])));
 
     if (!settingsRes.data) {
       const { data: created, error: createError } = await supabase
@@ -81,18 +85,17 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
     await supabase.from('user_settings').update({ push_enabled: newValue }).eq('user_id', userId);
   }
 
-  async function handleSaveGoal(e: React.FormEvent) {
-    e.preventDefault();
-    const value = Number(goalInput);
+  async function handleSaveGoal(vehicleId: string) {
+    const value = Number(vehicleGoals[vehicleId]);
     if (!value || value <= 0 || isNaN(value)) return;
-    setSavingGoal(true);
-    const { error: saveError } = await supabase.rpc('set_weekly_goal', { p_family_id: familyId, p_weekly_goal: value });
+    setSavingGoal(vehicleId);
+    const { error: saveError } = await supabase.rpc('set_vehicle_weekly_goal', { p_family_id: familyId, p_vehicle_id: vehicleId, p_weekly_goal: value });
     if (saveError) {
       setError(saveError.message);
-      setSavingGoal(false);
+      setSavingGoal(null);
       return;
     }
-    setSavingGoal(false);
+    setSavingGoal(null);
   }
 
   async function handlePasswordChange(e: React.FormEvent) {
@@ -168,21 +171,15 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
         <ToggleRow label="Bildirimler" enabled={settings.push_enabled} onToggle={togglePush} />
       </div>
 
-      <h2 style={styles.sectionTitle}>Haftalık Hedefim</h2>
-      <form onSubmit={handleSaveGoal} style={styles.card}>
-        <label style={styles.goalLabel}>Hedef tutar (USD)</label>
-        <input
-          style={styles.goalInput}
-          type="number"
-          min={1}
-          step="1"
-          value={goalInput}
-          onChange={(e) => setGoalInput(e.target.value)}
-        />
-        <button type="submit" style={styles.goalButton} disabled={savingGoal}>
-          {savingGoal ? 'Kaydediliyor…' : 'Kaydet'}
-        </button>
-      </form>
+      <h2 style={styles.sectionTitle}>Araç Haftalık Hedefleri</h2>
+      <div style={styles.card}>
+        {vehicles.map((vehicle) => <div key={vehicle.id} style={styles.goalRow}>
+          <label style={styles.goalLabel}>{vehicle.short_name}</label>
+          <input style={styles.goalInput} type="number" min={1} step="1" value={vehicleGoals[vehicle.id] ?? ''} onChange={(e) => setVehicleGoals((g) => ({ ...g, [vehicle.id]: e.target.value }))} />
+          <button type="button" style={styles.goalButton} disabled={savingGoal === vehicle.id} onClick={() => void handleSaveGoal(vehicle.id)}>{savingGoal === vehicle.id ? '...' : 'Kaydet'}</button>
+        </div>)}
+        <strong style={styles.goalTotal}>Aile hedefi: ${Object.values(vehicleGoals).reduce((sum, value) => sum + (Number(value) || 0), 0).toLocaleString('en-US')}</strong>
+      </div>
 
       <h2 style={styles.sectionTitle}>Parola Değiştir</h2>
       <form onSubmit={handlePasswordChange} style={styles.card}>
@@ -251,7 +248,7 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 16px 96px', color: 'white' },
+  page: { padding: '16px 16px calc(120px + var(--safe-bottom))', color: 'white' },
   heading: { fontSize: 20, fontWeight: 700, marginBottom: 16 },
   card: { background: '#120E2A', borderRadius: 16, padding: 16, marginBottom: 16 },
   email: { fontSize: 14, color: '#A7ABC0', margin: 0 },
@@ -300,6 +297,8 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 14,
   },
+  goalRow: { display: 'grid', gridTemplateColumns: '1fr 110px 72px', alignItems: 'center', gap: 8, marginBottom: 8 },
+  goalTotal: { display: 'block', textAlign: 'right', color: '#34D399', fontSize: 13, marginTop: 8 },
   passwordContainer: {
     display: 'flex',
     gap: 8,

@@ -15,19 +15,16 @@ interface WeeklyGoalCardProps {
 const MILESTONES = [25, 50, 75, 100];
 
 export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardProps) {
-  const familyGoal = goals.reduce((s, g) => s + (Number(g.weekly_goal) || 0), 0);
-  const familyIncome = goals.reduce((s, g) => s + (Number(g.week_income) || 0), 0);
-  const familyRemaining = Math.max(familyGoal - familyIncome, 0);
-  const familyPercent = familyGoal > 0 ? Math.min((familyIncome / familyGoal) * 100, 100) : 0;
-
-  const nextMilestone = MILESTONES.find((m) => m > familyPercent) ?? 100;
-  const prevMilestone = MILESTONES.filter((m) => m <= familyPercent).pop() ?? 0;
   const weekStart = useMemo(() => weekBoundary(now).start, [now]);
   const week = useMemo(() => weekBoundary(now), [now]);
   const vehicleProgress = useMemo(
     () => computeVehicleGoalProgress({ income, vehicles, goals, boundary: week }),
     [income, vehicles, goals, week]
   );
+  const familyGoal = vehicleProgress.reduce((sum, vehicle) => sum + vehicle.target, 0);
+  const familyIncome = vehicleProgress.reduce((sum, vehicle) => sum + vehicle.amount, 0);
+  const familyRemaining = Math.max(familyGoal - familyIncome, 0);
+  const familyPercent = familyGoal > 0 ? Math.min((familyIncome / familyGoal) * 100, 100) : 0;
   const celebratedRef = useRef<Set<number>>(new Set());
 
   useEffect(() => {
@@ -81,12 +78,6 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
         </div>
       </div>
 
-      <div style={S.summaryRow}>
-        <div style={S.summaryItem}><span>Toplam hedef</span><b>{formatMoney(familyGoal, true)}</b></div>
-        <div style={S.summaryItem}><span>Toplam gelir</span><b>{formatMoney(familyIncome, true)}</b></div>
-        <div style={S.summaryItem}><span>Kalan</span><b>{formatMoney(familyRemaining, true)}</b></div>
-      </div>
-
       <div style={S.divider} />
       <div style={S.vehicleHead}>
         <span style={S.vehicleTitle}>ARAÇ HEDEF İLERLEMESİ</span>
@@ -111,15 +102,6 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
         ))}
       </div>
 
-      <div style={S.milestoneText}>
-        {familyGoal <= 0 ? (
-          <span>Haftalık hedef henüz belirlenmemiş.</span>
-        ) : familyPercent >= 100 ? (
-          <span>🎉 Tebrikler! Aile hedefine ulaştınız.</span>
-        ) : (
-          <span>Sonraki kilometre taşı: <strong>%{nextMilestone}</strong> ({prevMilestone}% tamamlandı)</span>
-        )}
-      </div>
     </section>
   );
 }
@@ -131,11 +113,11 @@ const S: Record<string, React.CSSProperties> = {
   title: { fontSize: 22, fontWeight: 900, margin: '5px 0 2px', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
   percentText: { fontSize: 12, color: 'var(--text-secondary)', fontWeight: 800 },
   badge: { padding: '6px 9px', borderRadius: 10, background: 'rgba(34,197,94,.12)', color: 'var(--positive)', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' },
-  track: { position: 'relative', height: 22, borderRadius: 12, background: 'var(--surface-raised)', overflow: 'hidden', marginBottom: 20 },
+  track: { position: 'relative', height: 12, borderRadius: 12, background: 'var(--surface-raised)', overflow: 'hidden', marginBottom: 8 },
   fill: { height: '100%', borderRadius: 12, background: 'linear-gradient(90deg, var(--positive), var(--accent))', transition: 'width 0.6s ease' },
   milestones: { position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 6px' },
   dot: { width: 10, height: 10, borderRadius: 5, position: 'relative' },
-  dotLabel: { position: 'absolute', top: 18, left: '50%', transform: 'translateX(-50%)', fontSize: 9, color: 'var(--text-secondary)', fontWeight: 800 },
+  dotLabel: { display: 'none' },
   summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 7 },
   summaryItem: { minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, padding: 9, borderRadius: 12, background: 'var(--surface-raised)', fontSize: 10, color: 'var(--text-secondary)' },
   divider: { height: 1, background: 'var(--border)', margin: '14px 0 12px' },

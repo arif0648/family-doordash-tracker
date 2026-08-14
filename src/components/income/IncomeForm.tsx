@@ -103,7 +103,11 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     }
 
     setSaving(false);
-    if (rpcError) { setError(translateError(rpcError.message)); return; }
+    if (rpcError) {
+      if (import.meta.env.DEV) console.error('[income RPC]', { code: rpcError.code, message: rpcError.message, details: rpcError.details, hint: rpcError.hint });
+      setError(translateError([rpcError.code, rpcError.message, rpcError.details, rpcError.hint].filter(Boolean).join(' • ')));
+      return;
+    }
     playIncomeSound();
     setAmount(''); setClosingMileage(''); setNote(''); setWarning(null);
     setSuccess(editingIncome ? 'Gelir güncellendi.' : 'Gelir başarıyla kaydedildi.');
@@ -124,7 +128,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
         <label style={styles.label}>Gelir ($)</label>
         <input style={styles.moneyInput} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.')); setError(null); setSuccess(null); }} />
         <label style={styles.label}>Kapanış Mili</label>
-        <input style={styles.input} type="text" inputMode="decimal" placeholder="Aracın gösterge kilometresi (örn. 94150)" value={closingMileage} onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); setClosingMileage(v); checkMileage(v); }} />
+        <input style={styles.input} type="text" inputMode="decimal" placeholder="Aracın gösterge kilometresi (örn. 94150)" value={closingMileage} onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); setClosingMileage(v); setError(null); setSuccess(null); checkMileage(v); }} />
         <label style={styles.label}>Tarih</label>
         <input style={styles.input} type="date" value={recordDate} onChange={e => setRecordDate(e.target.value)} />
         <label style={styles.label}>Not</label>

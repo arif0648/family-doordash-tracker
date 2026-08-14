@@ -5,6 +5,7 @@ import { WorkTimeCard } from './WorkTimeCard';
 import { Upcoming7Days } from './Upcoming7Days';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
 import { VehicleChampions } from './VehicleChampions';
+import { MarketRatesStrip } from './MarketRatesStrip';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary } from '../../lib/timezone';
 import { formatMoney } from '../../lib/format';
@@ -17,7 +18,7 @@ interface HomePageProps {
 }
 
 export function HomePage({ familyId }: HomePageProps) {
-  const { income, expenses, fixedExpenses, vehicles, creditCards, appointments, workSessions, goals, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const { income, expenses, fixedExpenses, vehicles, creditCards, appointments, workSessions, goals, loading, error, retry, realtimeStatus } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
   const period: Period = raw === 'week' || raw === 'month' ? raw : 'today';
@@ -75,6 +76,8 @@ export function HomePage({ familyId }: HomePageProps) {
 
   const net = selectedSummary.net;
   const isPositive = net >= 0;
+  const lastMovement = [...income.map((r) => ({ at: r.created_at, amount: Number(r.amount), label: vehicles.find((v) => v.id === r.vehicle_id)?.short_name ?? 'Araç' })), ...expenses.map((r) => ({ at: r.created_at, amount: -Number(r.amount), label: r.vehicle_id ? vehicles.find((v) => v.id === r.vehicle_id)?.short_name ?? 'Araç' : r.category === 'market' ? 'Market' : 'Aile' }))].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime())[0];
+  const lastMinutes = lastMovement ? Math.max(0, Math.floor((now.getTime() - new Date(lastMovement.at).getTime()) / 60_000)) : null;
 
   return (
     <main style={S.page}>
@@ -84,6 +87,8 @@ export function HomePage({ familyId }: HomePageProps) {
           <p style={S.date}>{todayLabel}</p>
         </div>
       </header>
+
+      <MarketRatesStrip realtimeStatus={realtimeStatus} />
 
       <div style={S.periods}>
         {(['today', 'week', 'month'] as Period[]).map((p) => (
@@ -134,6 +139,8 @@ export function HomePage({ familyId }: HomePageProps) {
 
       <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions} onSessionsChanged={retry} />
 
+      {lastMovement && <div style={S.lastMovement}>Son hareket: {lastMovement.amount >= 0 ? '+' : '−'}{formatMoney(Math.abs(lastMovement.amount), true)} {lastMovement.label} • {lastMinutes === 0 ? 'şimdi' : `${lastMinutes} dk önce`}</div>}
+
       <Upcoming7Days creditCards={creditCards} fixedExpenses={fixedExpenses} appointments={appointments} />
     </main>
   );
@@ -142,6 +149,7 @@ export function HomePage({ familyId }: HomePageProps) {
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '18px 14px calc(120px + var(--safe-bottom))', color: 'var(--text)', background: 'var(--bg)', minHeight: '100vh' },
   header: { display: 'flex', alignItems: 'center', marginBottom: 14 },
+  lastMovement: { margin: '4px 4px 10px', color: 'var(--text-secondary)', fontSize: 11, textAlign: 'center' },
   title: { fontSize: 24, fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', margin: 0, color: 'var(--text)' },
   date: { fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0' },
   periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, padding: 5, borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 14 },

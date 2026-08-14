@@ -281,9 +281,9 @@ describe('Leaderboard — veri yokken sahte kazanan yok', () => {
 
 describe('Vehicle weekly goal progress — aile hedefi + araç hedefleri', () => {
   const goals = [
-    { user_id: 'u1', weekly_goal: 1400 },
-    { user_id: 'u2', weekly_goal: 1400 },
-    { user_id: 'u3', weekly_goal: 1400 },
+    { user_id: 'u1', vehicle_id: 'kia', weekly_goal: 1400 },
+    { user_id: 'u1', vehicle_id: 'toyota', weekly_goal: 1400 },
+    { user_id: 'u1', vehicle_id: 'honda', weekly_goal: 1400 },
   ];
   const vehicles = [
     { id: 'kia', short_name: 'Kia Sportage' },
@@ -291,7 +291,7 @@ describe('Vehicle weekly goal progress — aile hedefi + araç hedefleri', () =>
     { id: 'honda', short_name: 'Honda Accord' },
   ];
 
-  it('aracı geçmiş gelirde en çok kullanan üyenin hedefini araç hedefi yapar', () => {
+  it('her aracın açıkça atanmış hedefini kullanır', () => {
     const income: IncomeRecord[] = [
       { id: 'old1', userId: 'u1', vehicleId: 'kia', amount: 500, recordDate: '2026-07-20' },
       { id: 'old2', userId: 'u2', vehicleId: 'toyota', amount: 500, recordDate: '2026-07-20' },
@@ -304,6 +304,12 @@ describe('Vehicle weekly goal progress — aile hedefi + araç hedefleri', () =>
     expect(rows.find((r) => r.vehicleId === 'kia')?.percent).toBe(50);
     expect(rows.find((r) => r.vehicleId === 'toyota')?.percent).toBe(25);
     expect(rows.find((r) => r.vehicleId === 'honda')?.percent).toBe(0);
+  });
+
+  it('bir araç hedefi değişince aile toplamı otomatik değişir', () => {
+    const changed = goals.map((g) => g.vehicle_id === 'kia' ? { ...g, weekly_goal: 1600 } : g.vehicle_id === 'toyota' ? { ...g, weekly_goal: 1200 } : { ...g, weekly_goal: 1500 });
+    const rows = computeVehicleGoalProgress({ income: [], vehicles, goals: changed, boundary: { start: '2026-08-03', end: '2026-08-09' } });
+    expect(rows.reduce((sum, row) => sum + row.target, 0)).toBe(4300);
   });
 
   it('henüz araç-sürücü geçmişi yoksa ailedeki ortalama kişi hedefini kullanır', () => {

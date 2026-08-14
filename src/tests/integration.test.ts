@@ -38,6 +38,16 @@ describe('Integration Tests - Family Operations Center', () => {
     });
   });
 
+  describe('Income + mileage atomic create regression', () => {
+    it('writes mileage user_id and validates before either insert', () => {
+      const sql = readFileSync('supabase/migrations/0032_finalize_runtime_realtime_goals.sql', 'utf8');
+      expect(sql).toContain('(family_id,vehicle_id,user_id,record_date,closing_mileage,miles_driven)');
+      expect(sql.indexOf('MILEAGE_LOWER_THAN_PREVIOUS')).toBeLessThan(sql.indexOf('insert into public.mileage_log'));
+      expect(sql).toContain('pg_advisory_xact_lock');
+      expect(sql).toContain('insert into public.income');
+    });
+  });
+
   describe('Credit Card Payment', () => {
     it('uses payment_date before any record_date branch for card-payment triggers', () => {
       const sql = readFileSync('supabase/migrations/0031_fix_credit_card_payment_trigger.sql', 'utf8');

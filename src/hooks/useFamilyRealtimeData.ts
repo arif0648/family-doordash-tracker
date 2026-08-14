@@ -13,8 +13,8 @@ import {
   WorkSessionRow,
   Profile,
   WeeklyGoalRow,
+  RealtimeStatus,
 } from '../types/database';
-import { playIncomeSound, playExpenseSound } from '../lib/sound';
 
 // Central vehicle normalization: short_name -> shortName
 function normalizeVehicle(dbVehicle: Vehicle): Vehicle {
@@ -39,6 +39,11 @@ interface FamilyData {
   goals: WeeklyGoalRow[];
   loading: boolean;
   error: string | null;
+  realtimeStatus: RealtimeStatus;
+}
+
+export function shouldRefetchForRealtimeStatus(status: string): boolean {
+  return status === 'SUBSCRIBED';
 }
 
 export function useFamilyRealtimeData(familyId: string | null): FamilyData & { retry: () => void } {
@@ -57,15 +62,16 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     goals: [],
     loading: true,
     error: null,
+    realtimeStatus: 'connecting',
   });
   const mounted = useRef(true);
   const [retryCount, setRetryCount] = useState(0);
 
-  const fetchAll = useCallback(async () => {
+  const fetchAll = useCallback(async (background = false) => {
     if (!familyId) return;
-    setState((s) => ({ ...s, loading: true, error: null }));
+    if (!background) setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const [v, i, e, m, f, c, a, n, ms, ws] = await Promise.all([
+      const [v, i, e, m, f, c, a, n, ms, ws, goalRows] = await Promise.all([
         supabase.from('vehicles').select('*').eq('family_id', familyId),
         supabase.from('income').select('*').eq('family_id', familyId),
         supabase.from('expenses').select('*').eq('family_id', familyId),
@@ -76,8 +82,9 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         supabase.from('notifications').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(50),
         supabase.from('monthly_financial_summaries').select('*').eq('family_id', familyId).order('year', { ascending: false }).order('month', { ascending: false }).limit(12),
         supabase.from('work_sessions').select('*').eq('family_id', familyId).order('started_at', { ascending: false }).limit(100),
+        supabase.from('family_member_goals').select('user_id,vehicle_id,weekly_goal').eq('family_id', familyId),
       ]);
-      const err = v.error || i.error || e.error || m.error || f.error || c.error || a.error || n.error || ms.error || ws.error;
+      const err = v.error || i.error || e.error || m.error || f.error || c.error || a.error || n.error || ms.error || ws.error || goalRows.error;
       if (err) throw err;
       const income = i.data ?? [];
       const expenses = e.data ?? [];
@@ -86,11 +93,9 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         ? await supabase.from('profiles').select('*').in('user_id', userIds)
         : { data: [] as Profile[], error: null };
       if (p.error) throw p.error;
-      const { data: goals, error: goalsError } = await supabase.rpc('get_family_weekly_goals', { p_family_id: familyId });
-      if (goalsError) throw goalsError;
       if (!mounted.current) return;
       const normalizedVehicles = (v.data ?? []).map(normalizeVehicle);
-      setState({
+      setState((previous) => ({
         vehicles: normalizedVehicles,
         income,
         expenses,
@@ -102,10 +107,11 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         monthlySummaries: ms.data ?? [],
         workSessions: ws.data ?? [],
         profiles: p.data ?? [],
-        goals: (goals as WeeklyGoalRow[]) ?? [],
+        goals: (goalRows.data ?? []).map((g) => ({ ...g, display_name: '', week_income: 0, remaining: 0, percent: 0 })) as WeeklyGoalRow[],
         loading: false,
         error: null,
-      });
+        realtimeStatus: previous.realtimeStatus,
+      }));
     } catch (err) {
       if (!mounted.current) return;
       const message =
@@ -126,30 +132,32 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     if (!familyId) return;
     void fetchAll();
 
-    const onRemote = (kind: 'income' | 'expense') => {
-      if (kind === 'income') {
-        playIncomeSound();
-      } else {
-        playExpenseSound();
-      }
-      void fetchAll();
-    };
+    const onRemote = () => { void fetchAll(true); };
 
     const channel = supabase
       .channel(`family-${familyId}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'income', filter: `family_id=eq.${familyId}` }, () => onRemote('income'))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` }, () => onRemote('expense'))
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'mileage_log', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixed_expenses', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'monthly_financial_summaries', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_sessions', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'family_member_goals', filter: `family_id=eq.${familyId}` }, () => void fetchAll())
-      .subscribe();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'income', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mileage_log', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'fixed_expenses', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_cards', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'credit_card_payments', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'monthly_financial_summaries', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'work_sessions', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'family_member_goals', filter: `family_id=eq.${familyId}` }, onRemote)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'vehicles', filter: `family_id=eq.${familyId}` }, onRemote)
+      .subscribe((status) => {
+        if (import.meta.env.DEV) console.debug(`[realtime] ${status}`);
+        setState((s) => ({ ...s, realtimeStatus: status === 'SUBSCRIBED' ? 'live' : status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED' ? 'offline' : 'connecting' }));
+        if (shouldRefetchForRealtimeStatus(status)) void fetchAll(true);
+      });
 
-    return () => { void supabase.removeChannel(channel); };
+    const onVisibility = () => { if (document.visibilityState === 'visible') void fetchAll(true); };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => { document.removeEventListener('visibilitychange', onVisibility); void supabase.removeChannel(channel); };
   }, [familyId, fetchAll, retryCount]);
 
   return { ...state, retry: () => setRetryCount((c) => c + 1) };

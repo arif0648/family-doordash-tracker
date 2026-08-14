@@ -4,13 +4,16 @@
  * Gerçek deployment ortamında `npm run test` ile çalıştırılmalıdır.
  */
 import React from 'react';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ErrorBoundary } from '../components/common/ErrorBoundary';
 import { EmptyState, ErrorScreen, LoadingScreen } from '../components/common/StateScreens';
 import { WeeklyGoalCard } from '../components/home/WeeklyGoalCard';
 import { VehicleChampions } from '../components/home/VehicleChampions';
 import { calculateHourlyRate } from '../lib/hourlyRate';
+import { calculateQuarterGoldTry, parseUsdTry } from '../lib/marketData';
+import { unlockAudio, setSoundEnabled } from '../lib/sound';
+import { shouldRefetchForRealtimeStatus } from '../hooks/useFamilyRealtimeData';
 
 function Bomb(): React.ReactElement {
   throw new Error('Kasıtlı test hatası');
@@ -76,9 +79,36 @@ describe('WeeklyGoalCard', () => {
   });
 
   it('hedef %50 tamamlandığında gösterir', () => {
-    const goals = [{ user_id: 'u1', display_name: 'Ali', weekly_goal: 1400, week_income: 700, remaining: 700, percent: 50 }];
-    render(<WeeklyGoalCard goals={goals} income={[]} vehicles={[]} now={new Date('2026-08-05T12:00:00-07:00')} />);
+    const goals = [{ user_id: 'u1', vehicle_id: 'v1', display_name: 'Ali', weekly_goal: 1400, week_income: 0, remaining: 0, percent: 0 }];
+    const vehicles = [{ id: 'v1', family_id: 'f1', short_name: 'Kia', full_name: 'Kia', make: '', model: '', fuel_type: 'gas', year: null, is_active: true, created_at: '' }];
+    const income = [{ id: 'i1', userId: 'u1', vehicleId: 'v1', amount: 700, recordDate: '2026-08-05' }];
+    render(<WeeklyGoalCard goals={goals} income={income} vehicles={vehicles} now={new Date('2026-08-05T12:00:00-07:00')} />);
     expect(screen.getByText(/%50 Tamamlandı/i)).toBeInTheDocument();
+  });
+});
+
+describe('Market data helpers', () => {
+  it('USD/TRY parse eder ve spot altından teorik çeyrek değerini hesaplar', () => {
+    expect(parseUsdTry({ rates: { TRY: 42.5 } })).toBe(42.5);
+    expect(parseUsdTry({ rates: {} })).toBeNull();
+    expect(calculateQuarterGoldTry(40, 3000)).toBeCloseTo(6203.81, 1);
+  });
+});
+
+describe('Realtime refresh policy', () => {
+  it('subscribe/reconnect sonrası refetch ister', () => {
+    expect(shouldRefetchForRealtimeStatus('SUBSCRIBED')).toBe(true);
+    expect(shouldRefetchForRealtimeStatus('CHANNEL_ERROR')).toBe(false);
+  });
+});
+
+describe('Audio unlock', () => {
+  it('suspended context için resume çağırır', async () => {
+    const resume = vi.fn(async () => {});
+    (window as any).AudioContext = class { state = 'suspended'; resume = resume; };
+    setSoundEnabled(true);
+    await unlockAudio();
+    expect(resume).toHaveBeenCalled();
   });
 });
 

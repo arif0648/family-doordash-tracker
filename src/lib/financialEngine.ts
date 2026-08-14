@@ -361,11 +361,11 @@ export interface VehicleGoalProgressEntry {
 export function computeVehicleGoalProgress(args: {
   income: IncomeRecord[];
   vehicles: Array<{ id: string; short_name: string }>;
-  goals: Array<{ user_id: string; weekly_goal: number }>;
+  goals: Array<{ user_id: string; vehicle_id?: string | null; weekly_goal: number }>;
   boundary: PeriodBoundary;
 }): VehicleGoalProgressEntry[] {
   const { income, vehicles, goals, boundary } = args;
-  const goalMap = new Map(goals.map((g) => [g.user_id, Number(g.weekly_goal) || 0]));
+  const vehicleGoalMap = new Map(goals.filter((g) => g.vehicle_id).map((g) => [g.vehicle_id!, Number(g.weekly_goal) || 0]));
   const positiveGoals = goals.map((g) => Number(g.weekly_goal) || 0).filter((v) => v > 0);
   const fallbackTarget = positiveGoals.length
     ? roundCurrency(positiveGoals.reduce((a, b) => a + b, 0) / positiveGoals.length)
@@ -390,7 +390,7 @@ export function computeVehicleGoalProgress(args: {
     const ownerUserId = byUser
       ? [...byUser.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
       : null;
-    const target = ownerUserId ? (goalMap.get(ownerUserId) ?? fallbackTarget) : fallbackTarget;
+    const target = vehicleGoalMap.get(vehicle.id) ?? fallbackTarget;
     const amount = roundCurrency(weekIncome.get(vehicle.id) ?? 0);
     const remaining = roundCurrency(Math.max(target - amount, 0));
     const percent = target > 0 ? Math.min(Math.round((amount / target) * 100), 100) : 0;

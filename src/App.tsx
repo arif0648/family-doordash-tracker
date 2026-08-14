@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { useFamilyId } from './hooks/useFamilyId';
@@ -22,8 +23,10 @@ import { TransactionsPage } from './components/transactions/TransactionsPage';
 import { AppointmentsPage } from './components/appointments/AppointmentsPage';
 import { NotificationsPage } from './components/notifications/NotificationsPage';
 import { IncomeRow } from './types/database';
+import { initializeAudioManager } from './lib/sound';
 
 export default function App() {
+  useEffect(() => initializeAudioManager(), []);
   const { session, loading: authLoading, error: authError } = useAuth();
 
   // Bölüm 25 / Master Instruction Bölüm 13: auth initialization sırasında

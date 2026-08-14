@@ -43,6 +43,7 @@ body {
   font-size: 16px;
   line-height: 1.45;
   overflow-x: hidden;
+  padding-bottom: calc(96px + var(--safe-bottom));
 }
 
 button,

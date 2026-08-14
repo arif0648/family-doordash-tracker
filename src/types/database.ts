@@ -89,12 +89,15 @@ export interface UserSettingsRow {
 
 export interface WeeklyGoalRow {
   user_id: string;
+  vehicle_id?: string | null;
   display_name: string;
   weekly_goal: number;
   week_income: number;
   remaining: number;
   percent: number;
 }
+
+export type RealtimeStatus = 'connecting' | 'live' | 'offline';
 
 // Credit Card Types
 export interface CreditCardRow {

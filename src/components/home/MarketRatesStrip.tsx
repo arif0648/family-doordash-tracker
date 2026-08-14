@@ -1,11 +1,12 @@
 import React from 'react';
-import { useMarketRates } from '../../lib/marketRates';
+import { useMarketData } from '../../lib/marketData';
 
-export function MarketRatesStrip() {
-  const { usdTry, quarterGoldTry, available, error } = useMarketRates();
+export function MarketRatesStrip({ realtimeStatus }: { realtimeStatus: 'connecting' | 'live' | 'offline' }) {
+  const { usdTry, quarterGoldTry, updatedAt } = useMarketData();
+  const ageMinutes = updatedAt ? Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / 60_000)) : null;
 
   return (
-    <section style={styles.wrap} aria-label="Piyasa kurları">
+    <section style={styles.wrap} aria-label="Piyasa kurları" title="USD/TRY: Frankfurter. Çeyrek altın: PAX Gold spot ons fiyatından 1,608 g saf altın karşılığı; kuyumcu satış fiyatı değildir.">
       <div style={styles.item}>
         <span style={styles.icon}>$</span>
         <div>
@@ -23,7 +24,7 @@ export function MarketRatesStrip() {
           </strong>
         </div>
       </div>
-      <span style={styles.live}>{error ? '● Hata' : available ? '● canlı' : '● yükleniyor'}</span>
+      <span style={{ ...styles.live, color: realtimeStatus === 'live' ? '#34D399' : '#94A3B8' }}>● {realtimeStatus === 'live' ? 'Canlı' : realtimeStatus === 'offline' ? 'Bağlantı kesildi' : 'Bağlanıyor'}{ageMinutes !== null ? ` • ${ageMinutes === 0 ? 'şimdi' : `${ageMinutes} dk önce`}` : ''}</span>
     </section>
   );
 }
