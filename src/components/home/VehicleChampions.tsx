@@ -9,6 +9,7 @@ type ChampionPeriod = 'today' | 'week' | 'month';
 const periodButtons: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
 
 const titles: Record<ChampionPeriod, string> = { today: 'Günün Birincisi', week: 'Haftanın Birincisi', month: 'Ayın Birincisi' };
+const PODIUM_GOLD = '#d7ad61';
 
 interface VehicleChampionsProps {
   income: IncomeRecord[];
@@ -68,10 +69,9 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
           {podiumOrder.filter(v => v).map((v, i) => {
             const rankIndex = podiumOrder.length === 1 ? 0 : i === 0 ? 1 : i === 1 ? 0 : 2; // Map back to original rank
             const isFirst = rankIndex === 0;
-            const accents = ['#d7ad61', '#9ca8b6', '#a87855'];
             return (
-              <div key={v.vehicleId} style={{ ...S.podiumItem, ...(isFirst ? S.firstItem : {}), borderTopColor: accents[rankIndex] }}>
-                <div style={{ ...S.podiumRank, color: accents[rankIndex] }}>{rankIndex + 1}</div>
+              <div key={v.vehicleId} style={{ ...S.podiumItem, ...(isFirst ? S.firstItem : {}), borderTopColor: PODIUM_GOLD }}>
+                <div style={{ ...S.podiumRank, color: PODIUM_GOLD }}>{rankIndex + 1}</div>
                 <div style={S.podiumName}>{v.shortName}</div>
                 <div style={S.podiumAmount}>{formatMoney(v.amount, true)}</div>
               </div>
