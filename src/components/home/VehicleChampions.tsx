@@ -142,7 +142,7 @@ const S: Record<string, React.CSSProperties> = {
     borderTop: '2px solid',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04)',
   },
-  firstItem: { paddingTop: 18, paddingBottom: 15, transform: 'translateY(-7px)', background: 'radial-gradient(circle at 50% 0,rgba(215,173,97,.095),transparent 66%),linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.014))' },
+  firstItem: { paddingTop: 18, paddingBottom: 15, transform: 'translateY(-7px)', background: 'radial-gradient(circle at 50% 0,rgba(215,173,97,.055),transparent 62%),linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012))' },
   podiumRank: {
     fontSize: 15,
     fontWeight: 800,

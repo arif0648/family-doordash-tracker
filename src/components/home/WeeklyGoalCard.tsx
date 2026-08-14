@@ -77,7 +77,7 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
           <div key={vehicle.vehicleId} style={S.vehicleRow}>
             <div style={S.vehicleTopline}>
               <strong style={S.vehicleName}>{vehicle.shortName}</strong>
-              <span style={S.vehicleAmounts}>{formatMoney(vehicle.amount, true)} / {formatMoney(vehicle.target, true)}</span>
+              <span style={S.vehicleAmounts}>{formatMoney(vehicle.amount, true)} / {formatMoney(vehicle.target, true)} · {formatMoney(vehicle.remaining, true)} kaldı</span>
               <span style={S.vehiclePct}>%{vehicle.percent}</span>
             </div>
             <div style={S.vehicleTrack}>
@@ -110,7 +110,7 @@ const S: Record<string, React.CSSProperties> = {
   vehicleTopline: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
   vehicleName: { minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'var(--text)', fontWeight: 700 },
   vehiclePct: { width: 29, textAlign: 'right', fontSize: 10, fontWeight: 750, color: 'var(--positive)', fontVariantNumeric: 'tabular-nums' },
-  vehicleAmounts: { fontSize: 9, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
+  vehicleAmounts: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', fontSize: 8.5, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
   vehicleTrack: { height: 3, marginTop: 5, borderRadius: 999, background: 'rgba(255,255,255,.055)', overflow: 'hidden' },
   vehicleFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--accent), var(--positive))', transition: 'width 0.45s ease' },
   milestoneText: { marginTop: 10, fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' },

@@ -116,8 +116,8 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
   }
 
   return (
-    <div style={styles.shell}>
-      <form onSubmit={handleSubmit} style={styles.form}>
+    <div className="app-page" style={styles.shell}>
+      <form className="app-panel" onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.hero}>
           <span style={styles.eyebrow}>GELİR</span>
           <h1 style={styles.title}>{editingIncome ? 'Kazancı Düzenle' : 'Gelir Ekle'}</h1>
@@ -148,19 +148,19 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
 }
 import { translateError } from '../../lib/errorMessage';
 const styles: Record<string, React.CSSProperties> = {
-  shell:{padding:'12px 14px calc(110px + env(safe-area-inset-bottom))'},
-  form:{background:'linear-gradient(145deg,rgba(24,18,55,.94),rgba(8,10,24,.98))',border:'1px solid rgba(168,85,247,.34)',borderRadius:20,padding:14,boxShadow:'0 16px 40px rgba(0,0,0,.3)',display:'flex',flexDirection:'column',gap:7},
+  shell:{padding:'12px 14px calc(116px + var(--safe-bottom))',maxWidth:680,margin:'0 auto'},
+  form:{borderRadius:20,padding:15,display:'flex',flexDirection:'column',gap:8},
   hero:{padding:'2px 2px 4px'},
-  eyebrow:{fontSize:9,letterSpacing:2,color:'#C084FC',fontWeight:800},
-  title:{margin:'4px 0 3px',fontSize:20,color:'#fff',letterSpacing:-.5},
+  eyebrow:{fontSize:9,letterSpacing:1.5,color:'#aa96e3',fontWeight:750},
+  title:{margin:'4px 0 3px',fontSize:20,color:'var(--text)',fontWeight:750,letterSpacing:-.4},
   subtitle:{margin:0,color:'#8F93A8',fontSize:11},
   label:{fontSize:11,color:'#A7ABC0',marginTop:2},
-  input:{width:'100%',padding:'12px 14px',borderRadius:12,border:'1px solid rgba(148,163,184,.16)',background:'rgba(5,7,18,.78)',color:'#fff',fontSize:15,minHeight:46, boxSizing:'border-box'},
-  moneyInput:{width:'100%',padding:'14px 14px',borderRadius:14,border:'1px solid rgba(52,211,153,.35)',background:'rgba(5,7,18,.82)',color:'#34D399',fontSize:18,fontWeight:800,minHeight:52, boxSizing:'border-box'},
+  input:{width:'100%',padding:'12px 14px',borderRadius:12,border:'1px solid var(--border)',background:'#090e16',color:'var(--text)',fontSize:15,minHeight:46,boxSizing:'border-box'},
+  moneyInput:{width:'100%',padding:'14px',borderRadius:14,border:'1px solid rgba(53,201,121,.24)',background:'#090e16',color:'#65d99a',fontSize:18,fontWeight:750,minHeight:52,boxSizing:'border-box'},
   warning:{color:'#FBBF24',fontSize:12},
   error:{color:'#FB7185',fontSize:12},
   success:{color:'#34D399',fontSize:12},
   buttonRow:{display:'flex',gap:8,marginTop:6},
-  saveButton:{flex:1,minHeight:48,border:0,borderRadius:14,background:'linear-gradient(135deg,#34D399,#10B981)',color:'#04120D',fontWeight:900,fontSize:14,boxShadow:'0 8px 20px rgba(16,185,129,.25)'},
-  cancelButton:{flex:1,minHeight:48,border:0,borderRadius:14,background:'rgba(148,163,184,.2)',color:'#fff',fontWeight:900,fontSize:14}
+  saveButton:{flex:1,minHeight:48,border:'1px solid rgba(53,201,121,.25)',borderRadius:14,background:'rgba(53,201,121,.88)',color:'#04120D',fontWeight:800,fontSize:14},
+  cancelButton:{flex:1,minHeight:48,border:'1px solid var(--border)',borderRadius:14,background:'rgba(255,255,255,.045)',color:'var(--text)',fontWeight:750,fontSize:14}
 };

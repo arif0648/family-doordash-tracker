@@ -88,7 +88,7 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
   }).filter(Boolean) as VehicleSummary[];
 
   return (
-    <div style={styles.page}>
+    <div className="app-page" style={styles.page}>
       <div style={styles.header}>
         <h1 style={styles.heading}>Araçlar</h1>
         {activeVehicles.length < 3 && (
@@ -367,16 +367,16 @@ function VehicleDetailModal({
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 16px 96px', color: 'white' },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   heading: { fontSize: 20, fontWeight: 700, margin: 0 },
-  addButton: { border: 0, borderRadius: 12, padding: '10px 16px', background: 'linear-gradient(135deg,#A855F7,#6366F1)', color: '#fff', fontWeight: 900, fontSize: 13 },
+  addButton: { border: '1px solid rgba(141,114,220,.22)', borderRadius: 12, padding: '10px 14px', background: 'rgba(141,114,220,.12)', color: '#c5b8eb', fontWeight: 750, fontSize: 13 },
   section: { marginBottom: 24 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#A7ABC0', marginBottom: 12 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
-  vehicleCard: { background: '#120E2A', borderRadius: 16, padding: 16, border: '1px solid rgba(168,85,247,.2)' },
+  vehicleCard: { background: '#101823', borderRadius: 17, padding: 15, border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)' },
   vehicleHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
-  archivedCard: { background: 'rgba(20,14,43,.6)', borderRadius: 16, padding: 16, border: '1px solid rgba(148,163,184,.1)' },
+  archivedCard: { background: 'rgba(16,24,35,.62)', borderRadius: 17, padding: 15, border: '1px solid var(--border)' },
   archivedNote: { fontSize: 12, color: '#6F748A', margin: '8px 0 0 0' },
   archiveBtn: { border: 0, borderRadius: 8, padding: '6px 12px', background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontSize: 11 },
   restoreBtn: { border: 0, borderRadius: 8, padding: '6px 12px', background: 'rgba(52,211,153,.1)', color: '#34D399', fontSize: 11 },
@@ -391,7 +391,7 @@ const styles: Record<string, React.CSSProperties> = {
     zIndex: 100,
   },
   modal: {
-    background: '#080A17',
+    background: '#0d141e',
     borderRadius: 20,
     padding: 24,
     width: '90%',
@@ -399,7 +399,7 @@ const styles: Record<string, React.CSSProperties> = {
   },
   modalTitle: { fontSize: 18, fontWeight: 700, margin: '0 0 16px', color: '#fff' },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
-  input: { width: '100%', minHeight: 48, padding: 12, borderRadius: 12, border: '1px solid rgba(148,163,184,.14)', background: '#070916', color: '#fff', fontSize: 14 },
+  input: { width: '100%', minHeight: 48, padding: 12, borderRadius: 12, border: '1px solid var(--border)', background: '#090e16', color: 'var(--text)', fontSize: 14 },
   error: { color: '#FB7185', fontSize: 12 },
   modalActions: { display: 'flex', gap: 10, marginTop: 8 },
   cancelBtn: { flex: 1, padding: 12, borderRadius: 12, border: '1px solid rgba(148,163,184,.2)', background: 'transparent', color: '#fff' },

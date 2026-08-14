@@ -157,7 +157,7 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
   if (!settings) return <ErrorScreen message="Ayarlar yüklenemedi." onRetry={fetchSettings} />;
 
   return (
-    <div style={styles.page}>
+    <div className="app-page" style={styles.page}>
       <h1 style={styles.heading}>Profil</h1>
 
       <div style={styles.card}>
@@ -248,9 +248,9 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 16px calc(120px + var(--safe-bottom))', color: 'white' },
-  heading: { fontSize: 20, fontWeight: 700, marginBottom: 16 },
-  card: { background: '#120E2A', borderRadius: 16, padding: 16, marginBottom: 16 },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
+  heading: { fontSize: 20, fontWeight: 750, marginBottom: 14 },
+  card: { background: '#101823', border: '1px solid var(--border)', borderRadius: 18, padding: 15, marginBottom: 14, boxShadow: 'var(--shadow-card)' },
   email: { fontSize: 14, color: '#A7ABC0', margin: 0 },
   sectionTitle: { fontSize: 14, fontWeight: 700, color: '#A7ABC0', marginBottom: 8 },
   toggleRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' },
@@ -281,7 +281,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 10,
     borderRadius: 10,
     border: '1px solid rgba(255,255,255,.1)',
-    background: '#0B1120',
+    background: '#090e16',
     color: 'white',
     fontSize: 15,
     marginBottom: 10,
@@ -292,7 +292,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 0',
     borderRadius: 10,
     border: 'none',
-    background: '#A855F7',
+    background: 'rgba(141,114,220,.78)',
     color: 'white',
     fontWeight: 700,
     fontSize: 14,
@@ -309,7 +309,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: 10,
     borderRadius: 10,
     border: '1px solid rgba(255,255,255,.1)',
-    background: '#0B1120',
+    background: '#090e16',
     color: 'white',
     fontSize: 15,
     boxSizing: 'border-box',
@@ -318,7 +318,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '10px 12px',
     borderRadius: 10,
     border: '1px solid rgba(255,255,255,.1)',
-    background: '#0B1120',
+    background: '#090e16',
     fontSize: 16,
     cursor: 'pointer',
   },

@@ -100,7 +100,7 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
   const empty = notifications.length === 0 && !hasPayment && !hasAppointments;
 
   return (
-    <main style={S.page}>
+    <main className="app-page" style={S.page}>
       <header style={S.header}>
         <div>
           <span style={S.kicker}>BİLDİRİMLER</span>
@@ -193,7 +193,7 @@ function PaymentCard({ card, overdue }: { card: CreditCardRow; overdue: boolean 
       style={{
         ...S.alert,
         borderColor: overdue ? 'rgba(251,113,133,.35)' : 'rgba(168,85,247,.25)',
-        background: overdue ? 'rgba(251,113,133,.08)' : 'rgba(20,14,43,.92)',
+        background: overdue ? 'rgba(251,113,133,.07)' : '#101823',
       }}
     >
       <div style={{ ...S.alertIcon, background: overdue ? 'rgba(251,113,133,.15)' : 'rgba(168,85,247,.15)', color: overdue ? '#FDA4AF' : '#C084FC' }}>💳</div>
@@ -256,21 +256,21 @@ function NotificationCard({ notification, onMarkRead }: { notification: Notifica
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '18px 14px calc(130px + env(safe-area-inset-bottom))', color: '#fff' },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 26, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
   settingsLink: { fontSize: 12, color: '#C084FC', textDecoration: 'none', fontWeight: 700 },
   error: { marginTop: 14, padding: 12, borderRadius: 14, background: 'rgba(251,113,133,.1)', border: '1px solid rgba(251,113,133,.2)', color: '#FDA4AF', fontSize: 12 },
-  tabs: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, padding: 5, borderRadius: 17, background: 'rgba(18,14,39,.86)', border: '1px solid rgba(168,85,247,.16)', marginBottom: 14 },
+  tabs: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, padding: 4, borderRadius: 15, background: '#0e151f', border: '1px solid var(--border)', marginBottom: 14 },
   tab: { position: 'relative', padding: '10px 4px', textAlign: 'center', borderRadius: 12, border: 0, background: 'transparent', color: '#898DA0', fontSize: 11, fontWeight: 800, cursor: 'pointer' },
-  tabActive: { background: 'linear-gradient(135deg,rgba(168,85,247,.42),rgba(99,102,241,.28))', color: '#fff' },
+  tabActive: { background: 'rgba(60,200,237,.09)', boxShadow: 'inset 0 0 0 1px rgba(60,200,237,.18)', color: 'var(--text)' },
   badgeDot: { position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9, background: '#A855F7', color: '#fff', fontSize: 9, fontWeight: 900, display: 'grid', placeItems: 'center', padding: '0 5px' },
-  markAll: { width: '100%', padding: 12, borderRadius: 14, border: 0, background: 'rgba(168,85,247,.15)', color: '#C084FC', fontWeight: 900, fontSize: 13, marginBottom: 16 },
+  markAll: { width: '100%', padding: 11, borderRadius: 13, border: '1px solid var(--border)', background: 'rgba(255,255,255,.035)', color: 'var(--text-secondary)', fontWeight: 750, fontSize: 13, marginBottom: 14 },
   section: { marginBottom: 16 },
   sectionTitle: { fontSize: 10, color: '#7F8499', marginBottom: 10, fontWeight: 900, letterSpacing: 1 },
-  card: { display: 'flex', gap: 12, alignItems: 'center', padding: 14, borderRadius: 16, background: 'linear-gradient(145deg,rgba(20,14,43,.92),rgba(7,9,21,.96))', border: '1px solid rgba(168,85,247,.15)', marginBottom: 8 },
+  card: { display: 'flex', gap: 11, alignItems: 'center', padding: 13, borderRadius: 15, background: '#101823', border: '1px solid var(--border)', marginBottom: 7, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },
   icon: { width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 },
   content: { flex: 1, minWidth: 0 },
   cardHead: { display: 'flex', justifyContent: 'space-between', gap: 8, marginBottom: 5, alignItems: 'center' },
@@ -279,7 +279,7 @@ const S: Record<string, React.CSSProperties> = {
   cardTitle: { fontSize: 15, margin: '0 0 4px', color: '#fff', fontWeight: 800 },
   cardBody: { fontSize: 13, color: '#7F8499', margin: 0 },
   markRead: { width: 34, height: 34, borderRadius: 10, border: 0, background: 'rgba(52,211,153,.15)', color: '#34D399', fontWeight: 900, fontSize: 14, flexShrink: 0, cursor: 'pointer' },
-  alert: { display: 'flex', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, background: 'linear-gradient(145deg,rgba(20,14,43,.92),rgba(7,9,21,.96))', border: '1px solid', marginBottom: 8, textDecoration: 'none', color: '#fff' },
+  alert: { display: 'flex', alignItems: 'center', gap: 11, padding: 13, borderRadius: 15, background: '#101823', border: '1px solid', marginBottom: 7, textDecoration: 'none', color: 'var(--text)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },
   alertIcon: { width: 40, height: 40, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 },
   alertTitle: { fontSize: 14, fontWeight: 800, color: '#fff' },
   alertMeta: { fontSize: 12, color: '#7F8499', marginTop: 2 },

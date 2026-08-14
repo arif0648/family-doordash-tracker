@@ -117,7 +117,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
   }
 
   return (
-    <main style={S.page}>
+    <main className="app-page" style={S.page}>
       <header>
         <span style={S.kicker}>HAREKETLER</span>
         <h1 style={S.h1}>Gelir & Giderler</h1>
@@ -188,24 +188,24 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', maxWidth: 680, margin: '0 auto', color: '#fff' },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
   kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 29, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  note: { marginTop: 14, padding: 12, borderRadius: 14, background: 'rgba(168,85,247,.08)', border: '1px solid rgba(168,85,247,.2)', color: '#DDD6FE', fontSize: 12 },
+  note: { marginTop: 12, padding: 11, borderRadius: 13, background: 'rgba(141,114,220,.055)', border: '1px solid rgba(141,114,220,.14)', color: 'var(--text-secondary)', fontSize: 12 },
   filters: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 },
-  filterInput: { width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 12, border: '1px solid rgba(255,255,255,.08)', background: '#141926', color: '#fff', fontSize: 13 },
+  filterInput: { width: '100%', minHeight: 44, padding: '10px 12px', borderRadius: 12, border: '1px solid var(--border)', background: '#0c121b', color: 'var(--text)', fontSize: 13 },
   dateRow: { display: 'flex', alignItems: 'center', gap: 8 },
   dateSep: { color: '#8A90A6' },
   summary: { marginTop: 12, fontSize: 14, color: '#8A90A6' },
   list: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 },
-  dateHeader: { position: 'sticky', top: 0, background: '#0A0E1A', padding: '8px 4px', fontSize: 12, color: '#8A90A6', fontWeight: 800, zIndex: 10 },
-  row: { display: 'flex', gap: 10, alignItems: 'center', padding: 14, borderRadius: 18, background: '#141926', border: '1px solid rgba(255,255,255,.07)' },
+  dateHeader: { position: 'sticky', top: 0, background: 'rgba(6,9,15,.94)', padding: '8px 4px', fontSize: 12, color: 'var(--muted)', fontWeight: 750, zIndex: 10 },
+  row: { display: 'flex', gap: 10, alignItems: 'center', padding: 13, borderRadius: 16, background: '#101823', border: '1px solid var(--border)', boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },
   rowTop: { display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 13 },
   rowSub: { fontSize: 11, color: '#7F8499', marginTop: 2 },
   amount: { fontSize: 15, fontWeight: 700, minWidth: 80, textAlign: 'right' },
   actions: { display: 'flex', gap: 6 },
-  editInput: { width: 70, padding: 8, borderRadius: 8, border: '1px solid rgba(148,163,184,.2)', background: '#141926', color: '#fff', fontSize: 13, textAlign: 'right' },
+  editInput: { width: 70, padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: '#0c121b', color: 'var(--text)', fontSize: 13, textAlign: 'right' },
   editBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(168,85,247,.14)', color: '#D8B4FE', fontWeight: 800, fontSize: 11 },
   deleteBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontWeight: 800, fontSize: 11 },
 };

@@ -69,7 +69,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
   }
 
   return (
-    <div style={styles.form}>
+    <div className="app-page" style={styles.form}>
       <form onSubmit={handleSubmit} style={{display:'flex',flexDirection:'column',gap:10}}>
       <div><span style={{fontSize:10,letterSpacing:2,color:'#F472B6',fontWeight:900}}>GİDER</span><h2 style={styles.title}>Gider Ekle</h2><p style={{margin:0,color:'#7F8499',fontSize:12}}>Aile bütçesine anında yansır.</p></div>
 
@@ -133,15 +133,15 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  form: { display:'flex', flexDirection:'column', gap:8, padding:'12px 14px calc(110px + env(safe-area-inset-bottom))', color:'white' },
+  form: { display:'flex', flexDirection:'column', gap:9, padding:'12px 14px calc(116px + var(--safe-bottom))', color:'var(--text)' },
   title: { fontSize:20, fontWeight:800, margin:'6px 0', letterSpacing:-.5 },
-  tabs: { display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:4, background:'rgba(20,14,43,.9)', border:'1px solid rgba(168,85,247,.2)', borderRadius:14, padding:4 },
+  tabs: { display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:4, background:'#0e151f', border:'1px solid var(--border)', borderRadius:14, padding:4 },
   tab: { minHeight:42, borderRadius:10, border:'none', fontSize:11, fontWeight:800, cursor:'pointer' },
   subTabs: { display:'flex', gap:8 },
-  subTab: { flex:1, minHeight:46, borderRadius:13, background:'rgba(9,10,23,.8)', color:'white', fontSize:13 },
+  subTab: { flex:1, minHeight:44, borderRadius:12, background:'#0b111a', color:'var(--text)', fontSize:13 },
   label: { fontSize:11, color:'#A7ABC0', marginTop:2 },
-  input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid rgba(148,163,184,.16)', background:'rgba(5,7,18,.78)', color:'white', fontSize:15, minHeight:46, boxSizing:'border-box' },
+  input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid var(--border)', background:'#090e16', color:'var(--text)', fontSize:15, minHeight:46, boxSizing:'border-box' },
   error: { color:'#FB7185', fontSize:12, marginTop:4 },
   success: { color:'#34D399', fontSize:12, marginTop:4 },
-  saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'none', background:'linear-gradient(135deg,#34D399,#10B981)', color:'#04120D', fontWeight:900, fontSize:14, boxShadow:'0 8px 20px rgba(16,185,129,.22)' },
+  saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'1px solid rgba(53,201,121,.25)', background:'rgba(53,201,121,.88)', color:'#04120D', fontWeight:800, fontSize:14 },
 };

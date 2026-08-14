@@ -97,7 +97,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   }
 
   return (
-    <div style={styles.page}>
+    <div className="app-page" style={styles.page}>
       <h1 style={styles.heading}>Raporlar</h1>
 
       <h2 style={styles.sectionTitle}>Finansal Özet</h2>
@@ -160,14 +160,14 @@ function Stat({ label, value, highlight, isMiles }: { label: string; value: numb
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(110px + env(safe-area-inset-bottom))', color: 'white' },
-  heading: { fontSize: 20, fontWeight: 800, marginBottom: 16 },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)' },
+  heading: { fontSize: 20, fontWeight: 750, marginBottom: 14 },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 },
-  statCard: { background: '#120E2A', borderRadius: 16, padding: 14 },
+  statCard: { background: '#101823', border: '1px solid var(--border)', borderRadius: 15, padding: 13, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },
   statLabel: { fontSize: 12, color: '#7F8499', marginBottom: 6 },
   statValue: { fontSize: 18, fontWeight: 700, margin: 0 },
   sectionTitle: { fontSize: 15, fontWeight: 800, marginTop: 20, marginBottom: 10 },
-  trendCard: { padding: 16, borderRadius: 18, background: 'linear-gradient(145deg,rgba(25,18,56,.96),rgba(7,9,21,.98))', border: '1px solid rgba(168,85,247,.15)', boxShadow: '0 8px 20px rgba(0,0,0,.2)', marginBottom: 16 },
+  trendCard: { padding: 15, borderRadius: 18, background: 'linear-gradient(145deg,#111a26,#0a1018)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)', marginBottom: 14 },
   trendKicker: { fontSize: 10, letterSpacing: 2, color: '#8F93A8', fontWeight: 900 },
   trendStatus: { fontSize: 22, fontWeight: 900, margin: '6px 0' },
   trendMeta: { fontSize: 12, color: '#777C91' },
@@ -177,7 +177,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '12px 0',
     borderRadius: 12,
     border: '1px solid rgba(148,163,184,.14)',
-    background: '#120E2A',
+    background: '#101823',
     color: 'white',
     fontSize: 13,
     fontWeight: 700,

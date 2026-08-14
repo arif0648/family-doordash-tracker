@@ -255,7 +255,7 @@ const S: Record<string, React.CSSProperties> = {
     gap: 8,
     padding: '6px 10px',
     borderRadius: 999,
-    background: 'rgba(255,255,255,.035)',
+    background: 'rgba(255,255,255,.025)',
     border: '1px solid var(--border)',
   },
   dot: {
@@ -312,7 +312,7 @@ const S: Record<string, React.CSSProperties> = {
     alignItems: 'flex-start',
     gap: 2,
     padding: '7px 0',
-    borderTop: '1px solid rgba(255,255,255,.045)',
+    borderTop: '1px solid rgba(255,255,255,.04)',
   },
   cellLabel: {
     fontSize: 9,

@@ -20,7 +20,7 @@ export function CreditCardsPage({ familyId }: { familyId: string }) {
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
 
   return (
-    <main style={S.page}>
+    <main className="app-page" style={S.page}>
       <div style={S.header}>
         <div>
           <span style={S.kicker}>BORÇLAR</span>
@@ -220,19 +220,19 @@ function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: stri
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '18px 14px calc(112px + env(safe-area-inset-bottom))', maxWidth: 680, margin: '0 auto', color: '#fff' },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   kicker: { fontSize: 9, letterSpacing: 2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 29, margin: '4px 0' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
-  add: { border: 0, borderRadius: 14, padding: '13px 15px', background: 'linear-gradient(135deg,#A855F7,#6366F1)', color: '#fff', fontWeight: 900 },
-  form: { display: 'flex', flexDirection: 'column', gap: 10, padding: 17, borderRadius: 22, background: 'rgba(18,14,42,.95)', border: '1px solid rgba(168,85,247,.25)', marginBottom: 14 },
-  input: { width: '100%', minHeight: 52, padding: 14, borderRadius: 14, border: '1px solid rgba(148,163,184,.14)', background: '#080A17', color: '#fff', fontSize: 15 },
+  add: { border: '1px solid rgba(141,114,220,.22)', borderRadius: 13, padding: '11px 14px', background: 'rgba(141,114,220,.12)', color: '#c5b8eb', fontWeight: 750 },
+  form: { display: 'flex', flexDirection: 'column', gap: 10, padding: 16, borderRadius: 20, background: '#101823', border: '1px solid var(--border)', marginBottom: 14, boxShadow: 'var(--shadow-card)' },
+  input: { width: '100%', minHeight: 50, padding: 13, borderRadius: 13, border: '1px solid var(--border)', background: '#090e16', color: 'var(--text)', fontSize: 15 },
   dateLabel: { fontSize: 11, color: '#8D92A7' },
-  save: { minHeight: 52, border: 0, borderRadius: 15, background: '#34D399', color: '#03130D', fontWeight: 900 },
+  save: { minHeight: 50, border: '1px solid rgba(53,201,121,.25)', borderRadius: 14, background: 'rgba(53,201,121,.88)', color: '#03130D', fontWeight: 800 },
   error: { color: '#FB7185', fontSize: 12 },
   list: { display: 'flex', flexDirection: 'column', gap: 10 },
-  card: { padding: 18, borderRadius: 23, background: 'linear-gradient(145deg,rgba(21,16,48,.95),rgba(7,9,20,.98))', border: '1px solid' },
+  card: { padding: 16, borderRadius: 20, background: 'linear-gradient(145deg,#111a26,#0a1018)', border: '1px solid', boxShadow: 'var(--shadow-card)' },
   cardTop: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' },
   chip: { fontSize: 8, letterSpacing: 2, color: '#A78BFA' },
   cardNumber: { fontSize: 14, color: '#9CA3AF', letterSpacing: 2, marginTop: 6 },
@@ -249,7 +249,7 @@ const S: Record<string, React.CSSProperties> = {
   payBtn: { border: 0, borderRadius: 10, padding: '8px 12px', background: 'rgba(52,211,153,.15)', color: '#34D399', fontWeight: 800, fontSize: 11 },
   del: { border: 0, background: 'transparent', color: '#7F8499', fontSize: 11 },
   modalOverlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 },
-  modal: { background: '#080A17', borderRadius: 20, padding: 24, width: '90%', maxWidth: 400 },
+  modal: { background: '#0d141e', border: '1px solid var(--border)', borderRadius: 20, padding: 22, width: '90%', maxWidth: 400, boxShadow: '0 24px 60px rgba(0,0,0,.45)' },
   modalTitle: { fontSize: 18, margin: '0 0 16px', color: '#fff' },
   modalForm: { display: 'flex', flexDirection: 'column', gap: 12 },
   label: { fontSize: 12, color: '#A7ABC0' },
