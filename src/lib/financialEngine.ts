@@ -21,7 +21,7 @@ export type ExpenseCategory =
 export interface IncomeRecord {
   id: string;
   userId?: string;
-  vehicleId: string;
+  vehicleId: string | null;
   amount: number;
   recordDate: string; // 'YYYY-MM-DD' in Pacific-local terms
 }
@@ -288,6 +288,57 @@ export function computeLeaderboard(args: {
     .sort((a, b) => b.net - a.net);
 
   return { hasData: true, winner: ranking[0], ranking };
+}
+
+// ---------------------------------------------------------------------------
+// VEHICLE INCOME LEADERBOARD (revenue-based, excludes null vehicle_id)
+// ---------------------------------------------------------------------------
+
+export interface VehicleIncomeEntry {
+  vehicleId: string;
+  shortName: string;
+  amount: number;
+}
+
+export type VehicleIncomeLeaderboardResult =
+  | { hasData: false }
+  | { hasData: true; winner: VehicleIncomeEntry; second: VehicleIncomeEntry | null; ranking: VehicleIncomeEntry[] };
+
+/**
+ * Ranks vehicles by total INCOME for a period. Used for "Vehicle Champions"
+ * and weekly vehicle contribution breakdowns. Null vehicle_id records are
+ * excluded (they still count toward family totals, but not a specific vehicle).
+ */
+export function computeVehicleIncomeLeaderboard(args: {
+  income: IncomeRecord[];
+  vehicles: Array<{ id: string; short_name?: string; shortName?: string }>;
+  boundary: PeriodBoundary;
+}): VehicleIncomeLeaderboardResult {
+  const { income, vehicles, boundary } = args;
+  const periodIncome = filterIncomeByPeriod(income, boundary);
+  const vehicleMap = new Map<string, number>();
+
+  periodIncome.forEach((r) => {
+    if (!r.vehicleId) return;
+    vehicleMap.set(r.vehicleId, (vehicleMap.get(r.vehicleId) || 0) + r.amount);
+  });
+
+  const vehicleNameMap = Object.fromEntries(
+    vehicles.map((v) => [v.id, v.short_name ?? (v as any).shortName ?? v.id])
+  );
+
+  const ranking = [...vehicleMap.entries()]
+    .map(([vehicleId, amount]) => ({
+      vehicleId,
+      shortName: vehicleNameMap[vehicleId] || vehicleId,
+      amount: roundCurrency(amount),
+    }))
+    .sort((a, b) => b.amount - a.amount);
+
+  if (ranking.length === 0) return { hasData: false };
+
+  const [winner, second] = ranking;
+  return { hasData: true, winner, second: second ?? null, ranking };
 }
 
 // ---------------------------------------------------------------------------

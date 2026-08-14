@@ -169,7 +169,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
   const activeTotal = todaySummary.totalSeconds + elapsedSeconds;
 
   return (
-    <section style={S.section}>
+    <section id="work-card" style={S.section}>
       <div style={S.header}>
         <span style={S.kicker}>ÇALIŞMA ZAMANI</span>
         <div style={S.status}>

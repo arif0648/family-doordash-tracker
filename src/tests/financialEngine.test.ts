@@ -14,6 +14,7 @@ import {
   computeFamilySummary,
   computeVehicleSummary,
   computeLeaderboard,
+  computeVehicleIncomeLeaderboard,
   totalFixedExpenseAsOf,
   IncomeRecord,
   ExpenseRecord,
@@ -183,6 +184,89 @@ describe('Credit card spending does not double count', () => {
     expect(family.totalIncome).toBe(0);
     expect(family.market).toBe(100);
     expect(family.net).toBe(-100);
+  });
+});
+
+describe('Vehicle income leaderboard — gelir bazlı şampiyon', () => {
+  const vehicles = [
+    { id: 'kia', shortName: 'Kia Sportage' },
+    { id: 'toyota', shortName: 'Toyota Corolla' },
+  ];
+
+  it('vehicle_id=null gelir family total\'e girer ama şampiyonlara değil', () => {
+    const income: IncomeRecord[] = [
+      { id: 'i1', vehicleId: null, amount: 500, recordDate: '2026-08-05' },
+      { id: 'i2', vehicleId: 'kia', amount: 300, recordDate: '2026-08-05' },
+    ];
+    const family = computeFamilySummary({
+      period: 'today',
+      boundary: { start: '2026-08-05', end: '2026-08-05' },
+      income,
+      expenses: [],
+      fixedExpenseVersions: [],
+      monthAnchorDate: '2026-08-05',
+    });
+    const leaderboard = computeVehicleIncomeLeaderboard({ income, vehicles, boundary: { start: '2026-08-05', end: '2026-08-05' } });
+
+    expect(family.totalIncome).toBe(800);
+    expect(leaderboard.hasData).toBe(true);
+    if (leaderboard.hasData) {
+      expect(leaderboard.winner.shortName).toBe('Kia Sportage');
+      expect(leaderboard.winner.amount).toBe(300);
+      expect(leaderboard.ranking.length).toBe(1);
+    }
+  });
+
+  it('doğru araç ismi ve sıralama', () => {
+    const income: IncomeRecord[] = [
+      { id: 'i1', vehicleId: 'toyota', amount: 420, recordDate: '2026-08-05' },
+      { id: 'i2', vehicleId: 'kia', amount: 300, recordDate: '2026-08-05' },
+    ];
+    const result = computeVehicleIncomeLeaderboard({ income, vehicles, boundary: { start: '2026-08-05', end: '2026-08-05' } });
+    expect(result.hasData).toBe(true);
+    if (result.hasData) {
+      expect(result.winner.shortName).toBe('Toyota Corolla');
+      expect(result.winner.amount).toBe(420);
+      expect(result.second?.shortName).toBe('Kia Sportage');
+      expect(result.second?.amount).toBe(300);
+    }
+  });
+
+  it('veri yoksa hasData=false', () => {
+    const result = computeVehicleIncomeLeaderboard({ income: [], vehicles, boundary: { start: '2026-08-05', end: '2026-08-05' } });
+    expect(result.hasData).toBe(false);
+  });
+});
+
+describe('Family financial direction — income vs expenses', () => {
+  it('income > expenses => positive', () => {
+    const income: IncomeRecord[] = [{ id: 'i1', vehicleId: null, amount: 1000, recordDate: '2026-08-05' }];
+    const expenses: ExpenseRecord[] = [{ id: 'e1', category: 'market', vehicleId: null, amount: 400, recordDate: '2026-08-05' }];
+    const family = computeFamilySummary({
+      period: 'today',
+      boundary: { start: '2026-08-05', end: '2026-08-05' },
+      income,
+      expenses,
+      fixedExpenseVersions: [],
+      monthAnchorDate: '2026-08-05',
+    });
+    expect(family.net).toBe(600);
+    expect(family.net).toBeGreaterThan(0);
+  });
+
+  it('income < expenses => negative', () => {
+    const income: IncomeRecord[] = [{ id: 'i1', vehicleId: null, amount: 500, recordDate: '2026-08-05' }];
+    const expenses: ExpenseRecord[] = [{ id: 'e1', category: 'market', vehicleId: null, amount: 900, recordDate: '2026-08-05' }];
+    const family = computeFamilySummary({
+      period: 'today',
+      boundary: { start: '2026-08-05', end: '2026-08-05' },
+      income,
+      expenses,
+      fixedExpenseVersions: [],
+      monthAnchorDate: '2026-08-05',
+    });
+    expect(family.net).toBe(-400);
+    expect(family.net).toBeLessThan(0);
   });
 });
 

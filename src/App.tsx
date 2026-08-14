@@ -73,7 +73,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
           path="/"
           element={
             <ErrorBoundary boundaryName="Ana Sayfa">
-              <HomePage familyId={familyId} />
+              <HomePage familyId={familyId} userId={userId} />
             </ErrorBoundary>
           }
         />

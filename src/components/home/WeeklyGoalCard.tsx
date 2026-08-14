@@ -73,7 +73,7 @@ export function WeeklyGoalCard({ goals, userId }: WeeklyGoalCardProps) {
         <div style={{ ...S.fill, width: `${familyPercent}%` }} />
         <div style={S.milestones}>
           {MILESTONES.map((m) => (
-            <div key={m} style={{ ...S.dot, background: familyPercent >= m ? '#34D399' : 'rgba(255,255,255,.16)' }}>
+            <div key={m} style={{ ...S.dot, background: familyPercent >= m ? 'var(--positive)' : 'var(--surface-raised)' }}>
               <span style={S.dotLabel}>{m}%</span>
             </div>
           ))}
@@ -101,7 +101,7 @@ export function WeeklyGoalCard({ goals, userId }: WeeklyGoalCardProps) {
           const isMe = g.user_id === userId;
           const p = percentLabel(g.week_income, g.weekly_goal);
           return (
-            <div key={g.user_id} style={{ ...S.member, background: isMe ? 'rgba(168,85,247,.12)' : 'rgba(255,255,255,.04)' }}>
+            <div key={g.user_id} style={{ ...S.member, background: isMe ? 'rgba(139,92,246,.12)' : 'var(--surface-raised)' }}>
               <div style={S.memberInfo}>
                 <strong>{g.display_name} {isMe && '(Sen)'}</strong>
                 <span>${g.week_income.toLocaleString('en-US', { minimumFractionDigits: 2 })} / ${g.weekly_goal.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
@@ -130,36 +130,37 @@ export function WeeklyGoalCard({ goals, userId }: WeeklyGoalCardProps) {
 
 const S: Record<string, React.CSSProperties> = {
   section: {
-    padding: 14,
-    borderRadius: 18,
-    background: 'linear-gradient(145deg, rgba(25,18,56,.96), rgba(7,9,21,.98))',
-    border: '1px solid rgba(52,211,153,.18)',
-    boxShadow: '0 16px 40px rgba(0,0,0,.35)',
-    marginBottom: 8,
-    color: '#fff',
+    padding: 16,
+    borderRadius: 'var(--radius-card)',
+    background: 'var(--surface)',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-card)',
+    marginBottom: 14,
+    color: 'var(--text)',
   },
   head: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
-    marginBottom: 10,
+    marginBottom: 12,
   },
   kicker: {
-    fontSize: 9,
-    letterSpacing: 2,
-    color: '#9C8BEF',
+    fontSize: 10,
+    letterSpacing: 1.5,
+    color: 'var(--positive)',
     fontWeight: 900,
   },
   title: {
     fontSize: 18,
     fontWeight: 900,
     margin: '4px 0 0',
+    color: 'var(--text)',
   },
   badge: {
     padding: '6px 10px',
     borderRadius: 10,
-    background: 'rgba(52,211,153,.12)',
-    color: '#34D399',
+    background: 'rgba(34,197,94,.12)',
+    color: 'var(--positive)',
     fontSize: 12,
     fontWeight: 800,
   },
@@ -167,14 +168,14 @@ const S: Record<string, React.CSSProperties> = {
     position: 'relative',
     height: 22,
     borderRadius: 12,
-    background: 'rgba(255,255,255,.06)',
+    background: 'var(--surface-raised)',
     overflow: 'hidden',
     marginBottom: 12,
   },
   fill: {
     height: '100%',
     borderRadius: 12,
-    background: 'linear-gradient(90deg, #34D399, #A78BFA)',
+    background: 'linear-gradient(90deg, var(--positive), var(--accent))',
     transition: 'width 0.6s ease',
   },
   milestones: {
@@ -193,11 +194,11 @@ const S: Record<string, React.CSSProperties> = {
   },
   dotLabel: {
     position: 'absolute',
-    top: 16,
+    top: 18,
     left: '50%',
     transform: 'translateX(-50%)',
     fontSize: 9,
-    color: '#9CA3AF',
+    color: 'var(--text-secondary)',
     fontWeight: 800,
   },
   row: {
@@ -212,11 +213,13 @@ const S: Record<string, React.CSSProperties> = {
     gap: 4,
     padding: 10,
     borderRadius: 12,
-    background: 'rgba(255,255,255,.04)',
+    background: 'var(--surface-raised)',
+    fontSize: 11,
+    color: 'var(--text-secondary)',
   },
   membersTitle: {
     fontSize: 11,
-    color: '#9CA3AF',
+    color: 'var(--text-secondary)',
     margin: '0 0 8px',
     fontWeight: 800,
   },
@@ -232,12 +235,14 @@ const S: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     padding: 10,
     borderRadius: 12,
-    border: '1px solid rgba(255,255,255,.06)',
+    border: '1px solid var(--border)',
   },
   memberInfo: {
     display: 'flex',
     flexDirection: 'column',
     gap: 3,
+    fontSize: 12,
+    color: 'var(--text-secondary)',
   },
   memberRight: {
     display: 'flex',
@@ -248,24 +253,24 @@ const S: Record<string, React.CSSProperties> = {
   },
   memberPercent: {
     fontSize: 15,
-    color: '#34D399',
+    color: 'var(--positive)',
   },
   memberBar: {
     width: 70,
     height: 6,
     borderRadius: 3,
-    background: 'rgba(255,255,255,.1)',
+    background: 'var(--surface)',
     overflow: 'hidden',
   },
   memberFill: {
     height: '100%',
     borderRadius: 3,
-    background: '#60A5FA',
+    background: 'var(--accent)',
     transition: 'width 0.5s ease',
   },
   milestoneText: {
     fontSize: 13,
-    color: '#C7CAD6',
+    color: 'var(--text-secondary)',
     textAlign: 'center',
   },
 };

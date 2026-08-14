@@ -18,7 +18,7 @@ export function QuickActionsSheet({ open, onClose }: QuickActionsSheetProps) {
   const actions = [
     { path: '/kazanc', icon: '＋', label: 'Kazanç Ekle', color: 'var(--positive)' },
     { path: '/gider', icon: '−', label: 'Gider Ekle', color: 'var(--negative)' },
-    { path: '/', icon: '⏱', label: 'Çalışma Yönet', color: 'var(--accent)' },
+    { path: '/?focus=work', icon: '⏱', label: 'Çalışma Yönet', color: 'var(--accent)' },
     { path: '/randevular', icon: '📅', label: 'Randevu Ekle', color: 'var(--brand)' },
   ];
 
