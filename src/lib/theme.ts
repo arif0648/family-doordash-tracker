@@ -6,7 +6,7 @@ export const theme = {
     border: 'rgba(255,255,255,.07)',
     accent: '#38BDF8',
     income: '#42D183',
-    expense: '#F06F7F',
+    expense: '#EF6F6C',
     warning: '#F59E0B',
     gold: '#D4AF37',
     text: '#E8EAF2',

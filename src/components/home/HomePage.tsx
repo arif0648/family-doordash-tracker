@@ -174,7 +174,7 @@ const S: Record<string, React.CSSProperties> = {
   periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4, padding: 4, borderRadius: 15, marginBottom: 14 },
   period: { minHeight: 40, padding: '9px 4px', textAlign: 'center', borderRadius: 11, border: 0, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 12, fontWeight: 750, background: 'transparent', transition: 'color 160ms ease, background 160ms ease, box-shadow 160ms ease' },
   netCard: { padding: '18px 18px 14px', borderRadius: 'var(--radius-card)', marginBottom: 10, textAlign: 'center' },
-  netKicker: { fontSize: 10, letterSpacing: 1.35, color: 'var(--text-secondary)', fontWeight: 720 },
+  netKicker: { fontSize: 10, letterSpacing: 1.35, color: '#d7dee8', fontWeight: 740 },
   netValue: { fontSize: 'clamp(38px,11vw,44px)', fontWeight: 800, letterSpacing: -1.8, margin: '5px 0 10px', fontVariantNumeric: 'tabular-nums' },
   netRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 10px' },
   netCell: { display: 'flex', flexDirection: 'column', gap: 4 },
@@ -194,5 +194,5 @@ const S: Record<string, React.CSSProperties> = {
     transition: 'transform 120ms ease, background 120ms ease',
   },
   incomeBtn: { background: 'linear-gradient(135deg,rgba(53,201,121,.16),rgba(15,22,32,.76))', color: '#79dda7', borderColor: 'rgba(53,201,121,.22)' },
-  expenseBtn: { background: 'linear-gradient(135deg,rgba(239,107,130,.15),rgba(15,22,32,.76))', color: '#f39aac', borderColor: 'rgba(239,107,130,.2)' },
+  expenseBtn: { background: 'linear-gradient(135deg,rgba(239,111,108,.13),rgba(15,22,32,.76))', color: '#ef8b88', borderColor: 'rgba(239,111,108,.2)' },
 };
