@@ -89,16 +89,13 @@ export function HomePage({ familyId }: HomePageProps) {
     <main className="home-page" style={S.page}>
       <header className="home-glass" style={S.identity}>
         <div style={S.identityShine} />
-        <div style={S.familyMark} aria-hidden="true">B</div>
         <div style={S.identityCopy}>
-          <span style={S.identityEyebrow}>AİLE ALANI</span>
           <h1 style={S.title}>BARBIN AİLESİ</h1>
           <div style={S.identityMeta}>
             <time dateTime={monthAnchor} style={S.date}>{todayLabel}</time>
             <span style={S.metaDot} aria-hidden="true" />
             <time dateTime={now.toISOString()} style={S.time}>{timeLabel}</time>
           </div>
-          <span style={S.motto}>Yolumuz uzun.</span>
         </div>
       </header>
 
@@ -162,21 +159,18 @@ export function HomePage({ familyId }: HomePageProps) {
 
 const S: Record<string, React.CSSProperties> = {
   page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)', minHeight: '100vh' },
-  identity: { position: 'relative', overflow: 'hidden', display: 'grid', placeItems: 'center', minHeight: 112, marginBottom: 10, padding: '16px 18px 14px', borderRadius: 20, textAlign: 'center', background: 'linear-gradient(150deg,rgba(19,29,42,.96),rgba(8,13,20,.985))' },
+  identity: { position: 'relative', overflow: 'hidden', display: 'grid', placeItems: 'center', minHeight: 86, marginBottom: 10, padding: '15px 18px 13px', borderRadius: 20, textAlign: 'center', background: 'linear-gradient(150deg,rgba(19,29,42,.96),rgba(8,13,20,.985))' },
   identityShine: { position: 'absolute', inset: '0 12% auto', height: 1, background: 'linear-gradient(90deg,transparent,rgba(215,173,97,.55),transparent)', boxShadow: '0 1px 16px rgba(215,173,97,.1)' },
-  familyMark: { position: 'absolute', top: 13, left: 15, width: 25, height: 25, borderRadius: 9, display: 'grid', placeItems: 'center', border: '1px solid rgba(215,173,97,.19)', background: 'rgba(215,173,97,.055)', color: '#d7ad61', fontSize: 10, fontWeight: 800, letterSpacing: .4 },
   identityCopy: { position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' },
-  identityEyebrow: { color: '#d7ad61', fontSize: 7.5, fontWeight: 750, letterSpacing: 2.1, opacity: .78 },
   identityMeta: { display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, marginTop: 4 },
   metaDot: { width: 3, height: 3, borderRadius: 99, background: 'rgba(215,173,97,.6)' },
   lastMovement: { minWidth: 0, marginTop: 14, paddingTop: 11, borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 10, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' },
   activityDot: { width: 5, height: 5, borderRadius: 999, background: 'var(--accent)', boxShadow: '0 0 9px rgba(60,200,237,.45)' },
   activityAmount: { color: 'var(--text)', fontWeight: 750 },
   activityLabel: { overflow: 'hidden', textOverflow: 'ellipsis' },
-  title: { fontSize: 21, lineHeight: 1.1, fontWeight: 790, letterSpacing: 2.1, textTransform: 'uppercase', margin: '4px 0 0', color: 'var(--text)', textShadow: '0 2px 14px rgba(0,0,0,.3)' },
-  date: { fontSize: 10, color: 'var(--text-secondary)' },
-  time: { fontSize: 10, color: '#c5ced9', fontVariantNumeric: 'tabular-nums' },
-  motto: { marginTop: 7, paddingTop: 6, borderTop: '1px solid rgba(255,255,255,.055)', color: 'var(--muted)', fontSize: 8.5, fontStyle: 'italic', letterSpacing: .35 },
+  title: { fontSize: 21, lineHeight: 1.1, fontWeight: 790, letterSpacing: 2.1, textTransform: 'uppercase', margin: 0, color: '#d7ad61', textShadow: '0 2px 16px rgba(215,173,97,.08)' },
+  date: { fontSize: 10, color: '#bfa66f' },
+  time: { fontSize: 10, color: '#d3be8a', fontVariantNumeric: 'tabular-nums' },
   periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4, padding: 4, borderRadius: 15, marginBottom: 14 },
   period: { minHeight: 40, padding: '9px 4px', textAlign: 'center', borderRadius: 11, border: 0, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 12, fontWeight: 750, background: 'transparent', transition: 'color 160ms ease, background 160ms ease, box-shadow 160ms ease' },
   netCard: { padding: '18px 18px 14px', borderRadius: 'var(--radius-card)', marginBottom: 10, textAlign: 'center' },
