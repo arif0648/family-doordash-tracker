@@ -26,8 +26,10 @@ if ('serviceWorker' in navigator) {
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  document.body.innerHTML =
-    '<div style="color:white;padding:24px;font-family:sans-serif">Uygulama başlatılamadı: kök element bulunamadı.</div>';
+  const errorMessage = document.createElement('div');
+  errorMessage.style.cssText = 'color:white;padding:24px;font-family:sans-serif';
+  errorMessage.textContent = 'Uygulama başlatılamadı: kök element bulunamadı.';
+  document.body.replaceChildren(errorMessage);
 } else {
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>

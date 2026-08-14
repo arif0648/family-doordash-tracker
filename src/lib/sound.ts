@@ -9,68 +9,14 @@
 
 let audioCtx: AudioContext | null = null;
 let soundEnabled = true;
-let speechEnabled = true;
-let cachedTurkishFemaleVoice: SpeechSynthesisVoice | null = null;
 let unlockInstalled = false;
 
 export function setSoundEnabled(enabled: boolean): void {
   soundEnabled = enabled;
 }
 
-export function setSpeechEnabled(enabled: boolean): void {
-  speechEnabled = enabled;
-}
-
-export function isSoundEnabled(): boolean {
-  return soundEnabled;
-}
-
-export function isSpeechEnabled(): boolean {
-  return speechEnabled;
-}
-
-function selectTurkishFemaleVoice(): SpeechSynthesisVoice | null {
-  if (!('speechSynthesis' in window)) return null;
-  const voices = window.speechSynthesis.getVoices();
-  if (voices.length === 0) return null;
-
-  const turkishFemale = voices.find(
-    (v) => (v.lang === 'tr-TR' || v.lang === 'tr') && /female|kadın|woman/i.test(v.name)
-  );
-  if (turkishFemale) return turkishFemale;
-
-  const turkishFemaleName = voices.find(
-    (v) => (v.lang === 'tr-TR' || v.lang === 'tr') && /ayşe|ayşe|ayla|zeynep|elin|elif|fatma|deniz|defne|selin|ceyda|cansu|büşra|merve|müge|nazlı|nur|özlem|serap|şebnem|ümmü|gülşen/i.test(v.name)
-  );
-  if (turkishFemaleName) return turkishFemaleName;
-
-  const turkish = voices.find((v) => v.lang === 'tr-TR' || v.lang === 'tr');
-  if (turkish) return turkish;
-
-  const anyFemale = voices.find((v) => /female|kadın|woman/i.test(v.name));
-  if (anyFemale) return anyFemale;
-
-  const anyFemaleName = voices.find((v) => /ayşe|ayşe|ayla|zeynep|elin|elif|fatma|deniz|defne|selin|ceyda|cansu|büşra|merve|müge|nazlı|nur|özlem|serap|şebnem|ümmü|gülşen/i.test(v.name));
-  if (anyFemaleName) return anyFemaleName;
-
-  return null;
-}
-
-if ('speechSynthesis' in window) {
-  window.speechSynthesis.onvoiceschanged = () => {
-    cachedTurkishFemaleVoice = selectTurkishFemaleVoice();
-    if (cachedTurkishFemaleVoice) {
-      console.log('[sound.ts] Selected Turkish female voice:', cachedTurkishFemaleVoice.name, 'lang:', cachedTurkishFemaleVoice.lang);
-    } else {
-      console.log('[sound.ts] No Turkish female voice available, will use browser default voice');
-    }
-  };
-  cachedTurkishFemaleVoice = selectTurkishFemaleVoice();
-  if (cachedTurkishFemaleVoice) {
-    console.log('[sound.ts] Initial Turkish female voice:', cachedTurkishFemaleVoice.name, 'lang:', cachedTurkishFemaleVoice.lang);
-  } else {
-    console.log('[sound.ts] No Turkish female voice available initially, will use browser default voice');
-  }
+export function setSpeechEnabled(_enabled: boolean): void {
+  // Preference is retained for compatibility; app feedback intentionally uses tones only.
 }
 
 function getCtx(): AudioContext {
@@ -150,23 +96,4 @@ export function playWorkEndSound() {
 
 export function playCelebrationSound() {
   [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playTone(f, 200), i * 120));
-}
-
-export function speak(text: string, force?: boolean) {
-  if (!soundEnabled) return;
-  if (!speechEnabled && force !== true) return;
-  if (force === false) return;
-  if (!('speechSynthesis' in window)) return;
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'tr-TR';
-  utterance.rate = 0.95;
-  utterance.pitch = 1.05;
-  const voice = cachedTurkishFemaleVoice || selectTurkishFemaleVoice();
-  if (voice) {
-    utterance.voice = voice;
-    console.log('[sound.ts] Speaking with voice:', voice.name, 'lang:', voice.lang);
-  } else {
-    console.log('[sound.ts] Speaking with browser default voice (no Turkish female voice available)');
-  }
-  window.speechSynthesis.speak(utterance);
 }

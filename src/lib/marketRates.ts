@@ -9,8 +9,19 @@ export interface MarketRates {
   available: boolean;
 }
 
-const OUNCE_GRAMS = 31.1034768;
-const QUARTER_FINE_GOLD_GRAMS = 1.608;
+export const OUNCE_GRAMS = 31.1034768;
+export const QUARTER_FINE_GOLD_GRAMS = 1.608;
+
+export function parseUsdTry(payload: unknown): number | null {
+  const data = payload as { rates?: { TRY?: unknown; try?: unknown } };
+  const value = Number(data?.rates?.TRY ?? data?.rates?.try);
+  return Number.isFinite(value) && value > 0 ? value : null;
+}
+
+export function calculateQuarterGoldTry(usdTry: number, goldUsdPerOunce: number): number | null {
+  if (![usdTry, goldUsdPerOunce].every((value) => Number.isFinite(value) && value > 0)) return null;
+  return goldUsdPerOunce * usdTry * (QUARTER_FINE_GOLD_GRAMS / OUNCE_GRAMS);
+}
 
 const FETCH_TIMEOUT = 10_000;
 const MARKET_CACHE_KEY = 'barbin-market-rates-v3';
@@ -42,12 +53,8 @@ async function fetchUsdTry(): Promise<number | null> {
     try {
       const res = await fetchWithTimeout(url, { cache: 'no-store' });
       if (!res.ok) continue;
-      const data = await res.json();
-      const rate =
-        Number(data?.rates?.TRY) ||
-        Number(data?.rates?.try) ||
-        Number(data?.base === 'USD' ? data.rates?.TRY : undefined);
-      if (Number.isFinite(rate) && rate > 0) return rate;
+      const rate = parseUsdTry(await res.json());
+      if (rate !== null) return rate;
     } catch {
       // try next source
     }
@@ -98,7 +105,7 @@ async function fetchRates() {
   if (goldUsd === null) errors.push('Altın verisi alınamadı');
 
   const quarterGoldTry = usdTry !== null && goldUsd !== null
-    ? goldUsd * usdTry * (QUARTER_FINE_GOLD_GRAMS / OUNCE_GRAMS)
+    ? calculateQuarterGoldTry(usdTry, goldUsd)
     : null;
 
   if (usdTry !== null || quarterGoldTry !== null) {

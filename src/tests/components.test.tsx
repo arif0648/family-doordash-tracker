@@ -11,7 +11,7 @@ import { EmptyState, ErrorScreen, LoadingScreen } from '../components/common/Sta
 import { WeeklyGoalCard } from '../components/home/WeeklyGoalCard';
 import { VehicleChampions } from '../components/home/VehicleChampions';
 import { calculateHourlyRate } from '../lib/hourlyRate';
-import { calculateQuarterGoldTry, parseUsdTry } from '../lib/marketData';
+import { calculateQuarterGoldTry, parseUsdTry } from '../lib/marketRates';
 import { unlockAudio, setSoundEnabled } from '../lib/sound';
 import { shouldRefetchForRealtimeStatus } from '../hooks/useFamilyRealtimeData';
 
