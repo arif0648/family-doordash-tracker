@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { toPacificDateString } from '../../lib/timezone';
 import { playWorkStartSound, playWorkEndSound, speak } from '../../lib/sound';
@@ -9,6 +9,7 @@ interface WorkTimeCardProps {
   todayIncome: number;
   weekIncome: number;
   workSessions: WorkSessionRow[];
+  onSessionsChanged?: () => void;
 }
 
 interface WorkSummary {
@@ -35,14 +36,22 @@ function currency(n: number): string {
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions }: WorkTimeCardProps) {
+export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, onSessionsChanged }: WorkTimeCardProps) {
   const [now, setNow] = useState(() => new Date());
   const [todaySummary, setTodaySummary] = useState<WorkSummary>({ totalSeconds: 0, totalIncome: 0, hourlyRate: null });
   const [weekSummary, setWeekSummary] = useState<WorkSummary>({ totalSeconds: 0, totalIncome: 0, hourlyRate: null });
   const [loading, setLoading] = useState(false);
   const [optimisticActive, setOptimisticActive] = useState<boolean | null>(null);
+  const [optimisticSessionId, setOptimisticSessionId] = useState<string | null>(null);
+  const [workError, setWorkError] = useState<string | null>(null);
+  const isProcessing = useRef(false);
 
-  const openSession = useMemo(() => workSessions.find((s) => s.ended_at === null) ?? null, [workSessions]);
+  const openSession = useMemo(() => {
+    const active = workSessions.find((s) => s.ended_at === null);
+    if (active) return active;
+    if (optimisticSessionId) return workSessions.find((s) => s.id === optimisticSessionId) ?? null;
+    return null;
+  }, [workSessions, optimisticSessionId]);
   const isActive = optimisticActive ?? Boolean(openSession);
 
   const elapsedSeconds = useMemo(() => {
@@ -97,38 +106,57 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions }
   }
 
   async function startWork() {
+    if (isProcessing.current) return;
+    isProcessing.current = true;
+    setWorkError(null);
     setLoading(true);
     setOptimisticActive(true);
-    const { error } = await supabase.rpc('start_work_session', { p_family_id: familyId });
+    const { data, error } = await supabase.rpc('start_work_session', { p_family_id: familyId });
     if (error) {
+      isProcessing.current = false;
       setOptimisticActive(null);
+      setOptimisticSessionId(null);
       setLoading(false);
-      alert('Çalışma başlatılamadı: ' + error.message);
+      setWorkError('Çalışma başlatılamadı: ' + error.message);
       return;
     }
+    if (data) setOptimisticSessionId(data as string);
     playWorkStartSound();
     speak('Çalışma başladı');
+    isProcessing.current = false;
     setLoading(false);
+    onSessionsChanged?.();
     void refetch();
   }
 
   async function endWork() {
-    if (!openSession) {
+    if (isProcessing.current) return;
+    isProcessing.current = true;
+    setWorkError(null);
+    const sessionToEnd = openSession ?? (optimisticSessionId ? { id: optimisticSessionId } as WorkSessionRow : null);
+    if (!sessionToEnd) {
+      isProcessing.current = false;
       setOptimisticActive(null);
+      setOptimisticSessionId(null);
       return;
     }
     setLoading(true);
     setOptimisticActive(false);
-    const { error } = await supabase.rpc('end_work_session', { p_session_id: openSession.id });
+    const { error } = await supabase.rpc('end_work_session', { p_session_id: sessionToEnd.id });
     if (error) {
+      isProcessing.current = false;
       setOptimisticActive(null);
+      setOptimisticSessionId(null);
       setLoading(false);
-      alert('Çalışma bitirilemedi: ' + error.message);
+      setWorkError('Çalışma bitirilemedi: ' + error.message);
       return;
     }
+    setOptimisticSessionId(null);
     playWorkEndSound();
     speak('Çalışma sona erdi');
+    isProcessing.current = false;
     setLoading(false);
+    onSessionsChanged?.();
     void refetch();
   }
 
@@ -143,12 +171,14 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions }
   return (
     <section style={S.section}>
       <div style={S.header}>
-        <span style={S.kicker}>⏱️ ÇALIŞMA ZAMANI</span>
+        <span style={S.kicker}>ÇALIŞMA ZAMANI</span>
         <div style={S.status}>
           <span style={{ ...S.dot, background: isActive ? '#34D399' : '#F87171' }} />
           <span style={S.statusText}>{isActive ? 'ÇALIŞIYOR' : 'ÇALIŞMIYOR'}</span>
         </div>
       </div>
+
+      {workError && <div style={S.error}>{workError}</div>}
 
       <div style={S.main}>
         <div style={S.timerBox}>
@@ -291,4 +321,5 @@ const S: Record<string, React.CSSProperties> = {
     fontSize: 12,
     fontWeight: 800,
   },
+  error: { padding: 10, borderRadius: 10, background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontSize: 12, marginBottom: 10 },
 };

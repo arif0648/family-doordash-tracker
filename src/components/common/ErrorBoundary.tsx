@@ -33,6 +33,10 @@ export class ErrorBoundary extends Component<Props, State> {
     this.setState({ hasError: false, error: null });
   };
 
+  handleReload = () => {
+    window.location.reload();
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -44,9 +48,17 @@ export class ErrorBoundary extends Component<Props, State> {
           <p style={styles.message}>
             Bu bölümde beklenmeyen bir hata oluştu. Uygulamanın diğer kısımları çalışmaya devam ediyor.
           </p>
-          <button style={styles.button} onClick={this.handleRetry}>
-            Tekrar Dene
-          </button>
+          {this.state.error && (
+            <pre style={styles.detail}>{this.state.error.message}</pre>
+          )}
+          <div style={styles.buttons}>
+            <button style={styles.button} onClick={this.handleRetry}>
+              Tekrar Dene
+            </button>
+            <button style={{ ...styles.button, background: '#38BDF8' }} onClick={this.handleReload}>
+              Sayfayı Yenile
+            </button>
+          </div>
         </div>
       );
     }
@@ -77,4 +89,6 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 600,
     fontSize: '14px',
   },
+  buttons: { display: 'flex', gap: 10, marginTop: 16 },
+  detail: { marginTop: 12, padding: 12, borderRadius: 10, background: 'rgba(255,255,255,.05)', color: '#FDA4AF', fontSize: 12, maxWidth: 320, wordBreak: 'break-word' },
 };

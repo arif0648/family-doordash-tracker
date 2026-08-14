@@ -33,7 +33,8 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
     title: '',
     description: '',
     type: 'personal_reminder' as AppointmentType,
-    start_at: '',
+    startDate: '',
+    startTime: '',
     reminder_days: [1] as number[],
   });
   const [saving, setSaving] = useState(false);
@@ -45,10 +46,10 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
   const upcoming = appointments.filter(a => a.status === 'upcoming');
   const past = appointments.filter(a => a.status !== 'upcoming');
 
-  const toTimestamp = (value: string) => {
-    if (!value) return null;
-    if (value.length === 16) return value + ':00';
-    return value;
+  const toTimestamp = (date: string, time: string) => {
+    const t = time || '00:00';
+    if (!date) return null;
+    return `${date}T${t}:00`;
   };
 
   async function handleSubmit(e: React.FormEvent) {
@@ -59,15 +60,15 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
       setFormError('Başlık zorunludur.');
       return;
     }
-    if (!formData.start_at) {
-      setFormError('Başlangıç zamanı zorunludur.');
+    if (!formData.startDate) {
+      setFormError('Tarih zorunludur.');
       return;
     }
 
     setSaving(true);
 
     try {
-      const startAt = toTimestamp(formData.start_at);
+      const startAt = toTimestamp(formData.startDate, formData.startTime);
 
       if (editingAppointment) {
         const { error } = await supabase.rpc('update_appointment', {
@@ -100,7 +101,8 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
         title: '',
         description: '',
         type: 'personal_reminder',
-        start_at: '',
+        startDate: '',
+        startTime: '',
         reminder_days: [1],
       });
       retry();
@@ -145,11 +147,14 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
 
   function openEdit(appointment: AppointmentRow) {
     setEditingAppointment(appointment);
+    const date = appointment.start_at.substring(0, 10);
+    const time = appointment.start_at.length >= 16 ? appointment.start_at.substring(11, 16) : '';
     setFormData({
       title: appointment.title,
       description: appointment.description || '',
       type: appointment.type,
-      start_at: appointment.start_at.substring(0, 16),
+      startDate: date,
+      startTime: time,
       reminder_days: appointment.reminder_days,
     });
     setShowForm(true);
@@ -162,7 +167,8 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
       title: '',
       description: '',
       type: 'personal_reminder',
-      start_at: '',
+      startDate: '',
+      startTime: '',
       reminder_days: [1],
     });
   }
@@ -220,13 +226,21 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
               rows={3}
             />
 
-            <label style={S.label}>Randevu Tarihi ve Saati</label>
+            <label style={S.label}>Tarih</label>
             <input
               style={S.input}
-              type="datetime-local"
-              value={formData.start_at}
-              onChange={e => setFormData({ ...formData, start_at: e.target.value })}
+              type="date"
+              value={formData.startDate}
+              onChange={e => setFormData({ ...formData, startDate: e.target.value })}
               required
+            />
+
+            <label style={S.label}>Saat</label>
+            <input
+              style={S.input}
+              type="time"
+              value={formData.startTime}
+              onChange={e => setFormData({ ...formData, startTime: e.target.value })}
             />
 
             <label style={S.label}>Hatırlatma (gün önce)</label>

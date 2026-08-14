@@ -6,6 +6,7 @@ import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 interface CreditCardsDashboardProps {
   cards: CreditCardRow[];
   maxCards?: number;
+  compact?: boolean;
 }
 
 function formatDate(date: string | null): string {
@@ -14,7 +15,7 @@ function formatDate(date: string | null): string {
   return d.toLocaleDateString('tr-TR', { day: '2-digit', month: 'long' });
 }
 
-export function CreditCardsDashboard({ cards, maxCards }: CreditCardsDashboardProps) {
+export function CreditCardsDashboard({ cards, maxCards, compact }: CreditCardsDashboardProps) {
   if (cards.length === 0) return null;
 
   const sortedAll = [...cards]
@@ -32,6 +33,9 @@ export function CreditCardsDashboard({ cards, maxCards }: CreditCardsDashboardPr
   const total = sorted.reduce((s, c) => s + Number(c.current_balance || 0), 0);
   const totalLimit = sorted.reduce((s, c) => s + Number(c.credit_limit || 0), 0);
   const utilization = totalLimit > 0 ? total / totalLimit : 0;
+
+  const urgent = sorted[0];
+  const status = urgent ? computeCreditCardStatus(urgent) : null;
 
   return (
     <section style={S.section}>
@@ -58,48 +62,63 @@ export function CreditCardsDashboard({ cards, maxCards }: CreditCardsDashboardPr
         )}
       </div>
 
-      <div style={S.list}>
-        {sorted.map((c) => {
-          const { days, ...theme } = computeCreditCardStatus(c);
-          const balance = Number(c.current_balance || 0);
-          const limit = c.credit_limit ? Number(c.credit_limit) : 0;
-          const minPay = c.minimum_payment ? Number(c.minimum_payment) : null;
-          const stmt = c.statement_balance ? Number(c.statement_balance) : null;
-          const pct = limit > 0 ? Math.min((balance / limit) * 100, 100) : 0;
-          return (
-            <div key={c.id} style={{ ...S.card, boxShadow: `inset 0 0 0 1px ${theme.glow}` }}>
-              <div style={S.rowTop}>
-                <div style={S.identity}>
-                  <div style={S.cardName}>{c.card_name} {c.last_four ? <span style={S.last4}>•••• {c.last_four}</span> : null}</div>
-                  <div style={S.meta}>
-                    {c.due_date ? <span>{formatDate(c.due_date)} vade</span> : <span>Ödeme tarihi yok</span>}
-                    {days !== null && (
-                      <span style={{ ...S.badge, background: theme.badge, color: theme.accent }}>{days < 0 ? `${Math.abs(days)} gün gecikti` : days === 0 ? 'Bugün' : `${days} gün kaldı`}</span>
-                    )}
+      {compact && urgent && status && (
+        <div style={S.urgent}>
+          <div>
+            <strong style={S.urgentTitle}>Yaklaşan ödeme</strong>
+            <span style={S.urgentName}>{urgent.card_name} {urgent.last_four ? <span style={S.last4}>•••• {urgent.last_four}</span> : null}</span>
+            <span style={S.urgentDue}>{urgent.due_date ? formatDate(urgent.due_date) + ' vade' : 'Ödeme tarihi yok'}</span>
+          </div>
+          <span style={{ ...S.urgentBadge, background: status.badge, color: status.accent }}>
+            {status.days === 0 ? 'Bugün' : status.days! < 0 ? `${Math.abs(status.days!)} gün gecikti` : `${status.days} gün kaldı`}
+          </span>
+        </div>
+      )}
+
+      {!compact && (
+        <div style={S.list}>
+          {sorted.map((c) => {
+            const { days, ...theme } = computeCreditCardStatus(c);
+            const balance = Number(c.current_balance || 0);
+            const limit = c.credit_limit ? Number(c.credit_limit) : 0;
+            const minPay = c.minimum_payment ? Number(c.minimum_payment) : null;
+            const stmt = c.statement_balance ? Number(c.statement_balance) : null;
+            const pct = limit > 0 ? Math.min((balance / limit) * 100, 100) : 0;
+            return (
+              <div key={c.id} style={{ ...S.card, boxShadow: `inset 0 0 0 1px ${theme.glow}` }}>
+                <div style={S.rowTop}>
+                  <div style={S.identity}>
+                    <div style={S.cardName}>{c.card_name} {c.last_four ? <span style={S.last4}>•••• {c.last_four}</span> : null}</div>
+                    <div style={S.meta}>
+                      {c.due_date ? <span>{formatDate(c.due_date)} vade</span> : <span>Ödeme tarihi yok</span>}
+                      {days !== null && (
+                        <span style={{ ...S.badge, background: theme.badge, color: theme.accent }}>{days < 0 ? `${Math.abs(days)} gün gecikti` : days === 0 ? 'Bugün' : `${days} gün kaldı`}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ ...S.balance, color: balance > 0 ? '#FDA4AF' : '#34D399' }}>
+                    {balance > 0 ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'Borç yok'}
                   </div>
                 </div>
-                <div style={{ ...S.balance, color: balance > 0 ? '#FDA4AF' : '#34D399' }}>
-                  {balance > 0 ? `$${balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}` : 'Borç yok'}
-                </div>
-              </div>
 
-              <div style={S.bars}>
-                <div style={S.barTrack}>
-                  <div style={{ ...S.barFill, width: `${pct}%`, background: pct > 70 ? '#F87171' : pct > 40 ? '#FBBF24' : '#34D399' }} />
+                <div style={S.bars}>
+                  <div style={S.barTrack}>
+                    <div style={{ ...S.barFill, width: `${pct}%`, background: pct > 70 ? '#F87171' : pct > 40 ? '#FBBF24' : '#34D399' }} />
+                  </div>
+                  <div style={S.barLabel}>{limit > 0 ? `${pct.toFixed(0)}% / $${limit.toLocaleString('en-US')} limit` : 'Limit tanımlı değil'}</div>
                 </div>
-                <div style={S.barLabel}>{limit > 0 ? `${pct.toFixed(0)}% / $${limit.toLocaleString('en-US')} limit` : 'Limit tanımlı değil'}</div>
-              </div>
 
-              {(stmt || minPay) && (
-                <div style={S.foot}>
-                  {stmt ? <span>Dönem borcu <b>${stmt.toFixed(2)}</b></span> : null}
-                  {minPay ? <span>Min. ödeme <b>${minPay.toFixed(2)}</b></span> : null}
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+                {(stmt || minPay) && (
+                  <div style={S.foot}>
+                    {stmt ? <span>Dönem borcu <b>${stmt.toFixed(2)}</b></span> : null}
+                    {minPay ? <span>Min. ödeme <b>${minPay.toFixed(2)}</b></span> : null}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
@@ -156,4 +175,9 @@ const S: Record<string, React.CSSProperties> = {
   barFill: { height: '100%', borderRadius: 5, transition: 'width .4s ease' },
   barLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: 700 },
   foot: { display: 'flex', justifyContent: 'space-between', gap: 10, fontSize: 11, color: '#9CA3AF' },
+  urgent: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, background: 'rgba(255,255,255,.04)', border: '1px solid rgba(255,255,255,.06)' },
+  urgentTitle: { display: 'block', fontSize: 10, letterSpacing: 1.5, color: '#9C8BEF', fontWeight: 900, marginBottom: 4 },
+  urgentName: { display: 'block', fontSize: 15, fontWeight: 800, color: '#fff' },
+  urgentDue: { display: 'block', fontSize: 12, color: '#8A90A6', marginTop: 2 },
+  urgentBadge: { padding: '5px 10px', borderRadius: 10, fontSize: 11, fontWeight: 900 },
 };

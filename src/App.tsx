@@ -67,7 +67,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0B1120', paddingBottom: 72 }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 'calc(96px + var(--safe-bottom))' }}>
       <Routes>
         <Route
           path="/"

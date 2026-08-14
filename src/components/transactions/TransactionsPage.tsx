@@ -30,14 +30,28 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
   const [editValue, setEditValue] = useState('');
   const navigate = useNavigate();
 
-  if (loading) return <LoadingScreen label="İşlemler yükleniyor…" />;
-  if (error) return <ErrorScreen message={error} onRetry={retry} />;
+  const safeIncome = income ?? [];
+  const safeExpenses = expenses ?? [];
+  const safeVehicles = vehicles ?? [];
 
-  const names = Object.fromEntries(vehicles.map(v => [v.id, v.short_name]));
-  const rows: TransactionRow[] = [
-    ...income.map(x => ({ kind: 'income' as const, id: x.id, date: x.record_date, amount: Number(x.amount), title: `${names[x.vehicle_id] ?? 'Araç'} kazancı`, sub: 'Kazanç', vehicleId: x.vehicle_id, category: 'income', raw: x })),
-    ...expenses.map(x => ({ kind: 'expense' as const, id: x.id, date: x.record_date, amount: Number(x.amount), title: x.category, sub: x.vehicle_id ? (names[x.vehicle_id] ?? 'Araç') : 'Aile', vehicleId: x.vehicle_id, category: x.category, raw: x }))
-  ].sort((a, b) => b.date.localeCompare(a.date));
+  const rows = useMemo<TransactionRow[]>(() => {
+    const names = Object.fromEntries(safeVehicles.map(v => [v.id, v.short_name]));
+    const safeDate = (d: string | null | undefined) => {
+      if (!d) return '9999-12-31';
+      const iso = d.slice(0, 10);
+      return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : '9999-12-31';
+    };
+    return [
+      ...safeIncome.map(x => {
+        const amount = Number(x.amount);
+        return { kind: 'income' as const, id: x.id ?? '', date: safeDate(x.record_date), amount: Number.isFinite(amount) ? amount : 0, title: `${names[x.vehicle_id!] ?? 'Araç'} kazancı`, sub: 'Kazanç', vehicleId: x.vehicle_id ?? null, category: 'income', raw: x };
+      }),
+      ...safeExpenses.map(x => {
+        const amount = Number(x.amount);
+        return { kind: 'expense' as const, id: x.id ?? '', date: safeDate(x.record_date), amount: Number.isFinite(amount) ? amount : 0, title: x.category || 'Gider', sub: x.vehicle_id ? (names[x.vehicle_id!] ?? 'Araç') : 'Aile', vehicleId: x.vehicle_id ?? null, category: x.category || 'diger_aile', raw: x };
+      })
+    ].sort((a, b) => b.date.localeCompare(a.date));
+  }, [safeIncome, safeExpenses, safeVehicles]);
 
   const filtered = useMemo(() => rows.filter((r) => {
     if (kind !== 'all' && r.kind !== kind) return false;
@@ -51,7 +65,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
     return true;
   }), [rows, kind, vehicle, from, to, search]);
 
-  const total = filtered.reduce((s, r) => s + (r.kind === 'income' ? r.amount : -r.amount), 0);
+  const total = useMemo(() => filtered.reduce((s, r) => s + (r.kind === 'income' ? r.amount : -r.amount), 0), [filtered]);
 
   const grouped = useMemo(() => {
     const map = new Map<string, TransactionRow[]>();
@@ -62,6 +76,9 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
     }
     return [...map.entries()].sort((a, b) => b[0].localeCompare(a[0]));
   }, [filtered]);
+
+  if (loading) return <LoadingScreen label="İşlemler yükleniyor…" />;
+  if (error) return <ErrorScreen message={error} onRetry={retry} />;
 
   async function del(row: TransactionRow) {
     if (!window.confirm('Bu kayıt silinsin mi?')) return;
@@ -109,7 +126,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
       {note && <div style={S.note}>{note}</div>}
 
       <div style={S.filters}>
-        <input style={S.filterInput} placeholder="Ara..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input style={S.filterInput} placeholder="Ara…" value={search} onChange={e => setSearch(e.target.value)} />
         <select style={S.filterInput} value={kind} onChange={e => setKind(e.target.value as any)}>
           <option value="all">Tümü</option>
           <option value="income">Kazanç</option>
@@ -117,7 +134,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
         </select>
         <select style={S.filterInput} value={vehicle} onChange={e => setVehicle(e.target.value)}>
           <option value="all">Tüm Araçlar</option>
-          {vehicles.map(v => <option key={v.id} value={v.id}>{v.short_name}</option>)}
+          {safeVehicles.map(v => <option key={v.id} value={v.id}>{v.short_name}</option>)}
         </select>
         <div style={S.dateRow}>
           <input style={S.filterInput} type="date" value={from} onChange={e => setFrom(e.target.value)} />
