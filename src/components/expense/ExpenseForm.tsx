@@ -1,7 +1,7 @@
 import React, { useState, FormEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Vehicle, ExpenseCategory } from '../../types/database';
-import { playExpenseSound, speak } from '../../lib/sound';
+import { playExpenseSound } from '../../lib/sound';
 import { translateError } from '../../lib/errorMessage';
 import { toPacificDateString } from '../../lib/timezone';
 import { MAX_AMOUNT } from '../../lib/format';
@@ -26,6 +26,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
   const [recordDate, setRecordDate] = useState(() => toPacificDateString(new Date()));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const requiresVehicle = categoryTab === 'benzin' || categoryTab === 'arac_gideri';
   const resolvedCategory: ExpenseCategory = categoryTab === 'diger' ? 'diger_aile' : categoryTab;
@@ -34,6 +35,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     const amountNum = parseFloat(amount.replace(',', '.'));
     if (isNaN(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir tutar girin (örn. 12.50).');
@@ -61,9 +63,8 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
     }
 
     playExpenseSound();
-    speak('Para gitti.');
-
     setAmount('');
+    setSuccess('Gider başarıyla kaydedildi.');
     onSaved?.();
   }
 
@@ -109,7 +110,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
         inputMode="decimal"
         placeholder="0.00"
         value={amount}
-        onChange={(e) => setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.'))}
+        onChange={(e) => { setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.')); setError(null); setSuccess(null); }}
       />
 
       <label style={styles.label}>Tarih</label>
@@ -121,6 +122,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
       />
 
       {error && <p style={styles.error}>{error}</p>}
+      {success && <p style={styles.success}>{success}</p>}
 
       <button type="submit" style={styles.saveButton} disabled={saving}>
         {saving ? 'Kaydediliyor…' : 'Kaydet'}
@@ -140,5 +142,6 @@ const styles: Record<string, React.CSSProperties> = {
   label: { fontSize:11, color:'#A7ABC0', marginTop:2 },
   input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid rgba(148,163,184,.16)', background:'rgba(5,7,18,.78)', color:'white', fontSize:15, minHeight:46, boxSizing:'border-box' },
   error: { color:'#FB7185', fontSize:12, marginTop:4 },
+  success: { color:'#34D399', fontSize:12, marginTop:4 },
   saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'none', background:'linear-gradient(135deg,#34D399,#10B981)', color:'#04120D', fontWeight:900, fontSize:14, boxShadow:'0 8px 20px rgba(16,185,129,.22)' },
 };

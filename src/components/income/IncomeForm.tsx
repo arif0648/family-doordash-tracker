@@ -2,7 +2,7 @@ import React, { useState, FormEvent, useEffect } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { Vehicle, MileageLogRow, IncomeRow } from '../../types/database';
 import { validateNewClosingMileage, MileageEntry } from '../../lib/mileageEngine';
-import { playIncomeSound, speak } from '../../lib/sound';
+import { playIncomeSound } from '../../lib/sound';
 import { toPacificDateString } from '../../lib/timezone';
 import { MAX_AMOUNT } from '../../lib/format';
 
@@ -24,6 +24,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [warning, setWarning] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Initialize form when editing
   useEffect(() => {
@@ -71,6 +72,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
     const amountNum = parseFloat(amount.replace(',', '.'));
     const mileageNum = parseFloat(closingMileage.replace(',', '.'));
     if (!vehicleId) return setError('Araç seçimi zorunludur.');
@@ -103,8 +105,8 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     setSaving(false);
     if (rpcError) { setError(translateError(rpcError.message)); return; }
     playIncomeSound();
-    speak('Oo, para geldi!');
     setAmount(''); setClosingMileage(''); setNote(''); setWarning(null);
+    setSuccess(editingIncome ? 'Gelir güncellendi.' : 'Gelir başarıyla kaydedildi.');
     onSaved?.();
     if (editingIncome) onCancelEdit?.();
   }
@@ -120,7 +122,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
         <label style={styles.label}>Araç</label>
         <select style={styles.input} value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>{vehicles.map(v => <option key={v.id} value={v.id}>{v.short_name}</option>)}</select>
         <label style={styles.label}>Gelir ($)</label>
-        <input style={styles.moneyInput} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.'))} />
+        <input style={styles.moneyInput} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => { setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.')); setError(null); setSuccess(null); }} />
         <label style={styles.label}>Kapanış Mili</label>
         <input style={styles.input} type="text" inputMode="decimal" placeholder="Aracın gösterge kilometresi (örn. 94150)" value={closingMileage} onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); setClosingMileage(v); checkMileage(v); }} />
         <label style={styles.label}>Tarih</label>
@@ -129,6 +131,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
         <input style={styles.input} type="text" placeholder="Opsiyonel not" value={note} onChange={e => setNote(e.target.value)} />
         {warning && <p style={styles.warning}>{warning}</p>}
         {error && <p style={styles.error}>{error}</p>}
+        {success && <p style={styles.success}>{success}</p>}
         <div style={styles.buttonRow}>
           {editingIncome && onCancelEdit && (
             <button type="button" onClick={onCancelEdit} style={styles.cancelButton} disabled={saving}>İptal</button>
@@ -152,6 +155,7 @@ const styles: Record<string, React.CSSProperties> = {
   moneyInput:{width:'100%',padding:'14px 14px',borderRadius:14,border:'1px solid rgba(52,211,153,.35)',background:'rgba(5,7,18,.82)',color:'#34D399',fontSize:18,fontWeight:800,minHeight:52, boxSizing:'border-box'},
   warning:{color:'#FBBF24',fontSize:12},
   error:{color:'#FB7185',fontSize:12},
+  success:{color:'#34D399',fontSize:12},
   buttonRow:{display:'flex',gap:8,marginTop:6},
   saveButton:{flex:1,minHeight:48,border:0,borderRadius:14,background:'linear-gradient(135deg,#34D399,#10B981)',color:'#04120D',fontWeight:900,fontSize:14,boxShadow:'0 8px 20px rgba(16,185,129,.25)'},
   cancelButton:{flex:1,minHeight:48,border:0,borderRadius:14,background:'rgba(148,163,184,.2)',color:'#fff',fontWeight:900,fontSize:14}

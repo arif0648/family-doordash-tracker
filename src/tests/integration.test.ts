@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'node:fs';
 
 describe('Integration Tests - Family Operations Center', () => {
   describe('Income Deletion with Mileage Recalculation', () => {
@@ -38,15 +39,16 @@ describe('Integration Tests - Family Operations Center', () => {
   });
 
   describe('Credit Card Payment', () => {
-    it('should record payment and update card balance correctly', async () => {
-      // This test verifies the record_credit_card_payment RPC
-      // It should:
-      // 1. Create payment history record
-      // 2. Decrease card balance
-      // 3. Update payment status
-      // 4. Recalculate financial summaries
-
-      expect(true).toBe(true); // Placeholder - requires test environment
+    it('uses payment_date before any record_date branch for card-payment triggers', () => {
+      const sql = readFileSync('supabase/migrations/0031_fix_credit_card_payment_trigger.sql', 'utf8');
+      const cardBranch = sql.indexOf("if tg_table_name = 'credit_card_payments'");
+      const paymentDate = sql.indexOf('new.payment_date', cardBranch);
+      const recordDate = sql.indexOf('new.record_date', cardBranch);
+      expect(cardBranch).toBeGreaterThan(-1);
+      expect(paymentDate).toBeGreaterThan(cardBranch);
+      expect(recordDate).toBeGreaterThan(paymentDate);
+      expect(sql).toContain('greatest(0, v_current_balance - p_amount)');
+      expect(sql).not.toContain('current_balance - p_amount,\n    statement_balance');
     });
   });
 

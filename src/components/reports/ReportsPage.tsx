@@ -68,7 +68,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   function exportIncomeCsv() {
     const csv = toCsv(income, [
       { header: 'Tarih', accessor: (r) => r.record_date },
-      { header: 'Araç', accessor: (r) => vehicleNames[r.vehicle_id] ?? r.vehicle_id },
+      { header: 'Araç', accessor: (r) => vehicleNames[r.vehicle_id] ?? 'Arşivlenmiş Araç' },
       { header: 'Tutar', accessor: (r) => r.amount },
       { header: 'Not', accessor: (r) => r.note ?? '' },
     ]);
@@ -79,7 +79,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
     const csv = toCsv(expenses, [
       { header: 'Tarih', accessor: (r) => r.record_date },
       { header: 'Kategori', accessor: (r) => r.category },
-      { header: 'Araç', accessor: (r) => (r.vehicle_id ? vehicleNames[r.vehicle_id] ?? r.vehicle_id : 'Aile') },
+      { header: 'Araç', accessor: (r) => (r.vehicle_id ? vehicleNames[r.vehicle_id] ?? 'Arşivlenmiş Araç' : 'Aile') },
       { header: 'Tutar', accessor: (r) => r.amount },
       { header: 'Not', accessor: (r) => r.note ?? '' },
     ]);
@@ -89,7 +89,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   function exportMileageCsv() {
     const csv = toCsv(mileageLog, [
       { header: 'Tarih', accessor: (r) => r.record_date },
-      { header: 'Araç', accessor: (r) => vehicleNames[r.vehicle_id] ?? r.vehicle_id },
+      { header: 'Araç', accessor: (r) => vehicleNames[r.vehicle_id] ?? 'Arşivlenmiş Araç' },
       { header: 'Kapanış Mili', accessor: (r) => r.closing_mileage },
       { header: 'Günlük Mil', accessor: (r) => r.miles_driven },
     ]);

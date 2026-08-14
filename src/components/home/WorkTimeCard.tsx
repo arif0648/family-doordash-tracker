@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { toPacificDateString } from '../../lib/timezone';
-import { playWorkStartSound, playWorkEndSound, speak } from '../../lib/sound';
+import { playWorkStartSound, playWorkEndSound } from '../../lib/sound';
+import { calculateHourlyRate } from '../../lib/hourlyRate';
 import { WorkSessionRow } from '../../types/database';
 
 interface WorkTimeCardProps {
@@ -34,6 +35,11 @@ function formatDuration(totalSeconds: number): string {
 
 function currency(n: number): string {
   return `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+}
+
+function hourlyRateLabel(income: number, totalSeconds: number): string {
+  const rate = calculateHourlyRate(income, totalSeconds);
+  return rate === null ? '—' : `${currency(rate)}/saat`;
 }
 
 export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, onSessionsChanged }: WorkTimeCardProps) {
@@ -86,7 +92,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
     setter({
       totalSeconds: Number(row.total_seconds ?? 0),
       totalIncome: income,
-      hourlyRate: row.total_seconds > 0 ? income / (Number(row.total_seconds) / 3600) : null,
+      hourlyRate: calculateHourlyRate(income, Number(row.total_seconds)),
     });
   }
 
@@ -122,7 +128,6 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
     }
     if (data) setOptimisticSessionId(data as string);
     playWorkStartSound();
-    speak('Hayırlı işler olsun.');
     isProcessing.current = false;
     setLoading(false);
     onSessionsChanged?.();
@@ -153,7 +158,6 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
     }
     setOptimisticSessionId(null);
     playWorkEndSound();
-    speak('İyi istirahatler.');
     isProcessing.current = false;
     setLoading(false);
     onSessionsChanged?.();
@@ -204,7 +208,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
         <div style={S.cell}>
           <div style={S.cellLabel}>📈 Saatlik Gelir</div>
           <div style={S.cellValue}>
-            {activeTotal > 0 ? `${currency(todayIncome / (activeTotal / 3600))}/saat` : '—'}
+            {hourlyRateLabel(todayIncome, activeTotal)}
           </div>
         </div>
         <div style={S.cell}>
@@ -218,7 +222,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
         <div style={{ ...S.cell, gridColumn: '1 / -1' }}>
           <div style={S.cellLabel}>📈 Ort. Saatlik</div>
           <div style={S.cellValue}>
-            {weekSummary.totalSeconds > 0 ? `${currency(weekIncome / (weekSummary.totalSeconds / 3600))}/saat` : '—'}
+            {hourlyRateLabel(weekIncome, weekSummary.totalSeconds)}
           </div>
         </div>
       </div>

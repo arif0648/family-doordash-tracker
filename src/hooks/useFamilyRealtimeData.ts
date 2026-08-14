@@ -14,7 +14,7 @@ import {
   Profile,
   WeeklyGoalRow,
 } from '../types/database';
-import { playIncomeSound, playExpenseSound, speak } from '../lib/sound';
+import { playIncomeSound, playExpenseSound } from '../lib/sound';
 
 // Central vehicle normalization: short_name -> shortName
 function normalizeVehicle(dbVehicle: Vehicle): Vehicle {
@@ -129,10 +129,8 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     const onRemote = (kind: 'income' | 'expense') => {
       if (kind === 'income') {
         playIncomeSound();
-        speak('Yeni kazanç eklendi.', true);
       } else {
         playExpenseSound();
-        speak('Yeni gider eklendi.', true);
       }
       void fetchAll();
     };

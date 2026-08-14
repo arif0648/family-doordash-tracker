@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { translateError } from '../../lib/errorMessage';
 import { MAX_AMOUNT } from '../../lib/format';
@@ -11,7 +11,6 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [edits,setEdits]=useState<Record<string,string>>({});
-  const debounceRef = useRef<Record<string,ReturnType<typeof setTimeout>>>({});
   const active = expenses.filter(e=>!e.effective_to);
   const total = active.reduce((s,e)=>s+Number(e.monthly_amount||0),0);
 
@@ -32,19 +31,16 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
   async function save(row:FixedExpenseRow, next:string){
     const n=Number(next); if(!Number.isFinite(n)||n<0){setError('Geçerli bir tutar girin.');return;}
     if(n > MAX_AMOUNT){setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);return;}
-    if(n === Number(row.monthly_amount)) return;
-    const {error:saveError}=await supabase.from('fixed_expenses').update({monthly_amount:n}).eq('id',row.id).eq('family_id',familyId);
-    if(saveError){setError(translateError(saveError.message));} else {setError(null); onChanged();}
+    if(n === Number(row.monthly_amount)) {setEdits(prev=>{const updated={...prev};delete updated[row.id];return updated;});return;}
+    const {error:saveError}=await supabase.rpc('set_family_fixed_expense', {p_family_id:familyId,p_label:row.label,p_monthly_amount:n,p_effective_from:toPacificDateString(new Date())});
+    if(saveError){setError(translateError(saveError.message));} else {setError(null);setEdits(prev=>{const updated={...prev};delete updated[row.id];return updated;});onChanged();}
   }
 
   function startEdit(row:FixedExpenseRow, value:string){
     setEdits(prev=>({...prev,[row.id]:value}));
-    if(debounceRef.current[row.id]) clearTimeout(debounceRef.current[row.id]);
-    debounceRef.current[row.id]=setTimeout(()=>{ void save(row,value); },500);
   }
 
   function blurSave(row:FixedExpenseRow){
-    if(debounceRef.current[row.id]){ clearTimeout(debounceRef.current[row.id]); delete debounceRef.current[row.id]; }
     const value = edits[row.id];
     if(value!==undefined) void save(row,value);
   }

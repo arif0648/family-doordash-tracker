@@ -2,9 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { WorkTimeCard } from './WorkTimeCard';
-import { CreditCardsDashboard } from './CreditCardsDashboard';
 import { Upcoming7Days } from './Upcoming7Days';
-import { FixedExpensesSummary } from './FixedExpensesSummary';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
 import { VehicleChampions } from './VehicleChampions';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
@@ -136,11 +134,7 @@ export function HomePage({ familyId }: HomePageProps) {
 
       <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions} onSessionsChanged={retry} />
 
-      <CreditCardsDashboard cards={creditCards} compact />
-
       <Upcoming7Days creditCards={creditCards} fixedExpenses={fixedExpenses} appointments={appointments} />
-
-      <FixedExpensesSummary expenses={fixedExpenses} />
     </main>
   );
 }

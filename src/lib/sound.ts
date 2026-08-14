@@ -99,22 +99,25 @@ function playTone(freq: number, durationMs: number, type: OscillatorType = 'sine
 }
 
 export function playIncomeSound() {
-  playTone(880, 150);
-  setTimeout(() => playTone(1174, 180), 100);
+  [659, 880, 1175].forEach((frequency, index) =>
+    setTimeout(() => playTone(frequency, 120, index === 2 ? 'sine' : 'triangle'), index * 75)
+  );
 }
 
 export function playExpenseSound() {
-  playTone(440, 200, 'triangle');
+  [494, 392, 294].forEach((frequency, index) =>
+    setTimeout(() => playTone(frequency, 135, index === 2 ? 'sawtooth' : 'triangle'), index * 80)
+  );
 }
 
 export function playWorkStartSound() {
-  playTone(698, 120);
-  setTimeout(() => playTone(880, 150), 100);
+  playTone(523, 90, 'square');
+  setTimeout(() => playTone(784, 140, 'sine'), 85);
 }
 
 export function playWorkEndSound() {
-  playTone(880, 120);
-  setTimeout(() => playTone(698, 150), 100);
+  playTone(659, 100, 'sine');
+  setTimeout(() => playTone(392, 170, 'triangle'), 90);
 }
 
 export function playCelebrationSound() {

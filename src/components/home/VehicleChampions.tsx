@@ -6,12 +6,6 @@ import { formatMoney } from '../../lib/format';
 
 type ChampionPeriod = 'today' | 'week' | 'month';
 
-const periodTitles: Record<ChampionPeriod, string> = {
-  today: 'GÜNÜN İLK 3\'Ü',
-  week: 'HAFTANIN İLK 3\'Ü',
-  month: 'AYIN İLK 3\'Ü',
-};
-
 const periodButtons: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
 
 const VEHICLE_ICONS: Record<string, string> = {
@@ -53,7 +47,7 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
   return (
     <section style={S.section}>
       <div style={S.head}>
-        <span style={S.kicker}>{periodTitles[period]}</span>
+        <span style={S.kicker}>KAZANÇ SIRALAMASI</span>
         <div style={S.tabsSmall}>
           {(['today', 'week', 'month'] as ChampionPeriod[]).map((p) => (
             <button
