@@ -3,7 +3,7 @@ import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
 import { NotificationRow, NotificationType, CreditCardRow } from '../../types/database';
-import { NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router';
 
 type Tab = 'all' | 'notifications' | 'payments' | 'appointments';
 

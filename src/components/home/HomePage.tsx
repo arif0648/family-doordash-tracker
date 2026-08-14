@@ -9,7 +9,7 @@ import { MarketRatesStrip } from './MarketRatesStrip';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
 import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary } from '../../lib/timezone';
 import { formatMoney } from '../../lib/format';
-import { NavLink, useSearchParams } from 'react-router-dom';
+import { NavLink, useSearchParams } from 'react-router';
 
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
 const summaryLabels: Record<Period, string> = { today: 'BUGÜNÜN ÖZETİ', week: 'HAFTANIN ÖZETİ', month: 'AYIN ÖZETİ' };
