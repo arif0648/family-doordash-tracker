@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div style={styles.container}>
-          <div style={styles.icon}>⚠️</div>
+          <div style={styles.icon}>!</div>
           <h2 style={styles.title}>
             {this.props.boundaryName ? `${this.props.boundaryName} yüklenemedi` : 'Bir şeyler ters gitti'}
           </h2>
@@ -55,7 +55,7 @@ export class ErrorBoundary extends Component<Props, State> {
             <button style={styles.button} onClick={this.handleRetry}>
               Tekrar Dene
             </button>
-            <button style={{ ...styles.button, background: '#38BDF8' }} onClick={this.handleReload}>
+            <button style={{ ...styles.button, background: 'rgba(255,255,255,.04)', color: 'var(--text-secondary)' }} onClick={this.handleReload}>
               Sayfayı Yenile
             </button>
           </div>
@@ -76,17 +76,17 @@ const styles: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     minHeight: '200px',
   },
-  icon: { fontSize: '32px', marginBottom: '8px' },
+  icon: { width: 32, height: 32, display:'grid', placeItems:'center', borderRadius:10, border:'1px solid var(--border)', color:'var(--negative)', marginBottom: '8px' },
   title: { fontSize: '17px', fontWeight: 600, margin: '4px 0' },
   message: { fontSize: '14px', color: '#94A3B8', maxWidth: '320px' },
   button: {
     marginTop: '16px',
     padding: '10px 24px',
     borderRadius: '12px',
-    border: 'none',
-    background: '#22C55E',
-    color: 'white',
-    fontWeight: 600,
+    border: '1px solid rgba(60,200,237,.18)',
+    background: 'rgba(60,200,237,.08)',
+    color: '#bdeafa',
+    fontWeight: 700,
     fontSize: '14px',
   },
   buttons: { display: 'flex', gap: 10, marginTop: 16 },

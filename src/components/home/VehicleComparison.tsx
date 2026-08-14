@@ -27,12 +27,12 @@ export function VehicleComparison({ summaries }: { summaries: VehicleSummary[] }
 }
 
 const S: Record<string, React.CSSProperties> = {
-  section: { padding: 16, borderRadius: 22, background: 'linear-gradient(145deg, rgba(20,25,38,.96), rgba(7,9,21,.98))', border: '1px solid rgba(255,255,255,.07)', marginBottom: 12 },
-  title: { fontSize: 16, fontWeight: 900, margin: '0 0 14px' },
-  list: { display: 'flex', flexDirection: 'column', gap: 14 },
+  section: { padding: 14, borderRadius: 17, background: '#101823', border: '1px solid var(--border)', marginBottom: 12, boxShadow:'var(--shadow-card)' },
+  title: { fontSize: 14, fontWeight: 750, margin: '0 0 11px' },
+  list: { display: 'flex', flexDirection: 'column', gap: 10 },
   row: { display: 'grid', gridTemplateColumns: '100px 1fr 70px', alignItems: 'center', gap: 10 },
   name: { fontSize: 13, fontWeight: 800, whiteSpace: 'nowrap' },
   barTrack: { height: 10, borderRadius: 5, background: 'rgba(255,255,255,.06)' },
-  barFill: { height: '100%', borderRadius: 5, background: 'linear-gradient(90deg, #F43F5E, #FB7185)' },
+  barFill: { height: '100%', borderRadius: 5, background: 'linear-gradient(90deg, var(--accent), var(--positive))' },
   value: { fontSize: 13, fontWeight: 900, textAlign: 'right' },
 };

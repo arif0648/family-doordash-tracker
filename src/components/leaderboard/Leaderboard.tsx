@@ -2,7 +2,7 @@ import React from 'react';
 import { computeLeaderboard, VehicleSummary } from '../../lib/financialEngine';
 import { EmptyState } from '../common/StateScreens';
 
-const MEDALS = ['🥇', '🥈', '🥉', '4', '5', '6', '7', '8', '9', '10'];
+const MEDALS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
 
 export function Leaderboard({
   title,
@@ -22,15 +22,15 @@ export function Leaderboard({
         <h3 style={styles.title}>{title}</h3>
       </div>
       {!result.hasData ? (
-        <EmptyState message="Henüz veri yok" icon="🏆" />
+        <EmptyState message="Henüz veri yok" icon="·" />
       ) : (
         <div style={styles.list}>
           {result.ranking.map((entry, idx) => {
             const positive = entry.net >= 0;
             const top3 = idx < 3;
             return (
-              <div key={entry.vehicleId} style={{ ...styles.row, background: top3 ? 'rgba(255,255,255,.05)' : 'transparent', borderColor: top3 ? 'rgba(168,85,247,.25)' : 'rgba(255,255,255,.06)' }}>
-                <div style={{ ...styles.rank, background: top3 ? 'rgba(168,85,247,.18)' : 'rgba(255,255,255,.05)', color: top3 ? '#E9D5FF' : '#9CA3AF' }}>
+              <div key={entry.vehicleId} style={{ ...styles.row, background: top3 ? 'rgba(255,255,255,.025)' : 'transparent', borderColor: 'var(--border)' }}>
+                <div style={{ ...styles.rank, background: 'rgba(255,255,255,.035)', color: top3 ? 'var(--gold)' : 'var(--text-secondary)' }}>
                   {MEDALS[idx] ?? idx + 1}
                 </div>
                 <div style={styles.info}>
@@ -49,9 +49,9 @@ export function Leaderboard({
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  wrap: { background: 'linear-gradient(145deg,rgba(20,14,43,.95),rgba(7,9,21,.98))', borderRadius: 20, padding: 16, marginBottom: 12, border: '1px solid rgba(168,85,247,.15)' },
+  wrap: { background: 'linear-gradient(145deg,#111a26,#0a1018)', borderRadius: 18, padding: 15, marginBottom: 12, border: '1px solid var(--border)', boxShadow:'var(--shadow-card)' },
   head: { marginBottom: 12 },
-  kicker: { fontSize: 9, letterSpacing: 2, color: '#9C8BEF', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.4, color: 'var(--text-secondary)', fontWeight: 750 },
   title: { fontSize: 18, fontWeight: 800, margin: '4px 0 0', color: '#fff' },
   list: { display: 'flex', flexDirection: 'column', gap: 8 },
   row: { display: 'flex', alignItems: 'center', gap: 12, padding: 12, borderRadius: 14, border: '1px solid', transition: 'transform .15s, background .15s' },

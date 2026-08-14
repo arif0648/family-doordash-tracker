@@ -28,14 +28,14 @@ export function LoginPage() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="auth-page" style={styles.page}>
+      <div className="auth-card" style={styles.card}>
         <h1 style={styles.title}>BARBİN AİLESİ</h1>
         <p style={styles.subtitle}>Aile operasyon merkezine hoş geldiniz</p>
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>E-posta</label>
           <input
-            style={styles.input}
+            className="auth-input" style={styles.input}
             type="email"
             placeholder="ornek@email.com"
             value={email}
@@ -44,7 +44,7 @@ export function LoginPage() {
           />
           <label style={styles.label}>Şifre</label>
           <input
-            style={styles.input}
+            className="auth-input" style={styles.input}
             type="password"
             placeholder="••••••"
             value={password}
@@ -52,7 +52,7 @@ export function LoginPage() {
             autoComplete="current-password"
           />
           {error && <p style={styles.error}>{error}</p>}
-          <button style={styles.primaryButton} type="submit" disabled={loading}>
+          <button className="auth-primary" style={styles.primaryButton} type="submit" disabled={loading}>
             {loading ? 'Giriş yapılıyor…' : 'Giriş Yap'}
           </button>
           <div style={styles.links}>
@@ -80,16 +80,16 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px 16px',
-    background: 'radial-gradient(circle at 50% 0%, rgba(168,85,247,.10), transparent 40%), #050711',
+    background: 'var(--bg)',
   },
   card: {
     width: '100%',
     maxWidth: 380,
     padding: 26,
-    borderRadius: 24,
-    background: 'linear-gradient(145deg, rgba(25,18,56,.95), rgba(7,9,21,.98))',
-    border: '1px solid rgba(168,85,247,.22)',
-    boxShadow: '0 24px 60px rgba(0,0,0,.45)',
+    borderRadius: 20,
+    background: 'linear-gradient(145deg,#111925,#0a1018)',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-card)',
   },
   title: {
     color: '#C4B5FD',
@@ -125,7 +125,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '14px',
     borderRadius: 14,
     border: 'none',
-    background: 'linear-gradient(135deg, #A855F7, #6366F1)',
+    background: 'rgba(60,200,237,.1)',
     color: 'white',
     fontWeight: 900,
     fontSize: 15,

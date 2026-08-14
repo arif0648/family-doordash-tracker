@@ -4,6 +4,7 @@ import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
 import { supabase } from '../../lib/supabaseClient';
 import { translateError } from '../../lib/errorMessage';
 import { AppointmentRow, AppointmentType, AppointmentStatus } from '../../types/database';
+import { Button, PageHeader, PageShell, Surface } from '../ui/primitives';
 
 const APPOINTMENT_TYPES: { value: AppointmentType; label: string }[] = [
   { value: 'vehicle_maintenance', label: 'Araç Bakımı' },
@@ -182,17 +183,13 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
   const weekAppointments = upcoming.filter(a => a.start_at >= today && a.start_at <= nextWeek && !a.start_at.startsWith(today) && !a.start_at.startsWith(tomorrow));
 
   return (
-    <main style={S.page}>
-      <header>
-        <span style={S.kicker}>PLANLAMA</span>
-        <h1 style={S.h1}>Randevular</h1>
-        <p style={S.sub}>Aile randevuları ve hatırlatıcıları.</p>
-      </header>
+    <PageShell>
+      <PageHeader eyebrow="Planlama" title="Randevular" description="Aile randevuları ve hatırlatıcıları." />
 
       {formError && <div style={S.error}>{formError}</div>}
 
       {showForm ? (
-        <div style={S.formContainer}>
+        <Surface style={S.formContainer}>
           <form onSubmit={handleSubmit} style={S.form}>
             <h2 style={S.formTitle}>{editingAppointment ? 'Randevuyu Düzenle' : 'Yeni Randevu'}</h2>
             
@@ -264,17 +261,17 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
             </div>
 
             <div style={S.buttonRow}>
-              <button type="button" onClick={closeForm} style={S.cancelButton} disabled={saving}>İptal</button>
-              <button type="submit" style={S.saveButton} disabled={saving}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
+              <Button type="button" onClick={closeForm} disabled={saving}>İptal</Button>
+              <Button type="submit" tone="positive" disabled={saving}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</Button>
             </div>
           </form>
-        </div>
+        </Surface>
       ) : (
         <>
-          <button onClick={() => setShowForm(true)} style={S.addButton}>+ Yeni Randevu</button>
+          <Button tone="primary" onClick={() => setShowForm(true)} style={S.addButton}>+ Yeni Randevu</Button>
 
           {upcoming.length === 0 && past.length === 0 ? (
-            <EmptyState message="Henüz randevu yok." icon="📅" />
+            <EmptyState message="Henüz randevu yok." icon="□" />
           ) : (
             <>
               {todayAppointments.length > 0 && (
@@ -315,7 +312,7 @@ export function AppointmentsPage({ familyId }: { familyId: string }) {
           )}
         </>
       )}
-    </main>
+    </PageShell>
   );
 }
 
@@ -334,13 +331,13 @@ function AppointmentCard({ appointment, onEdit, onCancel, onComplete, onDelete }
     <article style={S.card}>
       <div style={{ flex: 1 }}>
         <div style={S.cardHeader}>
-          <span style={{ ...S.typeBadge, background: 'rgba(168,85,247,.15)', color: '#C084FC' }}>{typeLabel}</span>
+          <span style={{ ...S.typeBadge, background: 'rgba(141,114,220,.1)', color: '#aa96e3' }}>{typeLabel}</span>
           <span style={{ ...S.statusBadge, color: STATUS_COLORS[appointment.status] }}>{appointment.status === 'upcoming' ? 'Yaklaşan' : appointment.status === 'completed' ? 'Tamamlandı' : 'İptal'}</span>
         </div>
         <h4 style={S.cardTitle}>{appointment.title}</h4>
         {appointment.description && <p style={S.cardDescription}>{appointment.description}</p>}
         <div style={S.cardMeta}>
-          <span>📅 {dateStr}</span>
+          <span>□ {dateStr}</span>
           <span>⏰ {timeStr}</span>
         </div>
       </div>
@@ -365,22 +362,22 @@ const S: Record<string, React.CSSProperties> = {
   h1: { fontSize: 29, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
   error: { marginTop: 14, padding: 12, borderRadius: 14, background: 'rgba(251,113,133,.1)', border: '1px solid rgba(251,113,133,.2)', color: '#FDA4AF', fontSize: 12 },
-  addButton: { width: '100%', minHeight: 56, border: 0, borderRadius: 17, background: 'linear-gradient(135deg,#A855F7,#7C3AED)', color: '#fff', fontWeight: 900, fontSize: 15, marginBottom: 16, boxShadow: '0 12px 30px rgba(168,85,247,.25)' },
+  addButton: { width: '100%', marginBottom: 14 },
   section: { marginTop: 20 },
   sectionTitle: { fontSize: 13, color: '#7F8499', marginBottom: 10, fontWeight: 800 },
-  formContainer: { background: 'linear-gradient(145deg,rgba(24,18,55,.94),rgba(8,10,24,.98))', border: '1px solid rgba(168,85,247,.34)', borderRadius: 28, padding: 20, boxShadow: '0 24px 70px rgba(0,0,0,.45)' },
+  formContainer: { padding: 16 },
   form: { display: 'flex', flexDirection: 'column', gap: 12 },
   formTitle: { fontSize: 18, margin: '0 0 10px', color: '#fff' },
   label: { fontSize: 12, color: '#A7ABC0', marginTop: 4 },
-  input: { width: '100%', padding: '15px 14px', borderRadius: 15, border: '1px solid rgba(148,163,184,.16)', background: 'rgba(5,7,18,.78)', color: '#fff', fontSize: 16, minHeight: 52 },
-  textarea: { width: '100%', padding: '15px 14px', borderRadius: 15, border: '1px solid rgba(148,163,184,.16)', background: 'rgba(5,7,18,.78)', color: '#fff', fontSize: 16, minHeight: 80, resize: 'vertical' },
+  input: { fontSize: 16 },
+  textarea: { fontSize: 16, minHeight: 78, resize: 'vertical' },
   twoCol: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 },
   reminderDays: { display: 'flex', gap: 16, flexWrap: 'wrap' },
   reminderCheckbox: { fontSize: 13, color: '#A7ABC0', display: 'flex', alignItems: 'center', gap: 6 },
   buttonRow: { display: 'flex', gap: 10, marginTop: 10 },
   saveButton: { flex: 1, minHeight: 56, border: 0, borderRadius: 17, background: 'linear-gradient(135deg,#34D399,#10B981)', color: '#04120D', fontWeight: 900, fontSize: 15 },
   cancelButton: { flex: 1, minHeight: 56, border: 0, borderRadius: 17, background: 'rgba(148,163,184,.2)', color: '#fff', fontWeight: 900, fontSize: 15 },
-  card: { display: 'flex', gap: 12, alignItems: 'center', padding: 16, borderRadius: 18, background: 'linear-gradient(145deg,rgba(20,14,43,.92),rgba(7,9,21,.96))', border: '1px solid rgba(168,85,247,.15)', marginBottom: 8 },
+  card: { display: 'flex', gap: 11, alignItems: 'center', padding: 13, borderRadius: 16, background: '#101823', border: '1px solid var(--border)', marginBottom: 7, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },
   cardHeader: { display: 'flex', gap: 8, marginBottom: 6 },
   typeBadge: { fontSize: 10, padding: '4px 8px', borderRadius: 8, fontWeight: 800 },
   statusBadge: { fontSize: 10, padding: '4px 8px', borderRadius: 8, fontWeight: 800 },
@@ -389,6 +386,6 @@ const S: Record<string, React.CSSProperties> = {
   cardMeta: { display: 'flex', gap: 12, fontSize: 11, color: '#6F748A' },
   cardActions: { display: 'flex', gap: 6 },
   completeButton: { width: 36, height: 36, border: 0, borderRadius: 10, background: 'rgba(52,211,153,.15)', color: '#34D399', fontWeight: 900, fontSize: 16 },
-  editButton: { width: 36, height: 36, border: 0, borderRadius: 10, background: 'rgba(168,85,247,.15)', color: '#C084FC', fontWeight: 900, fontSize: 16 },
+  editButton: { width: 36, height: 36, border: '1px solid rgba(60,200,237,.14)', borderRadius: 10, background: 'rgba(60,200,237,.06)', color: 'var(--accent)', fontWeight: 800, fontSize: 16 },
   deleteButton: { width: 36, height: 36, border: 0, borderRadius: 10, background: 'rgba(251,113,133,.15)', color: '#F87171', fontWeight: 900, fontSize: 16 },
 };

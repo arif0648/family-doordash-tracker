@@ -69,7 +69,7 @@ export function Upcoming7Days({ creditCards, fixedExpenses, appointments, onPay 
 }
 
 const S: Record<string, React.CSSProperties> = {
-  section: { padding: 14, borderRadius: 20, background: 'linear-gradient(145deg, rgba(25,18,56,.96), rgba(7,9,21,.98))', border: '1px solid rgba(168,85,247,.15)', marginBottom: 10 },
+  section: { padding: 14, borderRadius: 18, background: 'linear-gradient(145deg,#111a26,#0a1018)', border: '1px solid var(--border)', boxShadow:'var(--shadow-card)', marginBottom: 10 },
   head: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   kicker: { fontSize: 9, letterSpacing: 2, color: '#9C8BEF', fontWeight: 900 },
   total: { fontSize: 16, color: '#FDA4AF' },

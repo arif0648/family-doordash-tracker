@@ -41,7 +41,7 @@ export function CreditCardsDashboard({ cards, maxCards, compact }: CreditCardsDa
     <section style={S.section}>
       <div style={S.head}>
         <div>
-          <span style={S.kicker}>💳 BORÇ ÖZETİ</span>
+          <span style={S.kicker}>BORÇ ÖZETİ</span>
           <h2 style={S.title}>Kredi Kartları</h2>
         </div>
         <NavLink to="/kredi-kartlari" style={S.link}>Tümünü Yönet ›</NavLink>
@@ -126,27 +126,27 @@ export function CreditCardsDashboard({ cards, maxCards, compact }: CreditCardsDa
 const S: Record<string, React.CSSProperties> = {
   section: {
     padding: 16,
-    borderRadius: 24,
-    background: 'linear-gradient(145deg, rgba(25,18,56,.96), rgba(7,9,21,.98))',
-    border: '1px solid rgba(168,85,247,.15)',
-    boxShadow: '0 24px 65px rgba(0,0,0,.35)',
+    borderRadius: 18,
+    background: 'linear-gradient(145deg,#111a26,#0a1018)',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-card)',
     marginBottom: 10,
   },
   head: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 },
-  kicker: { fontSize: 9, letterSpacing: 2, color: '#9C8BEF', fontWeight: 900 },
+  kicker: { fontSize: 9, letterSpacing: 1.4, color: 'var(--text-secondary)', fontWeight: 750 },
   title: { fontSize: 18, fontWeight: 800, margin: '4px 0 0', color: '#fff' },
-  link: { fontSize: 12, color: '#C084FC', textDecoration: 'none', fontWeight: 700 },
+  link: { fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 700 },
   overview: {
     padding: 16,
-    borderRadius: 18,
-    background: 'linear-gradient(135deg, rgba(168,85,247,.14), rgba(99,102,241,.08))',
-    border: '1px solid rgba(168,85,247,.2)',
+    borderRadius: 15,
+    background: 'rgba(255,255,255,.025)',
+    border: '1px solid var(--border)',
     marginBottom: 12,
     display: 'flex',
     flexDirection: 'column',
     gap: 10,
   },
-  overviewLabel: { fontSize: 10, letterSpacing: 1.5, color: '#9C8BEF', fontWeight: 800 },
+  overviewLabel: { fontSize: 10, letterSpacing: 1.2, color: 'var(--text-secondary)', fontWeight: 750 },
   overviewTotal: { fontSize: 28, fontWeight: 900, color: '#FDA4AF', letterSpacing: -1 },
   util: { display: 'flex', flexDirection: 'column', gap: 6 },
   utilBar: { height: 6, borderRadius: 6, background: 'rgba(255,255,255,.08)', overflow: 'hidden' },

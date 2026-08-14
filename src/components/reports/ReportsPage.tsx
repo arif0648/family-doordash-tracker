@@ -1,14 +1,14 @@
 import React, { useMemo } from 'react';
 import { useFamilyRealtimeData } from '../../hooks/useFamilyRealtimeData';
 import { LoadingScreen, ErrorScreen, EmptyState } from '../common/StateScreens';
-import { computeFamilySummary, computeVehicleSummary, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
-import { monthBoundary, toPacificDateString, weekBoundary } from '../../lib/timezone';
-import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
+import { computeFamilySummary, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
+import { monthBoundary, toPacificDateString } from '../../lib/timezone';
+import { MileageEntry } from '../../lib/mileageEngine';
 import { toCsv, downloadCsv } from '../../lib/csvExport';
-import { Leaderboard } from '../leaderboard/Leaderboard';
-import { LeaderboardCard } from '../home/LeaderboardCard';
+import { VehicleChampions } from '../home/VehicleChampions';
 import { CreditCardsDashboard } from '../home/CreditCardsDashboard';
 import { supabase } from '../../lib/supabaseClient';
+import { Button, PageHeader, PageShell, SectionHeader } from '../ui/primitives';
 
 export function ReportsPage({ familyId }: { familyId: string }) {
   const { vehicles, income, expenses, mileageLog, fixedExpenses, creditCards, loading, error, retry } =
@@ -17,8 +17,6 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   const now = new Date();
   const boundary = useMemo(() => monthBoundary(now), []);
   const monthAnchor = toPacificDateString(now);
-  const todayStr = toPacificDateString(now);
-  const weekB = weekBoundary(now);
 
   const [trend, setTrend] = React.useState<any>(null);
   React.useEffect(() => {
@@ -50,19 +48,6 @@ export function ReportsPage({ familyId }: { familyId: string }) {
     .filter((m) => m.recordDate >= boundary.start && m.recordDate <= boundary.end)
     .reduce((s, m) => s + m.milesDriven, 0);
 
-  const vehicleSummaries = vehicles.map((v) =>
-    computeVehicleSummary({
-      vehicle: { id: v.id, short_name: v.short_name },
-      period: 'month',
-      boundary,
-      income: incomeRecords,
-      expenses: expenseRecords,
-      fixedExpenseVersions: fixedVersions,
-      monthAnchorDate: monthAnchor,
-      totalVehicleCount: vehicles.length,
-      milesInPeriod: sumMilesInPeriod(mileageEntries.filter((m) => m.vehicleId === v.id), boundary.start, boundary.end),
-    })
-  );
   const vehicleNames = Object.fromEntries(vehicles.map((v) => [v.id, v.short_name]));
 
   function exportIncomeCsv() {
@@ -97,12 +82,12 @@ export function ReportsPage({ familyId }: { familyId: string }) {
   }
 
   return (
-    <div className="app-page" style={styles.page}>
-      <h1 style={styles.heading}>Raporlar</h1>
+    <PageShell>
+      <PageHeader title="Raporlar" description="Finans, araç ve borç görünümü." />
 
-      <h2 style={styles.sectionTitle}>Finansal Özet</h2>
+      <SectionHeader title="Finansal Özet" />
       {!hasAnyData ? (
-        <EmptyState message="Henüz veri yok." icon="📊" />
+        <EmptyState message="Henüz veri yok." icon="▥" />
       ) : (
         <>
           <div style={styles.grid}>
@@ -126,29 +111,26 @@ export function ReportsPage({ familyId }: { familyId: string }) {
             </section>
           )}
 
-          <h2 style={styles.sectionTitle}>Araç Karşılaştırması</h2>
-          <Leaderboard title="AYIN 1.'Sİ" vehicleSummaries={vehicleSummaries} hasAnyRealActivity={hasAnyData} />
+          <SectionHeader title="Araç Sıralaması" />
+          <VehicleChampions income={incomeRecords} vehicles={vehicles} now={now} />
 
-          <h2 style={styles.sectionTitle}>Aile Sıralaması</h2>
-          <LeaderboardCard income={incomeRecords} vehicles={vehicles} today={{ start: todayStr, end: todayStr }} week={weekB} month={boundary} />
-
-          <h2 style={styles.sectionTitle}>Borç Özeti</h2>
+          <SectionHeader title="Borç Özeti" />
           <CreditCardsDashboard cards={creditCards} />
 
-          <h2 style={styles.sectionTitle}>Dışa Aktar (CSV)</h2>
+          <SectionHeader title="Dışa Aktar (CSV)" />
           <div style={styles.exportRow}>
-            <button style={styles.exportButton} onClick={exportIncomeCsv}>Gelir</button>
-            <button style={styles.exportButton} onClick={exportExpensesCsv}>Gider</button>
-            <button style={styles.exportButton} onClick={exportMileageCsv}>Kilometre</button>
+            <Button onClick={exportIncomeCsv}>Gelir</Button>
+            <Button onClick={exportExpensesCsv}>Gider</Button>
+            <Button onClick={exportMileageCsv}>Kilometre</Button>
           </div>
         </>
       )}
-    </div>
+    </PageShell>
   );
 }
 
 function Stat({ label, value, highlight, isMiles }: { label: string; value: number; highlight?: boolean; isMiles?: boolean }) {
-  const color = highlight ? (value >= 0 ? '#A855F7' : '#F87171') : '#E2E8F0';
+  const color = highlight ? (value >= 0 ? 'var(--positive)' : 'var(--negative)') : 'var(--text)';
   return (
     <div style={styles.statCard}>
       <p style={styles.statLabel}>{label}</p>
@@ -160,7 +142,7 @@ function Stat({ label, value, highlight, isMiles }: { label: string; value: numb
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)' },
+  page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)' },
   heading: { fontSize: 20, fontWeight: 750, marginBottom: 14 },
   grid: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 },
   statCard: { background: '#101823', border: '1px solid var(--border)', borderRadius: 15, padding: 13, boxShadow: 'inset 0 1px 0 rgba(255,255,255,.025)' },

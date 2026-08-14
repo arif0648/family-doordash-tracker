@@ -63,7 +63,7 @@ export function BottomNav() {
             background: activeFor('/kredi-kartlari') ? 'rgba(60,200,237,.065)' : 'transparent',
           }}
         >
-          <span style={S.icon}>💳</span>
+          <span style={S.icon}>▭</span>
           <span style={S.label}>Kartlar</span>
         </NavLink>
 

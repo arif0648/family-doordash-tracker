@@ -19,7 +19,7 @@ export function QuickActionsSheet({ open, onClose }: QuickActionsSheetProps) {
     { path: '/kazanc', icon: '＋', label: 'Gelir Ekle', color: 'var(--positive)' },
     { path: '/gider', icon: '−', label: 'Gider Ekle', color: 'var(--negative)' },
     { path: '/?focus=work', icon: '⏱', label: 'Çalışma Yönet', color: 'var(--accent)' },
-    { path: '/randevular', icon: '📅', label: 'Randevu Ekle', color: 'var(--brand)' },
+    { path: '/randevular', icon: '□', label: 'Randevu Ekle', color: 'var(--brand)' },
   ];
 
   return (
@@ -46,14 +46,14 @@ const S: Record<string, React.CSSProperties> = {
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: 10,
+    gap: 8,
   },
   row: {
     display: 'flex',
     alignItems: 'center',
     gap: 14,
-    minHeight: 56,
-    borderRadius: 18,
+    minHeight: 52,
+    borderRadius: 15,
     border: '1px solid var(--border)',
     background: 'var(--surface-raised)',
     color: 'var(--text)',

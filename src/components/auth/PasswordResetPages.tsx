@@ -33,8 +33,8 @@ export function ForgotPasswordPage() {
 
   if (sent) {
     return (
-      <div style={styles.container}>
-        <div style={styles.box}>
+      <div className="auth-page" style={styles.container}>
+        <div className="auth-card" style={styles.box}>
           <h2 style={{ color: 'white', fontSize: 20 }}>E-posta gönderildi</h2>
           <p style={{ color: '#94A3B8', marginTop: 8 }}>
             {email} adresine bir şifre sıfırlama bağlantısı gönderdik. Gelen kutunuzu kontrol edin.
@@ -48,11 +48,11 @@ export function ForgotPasswordPage() {
   }
 
   return (
-    <div style={styles.container}>
+    <div className="auth-page" style={styles.container}>
       <h1 style={styles.title}>Şifremi Unuttum</h1>
       <form onSubmit={handleSubmit} style={styles.form}>
         <input
-          style={styles.input}
+          className="auth-input" style={styles.input}
           type="email"
           placeholder="E-posta"
           value={email}
@@ -60,7 +60,7 @@ export function ForgotPasswordPage() {
           autoComplete="email"
         />
         {error && <p style={styles.error}>{error}</p>}
-        <button style={styles.primaryButton} type="submit" disabled={loading}>
+        <button className="auth-primary" style={styles.primaryButton} type="submit" disabled={loading}>
           {loading ? 'Gönderiliyor…' : 'Sıfırlama Bağlantısı Gönder'}
         </button>
         <Link to="/giris" style={styles.link}>
@@ -109,8 +109,8 @@ export function ResetPasswordPage() {
 
   if (success) {
     return (
-      <div style={styles.container}>
-        <div style={styles.box}>
+      <div className="auth-page" style={styles.container}>
+        <div className="auth-card" style={styles.box}>
           <h2 style={{ color: 'white', fontSize: 20 }}>Şifreniz güncellendi</h2>
           <p style={{ color: '#94A3B8', marginTop: 8 }}>Yönlendiriliyorsunuz…</p>
         </div>
@@ -119,11 +119,11 @@ export function ResetPasswordPage() {
   }
 
   return (
-    <div style={styles.container}>
+    <div className="auth-page" style={styles.container}>
       <h1 style={styles.title}>Yeni Şifre Belirle</h1>
       <form onSubmit={handleSubmit} style={styles.form}>
         <input
-          style={styles.input}
+          className="auth-input" style={styles.input}
           type="password"
           placeholder="Yeni Şifre"
           value={password}
@@ -131,7 +131,7 @@ export function ResetPasswordPage() {
           autoComplete="new-password"
         />
         <input
-          style={styles.input}
+          className="auth-input" style={styles.input}
           type="password"
           placeholder="Yeni Şifre (Tekrar)"
           value={confirmPassword}
@@ -139,7 +139,7 @@ export function ResetPasswordPage() {
           autoComplete="new-password"
         />
         {error && <p style={styles.error}>{error}</p>}
-        <button style={styles.primaryButton} type="submit" disabled={loading}>
+        <button className="auth-primary" style={styles.primaryButton} type="submit" disabled={loading}>
           {loading ? 'Kaydediliyor…' : 'Şifreyi Güncelle'}
         </button>
       </form>

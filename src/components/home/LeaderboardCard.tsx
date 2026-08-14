@@ -43,7 +43,7 @@ export function LeaderboardCard({ income, vehicles, today, week, month }: Leader
             <span style={S.label}>{p.label}</span>
             {w ? (
               <span style={S.winner}>
-                <span>🏆</span>
+                <span>1</span>
                 <span>{w.name}</span>
                 <span style={S.amount}>${Math.abs(w.amount).toLocaleString('en-US')}</span>
               </span>

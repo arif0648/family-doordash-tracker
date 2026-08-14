@@ -8,12 +8,12 @@ interface MenuSheetProps {
 }
 
 const items = [
-  { path: '/araclar', icon: '🚗', label: 'Araçlar' },
-  { path: '/sabit-giderler', icon: '🏠', label: 'Sabit Giderler' },
-  { path: '/randevular', icon: '📅', label: 'Randevular' },
-  { path: '/bildirimler', icon: '🔔', label: 'Bildirimler' },
-  { path: '/raporlar', icon: '📊', label: 'Raporlar' },
-  { path: '/profil', icon: '⚙️', label: 'Profil' },
+  { path: '/araclar', icon: '◇', label: 'Araçlar' },
+  { path: '/sabit-giderler', icon: '⌂', label: 'Sabit Giderler' },
+  { path: '/randevular', icon: '□', label: 'Randevular' },
+  { path: '/bildirimler', icon: '○', label: 'Bildirimler' },
+  { path: '/raporlar', icon: '▥', label: 'Raporlar' },
+  { path: '/profil', icon: '◎', label: 'Profil' },
 ];
 
 export function MenuSheet({ open, onClose }: MenuSheetProps) {
@@ -47,26 +47,27 @@ const S: Record<string, React.CSSProperties> = {
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
-    gap: 12,
+    gap: 8,
   },
   item: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
-    minHeight: 88,
-    borderRadius: 20,
+    gap: 6,
+    minHeight: 74,
+    borderRadius: 15,
     border: '1px solid var(--border)',
     background: 'var(--surface-raised)',
     color: 'var(--text)',
-    padding: 12,
+    padding: 10,
     fontWeight: 700,
     fontSize: 12,
     transition: 'transform 120ms ease, background 120ms ease',
   },
   icon: {
-    fontSize: 24,
+    fontSize: 20,
+    color: 'var(--accent)',
     lineHeight: 1,
   },
   label: {

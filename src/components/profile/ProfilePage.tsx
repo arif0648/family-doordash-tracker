@@ -176,7 +176,7 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
         {vehicles.map((vehicle) => <div key={vehicle.id} style={styles.goalRow}>
           <label style={styles.goalLabel}>{vehicle.short_name}</label>
           <input style={styles.goalInput} type="number" min={1} step="1" value={vehicleGoals[vehicle.id] ?? ''} onChange={(e) => setVehicleGoals((g) => ({ ...g, [vehicle.id]: e.target.value }))} />
-          <button type="button" style={styles.goalButton} disabled={savingGoal === vehicle.id} onClick={() => void handleSaveGoal(vehicle.id)}>{savingGoal === vehicle.id ? '...' : 'Kaydet'}</button>
+          <button type="button" style={styles.goalSaveButton} aria-label={`${vehicle.short_name} hedefini kaydet`} disabled={savingGoal === vehicle.id} onClick={() => void handleSaveGoal(vehicle.id)}>{savingGoal === vehicle.id ? '…' : '✓'}</button>
         </div>)}
         <strong style={styles.goalTotal}>Aile hedefi: ${Object.values(vehicleGoals).reduce((sum, value) => sum + (Number(value) || 0), 0).toLocaleString('en-US')}</strong>
       </div>
@@ -197,7 +197,7 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
             onClick={() => setShowPassword(!showPassword)}
             style={styles.toggleVisibilityButton}
           >
-            {showPassword ? '🙈' : '👁️'}
+            {showPassword ? 'Gizle' : 'Göster'}
           </button>
         </div>
 
@@ -233,7 +233,7 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
         onClick={onToggle}
         style={{
           ...styles.toggleButton,
-          background: enabled ? '#A855F7' : '#334155',
+          background: enabled ? 'rgba(60,200,237,.72)' : '#283444',
         }}
       >
         <span
@@ -248,7 +248,7 @@ function ToggleRow({ label, enabled, onToggle }: { label: string; enabled: boole
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
+  page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
   heading: { fontSize: 20, fontWeight: 750, marginBottom: 14 },
   card: { background: '#101823', border: '1px solid var(--border)', borderRadius: 18, padding: 15, marginBottom: 14, boxShadow: 'var(--shadow-card)' },
   email: { fontSize: 14, color: '#A7ABC0', margin: 0 },
@@ -298,6 +298,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: 14,
   },
   goalRow: { display: 'grid', gridTemplateColumns: '1fr 110px 72px', alignItems: 'center', gap: 8, marginBottom: 8 },
+  goalSaveButton: { width: 38, height: 38, justifySelf: 'end', borderRadius: 11, border: '1px solid rgba(60,200,237,.16)', background: 'rgba(60,200,237,.07)', color: 'var(--accent)', fontWeight: 800, fontSize: 15 },
   goalTotal: { display: 'block', textAlign: 'right', color: '#34D399', fontSize: 13, marginTop: 8 },
   passwordContainer: {
     display: 'flex',
@@ -319,7 +320,9 @@ const styles: Record<string, React.CSSProperties> = {
     borderRadius: 10,
     border: '1px solid rgba(255,255,255,.1)',
     background: '#090e16',
-    fontSize: 16,
+    color: 'var(--text-secondary)',
+    fontSize: 10,
+    fontWeight: 700,
     cursor: 'pointer',
   },
   passwordError: {

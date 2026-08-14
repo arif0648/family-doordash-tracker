@@ -133,7 +133,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  form: { display:'flex', flexDirection:'column', gap:9, padding:'12px 14px calc(116px + var(--safe-bottom))', color:'var(--text)' },
+  form: { display:'flex', flexDirection:'column', gap:9, padding:'12px 14px var(--page-bottom-space)', color:'var(--text)' },
   title: { fontSize:20, fontWeight:800, margin:'6px 0', letterSpacing:-.5 },
   tabs: { display:'grid', gridTemplateColumns:'repeat(2,1fr)', gap:4, background:'#0e151f', border:'1px solid var(--border)', borderRadius:14, padding:4 },
   tab: { minHeight:42, borderRadius:10, border:'none', fontSize:11, fontWeight:800, cursor:'pointer' },

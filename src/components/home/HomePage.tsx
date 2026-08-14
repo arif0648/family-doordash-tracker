@@ -148,7 +148,7 @@ export function HomePage({ familyId }: HomePageProps) {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', minHeight: '100vh' },
+  page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)', minHeight: '100vh' },
   header: { display: 'flex', alignItems: 'center', marginBottom: 12 },
   lastMovement: { minWidth: 0, marginTop: 14, paddingTop: 11, borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 10, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' },
   activityDot: { width: 5, height: 5, borderRadius: 999, background: 'var(--accent)', boxShadow: '0 0 9px rgba(60,200,237,.45)' },

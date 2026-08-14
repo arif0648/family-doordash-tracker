@@ -4,6 +4,7 @@ import { translateError } from '../../lib/errorMessage';
 import { MAX_AMOUNT } from '../../lib/format';
 import { FixedExpenseRow } from '../../types/database';
 import { toPacificDateString } from '../../lib/timezone';
+import { Button, PageHeader, PageShell, Surface } from '../ui/primitives';
 
 export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId:string; expenses:FixedExpenseRow[]; onChanged:()=>void }) {
   const [label,setLabel]=useState('');
@@ -55,15 +56,16 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     if(error)setError(translateError(error.message)); else onChanged();
   }
 
-  return <section style={styles.shell}>
-    <div style={styles.header}><div><span style={styles.eyebrow}>HER AY</span><h2 style={styles.title}>Aylık Sabit Giderler</h2></div><strong style={styles.total}>${total.toLocaleString('en-US',{minimumFractionDigits:2})}</strong></div>
-    <p style={styles.note}>Düzenli ödemeler burada tutulur. Ana ekranda gösterilmez; aylık net hesaba otomatik dahil edilir.</p>
-    <form onSubmit={add} style={styles.addRow}><input value={label} onChange={e=>setLabel(e.target.value)} placeholder="Kira, sigorta, kredi…" style={styles.input}/><input value={amount} onChange={e=>setAmount(e.target.value)} type="number" step="0.01" placeholder="$" style={styles.amount}/><button disabled={saving} style={styles.add}>+</button></form>
-    {error&&<div style={styles.error}>{error}</div>}
-    <div style={styles.list}>{active.map(row=>{
+  return <PageShell>
+    <PageHeader eyebrow="Her ay" title="Aylık Sabit Giderler" description="Düzenli ödemeler aylık net hesaba otomatik dahil edilir." action={<strong style={styles.total}>${total.toLocaleString('en-US',{minimumFractionDigits:2})}</strong>} />
+    <Surface>
+      <form onSubmit={add} style={styles.addRow}><input value={label} onChange={e=>setLabel(e.target.value)} placeholder="Kira, sigorta, kredi…"/><input value={amount} onChange={e=>setAmount(e.target.value)} type="number" step="0.01" placeholder="$"/><Button tone="primary" disabled={saving} aria-label="Sabit gider ekle">+</Button></form>
+      {error&&<div style={styles.error}>{error}</div>}
+      <div style={styles.list}>{active.map(row=>{
       const val = edits[row.id] ?? row.monthly_amount.toString();
-      return <div key={row.id} style={styles.item}><div style={{minWidth:0}}><strong style={styles.name}>{row.label}</strong><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={keySave} style={styles.edit}/><button onClick={()=>void remove(row)} style={styles.delete}>Sil</button></div></div>
-    })}</div>
-  </section>
+      return <div key={row.id} style={styles.item}><div style={{minWidth:0}}><strong style={styles.name}>{row.label}</strong><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input aria-label={`${row.label} tutarı`} type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={keySave} style={styles.edit}/><Button type="button" tone="danger" onClick={()=>void remove(row)} style={styles.delete}>Sil</Button></div></div>
+      })}</div>
+    </Surface>
+  </PageShell>
 }
-const styles:Record<string,React.CSSProperties>={shell:{margin:'0 14px 18px',padding:18,borderRadius:24,background:'linear-gradient(145deg,rgba(20,14,43,.94),rgba(7,9,21,.96))',border:'1px solid rgba(168,85,247,.25)',boxShadow:'0 18px 50px rgba(0,0,0,.35)'},header:{display:'flex',justifyContent:'space-between',alignItems:'center',gap:10},eyebrow:{fontSize:9,letterSpacing:2,color:'#A78BFA',fontWeight:900},title:{fontSize:20,margin:'4px 0',color:'#fff'},total:{fontSize:18,color:'#C084FC'},note:{fontSize:11,color:'#747A91',lineHeight:1.5},addRow:{display:'grid',gridTemplateColumns:'1.5fr .7fr 48px',gap:7,margin:'14px 0'},input:{minWidth:0,minHeight:48,padding:'12px',borderRadius:13,border:'1px solid rgba(148,163,184,.15)',background:'#070916',color:'#fff'},amount:{minWidth:0,minHeight:48,padding:'12px',borderRadius:13,border:'1px solid rgba(148,163,184,.15)',background:'#070916',color:'#34D399'},add:{border:0,borderRadius:13,background:'linear-gradient(135deg,#A855F7,#6366F1)',color:'#fff',fontSize:24,fontWeight:700},list:{display:'flex',flexDirection:'column',gap:8},item:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'12px 0',borderTop:'1px solid rgba(255,255,255,.06)'},name:{display:'block',fontSize:13,color:'#F4F4F5',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},meta:{fontSize:10,color:'#6F748A'},actions:{display:'flex',alignItems:'center',gap:5,color:'#A7ABC0'},edit:{width:82,minHeight:40,padding:'8px',borderRadius:10,border:'1px solid rgba(168,85,247,.35)',background:'#090B18',color:'#34D399',textAlign:'right',fontWeight:800},delete:{border:0,background:'transparent',color:'#FB7185',fontSize:11},error:{color:'#FB7185',fontSize:12,marginBottom:8}}
+const styles:Record<string,React.CSSProperties>={total:{padding:'7px 9px',borderRadius:11,border:'1px solid rgba(60,200,237,.15)',background:'rgba(60,200,237,.06)',color:'#bdeafa',fontSize:15},addRow:{display:'grid',gridTemplateColumns:'1.45fr .7fr 46px',gap:7,marginBottom:10},list:{display:'flex',flexDirection:'column'},item:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'11px 0',borderTop:'1px solid var(--border)'},name:{display:'block',fontSize:13,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},meta:{display:'block',fontSize:10,color:'var(--muted)'},actions:{display:'flex',alignItems:'center',gap:5,color:'var(--text-secondary)'},edit:{width:82,minHeight:38,padding:'7px',color:'var(--positive)',textAlign:'right',fontWeight:750},delete:{minHeight:38,padding:'7px 9px',fontSize:11},error:{color:'var(--negative)',fontSize:12,marginBottom:8}}

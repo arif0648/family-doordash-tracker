@@ -28,19 +28,19 @@ export function VehiclePerformanceCard({ income, vehicles, month }: VehiclePerfo
       {first ? (
         <div style={S.podium}>
           <div style={S.first}>
-            <span style={S.rank}>🥇</span>
+            <span style={S.rank}>1</span>
             <span style={S.name}>{names[first[0]]}</span>
             <span style={S.amount}>${first[1].toLocaleString('en-US')}</span>
           </div>
           {second ? (
             <div style={S.row}>
-              <span>🥈 {names[second[0]]}</span>
+              <span>2 · {names[second[0]]}</span>
               <span>${second[1].toLocaleString('en-US')}</span>
             </div>
           ) : null}
           {third ? (
             <div style={S.row}>
-              <span>🥉 {names[third[0]]}</span>
+              <span>3 · {names[third[0]]}</span>
               <span>${third[1].toLocaleString('en-US')}</span>
             </div>
           ) : null}
@@ -53,7 +53,7 @@ export function VehiclePerformanceCard({ income, vehicles, month }: VehiclePerfo
 }
 
 const S: Record<string, React.CSSProperties> = {
-  section: { padding: 16, borderRadius: 20, background: 'linear-gradient(145deg, rgba(25,18,56,.96), rgba(7,9,21,.98))', border: '1px solid rgba(168,85,247,.15)', marginBottom: 10 },
+  section: { padding: 15, borderRadius: 18, background: 'linear-gradient(145deg,#111a26,#0a1018)', border: '1px solid var(--border)', boxShadow:'var(--shadow-card)', marginBottom: 10 },
   kicker: { fontSize: 9, letterSpacing: 2, color: '#9C8BEF', fontWeight: 900 },
   title: { fontSize: 20, fontWeight: 900, margin: '4px 0 12px' },
   podium: { display: 'flex', flexDirection: 'column', gap: 8 },

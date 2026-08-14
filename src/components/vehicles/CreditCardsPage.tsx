@@ -6,6 +6,7 @@ import { CreditCardRow } from '../../types/database';
 import { computeCreditCardStatus } from '../../lib/creditCardStatus';
 import { translateError } from '../../lib/errorMessage';
 import { MAX_AMOUNT } from '../../lib/format';
+import { Button, Modal } from '../ui/primitives';
 
 export function CreditCardsPage({ familyId }: { familyId: string }) {
   const { creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
@@ -134,7 +135,7 @@ function Card({ card, onChanged, onPayment, onQuickPay }: { card: CreditCardRow;
   }
 
   return (
-    <article style={{ ...S.card, borderColor: overdue ? 'rgba(251,113,133,.42)' : urgent ? 'rgba(244,114,182,.42)' : 'rgba(168,85,247,.18)' }}>
+    <article style={{ ...S.card, borderColor: overdue ? 'rgba(251,113,133,.34)' : urgent ? 'rgba(244,114,182,.3)' : 'var(--border)' }}>
       <div style={S.cardTop}>
         <div>
           <span style={{ ...S.chip, color: status.accent }}>{status.label}</span>
@@ -198,9 +199,7 @@ function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: stri
   }
 
   return (
-    <div style={S.modalOverlay} onClick={onClose}>
-      <div style={S.modal} onClick={e => e.stopPropagation()}>
-        <h3 style={S.modalTitle}>Ödeme Yap</h3>
+    <Modal open title="Ödeme Yap" onClose={onClose}>
         <form onSubmit={submit} style={S.modalForm}>
           <label style={S.label}>Ödeme Tutarı ($)</label>
           <input style={S.input} type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} />
@@ -210,17 +209,16 @@ function PaymentForm({ cardId, initialAmount, onClose, onSaved }: { cardId: stri
           <input style={S.input} value={note} onChange={e => setNote(e.target.value)} />
           {err && <p style={S.error}>{err}</p>}
           <div style={S.modalActions}>
-            <button type="button" onClick={onClose} style={S.cancelBtn}>İptal</button>
-            <button type="submit" style={S.submitBtn} disabled={save}>{save ? 'Kaydediliyor…' : 'Ödemeyi Kaydet'}</button>
+            <Button type="button" onClick={onClose}>İptal</Button>
+            <Button type="submit" tone="positive" disabled={save}>{save ? 'Kaydediliyor…' : 'Ödemeyi Kaydet'}</Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
+  page: { padding: '16px 14px var(--page-bottom-space)', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   kicker: { fontSize: 9, letterSpacing: 2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 29, margin: '4px 0' },

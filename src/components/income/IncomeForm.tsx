@@ -148,7 +148,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
 }
 import { translateError } from '../../lib/errorMessage';
 const styles: Record<string, React.CSSProperties> = {
-  shell:{padding:'12px 14px calc(116px + var(--safe-bottom))',maxWidth:680,margin:'0 auto'},
+  shell:{padding:'12px 14px var(--page-bottom-space)',maxWidth:680,margin:'0 auto'},
   form:{borderRadius:20,padding:15,display:'flex',flexDirection:'column',gap:8},
   hero:{padding:'2px 2px 4px'},
   eyebrow:{fontSize:9,letterSpacing:1.5,color:'#aa96e3',fontWeight:750},

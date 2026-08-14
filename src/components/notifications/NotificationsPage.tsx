@@ -8,16 +8,16 @@ import { NavLink } from 'react-router-dom';
 type Tab = 'all' | 'notifications' | 'payments' | 'appointments';
 
 const TYPE_ICONS: Record<NotificationType, string> = {
-  CREDIT_CARD: '💳',
-  PAYMENT: '💰',
-  APPOINTMENT: '📅',
-  VEHICLE: '🚗',
-  FINANCIAL: '📊',
-  SYSTEM: '⚙️',
+  CREDIT_CARD: '▭',
+  PAYMENT: '$',
+  APPOINTMENT: '□',
+  VEHICLE: '◇',
+  FINANCIAL: '▥',
+  SYSTEM: '◎',
 };
 
 const TYPE_COLORS: Record<NotificationType, string> = {
-  CREDIT_CARD: '#A855F7',
+  CREDIT_CARD: '#8d72dc',
   PAYMENT: '#34D399',
   APPOINTMENT: '#60A5FA',
   VEHICLE: '#F59E0B',
@@ -140,7 +140,7 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
       )}
 
       {empty ? (
-        <EmptyState message="Henüz bildirim yok." icon="🔔" />
+        <EmptyState message="Henüz bildirim yok." icon="○" />
       ) : (
         <>
           {showNotifications && (
@@ -153,7 +153,7 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
               {read.map((n) => (
                 <NotificationCard key={n.id} notification={n} onMarkRead={handleMarkRead} />
               ))}
-              {notifications.length === 0 && tab === 'notifications' && <EmptyState message="Henüz bildirim yok." icon="🔔" />}
+              {notifications.length === 0 && tab === 'notifications' && <EmptyState message="Henüz bildirim yok." icon="○" />}
             </section>
           )}
 
@@ -192,11 +192,11 @@ function PaymentCard({ card, overdue }: { card: CreditCardRow; overdue: boolean 
       to="/kredi-kartlari"
       style={{
         ...S.alert,
-        borderColor: overdue ? 'rgba(251,113,133,.35)' : 'rgba(168,85,247,.25)',
+        borderColor: overdue ? 'rgba(251,113,133,.35)' : 'var(--border)',
         background: overdue ? 'rgba(251,113,133,.07)' : '#101823',
       }}
     >
-      <div style={{ ...S.alertIcon, background: overdue ? 'rgba(251,113,133,.15)' : 'rgba(168,85,247,.15)', color: overdue ? '#FDA4AF' : '#C084FC' }}>💳</div>
+      <div style={{ ...S.alertIcon, background: overdue ? 'rgba(251,113,133,.12)' : 'rgba(141,114,220,.1)', color: overdue ? '#FDA4AF' : '#aa96e3' }}>▭</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={S.alertTitle}>{card.card_name}</div>
         <div style={S.alertMeta}>
@@ -216,7 +216,7 @@ function AppointmentCard({ appointment: a }: { appointment: { id: string; title:
   const timeStr = new Date(a.start_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
   return (
     <NavLink to="/randevular" style={S.alert}>
-      <div style={{ ...S.alertIcon, background: 'rgba(96,165,250,.15)', color: '#60A5FA' }}>📅</div>
+      <div style={{ ...S.alertIcon, background: 'rgba(60,200,237,.09)', color: 'var(--accent)' }}>□</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={S.alertTitle}>{a.title}</div>
         <div style={S.alertMeta}>{days === 0 ? 'Bugün' : `${days} gün sonra`} • {dateStr} {timeStr}</div>
@@ -227,7 +227,7 @@ function AppointmentCard({ appointment: a }: { appointment: { id: string; title:
 }
 
 function NotificationCard({ notification, onMarkRead }: { notification: NotificationRow; onMarkRead: (n: NotificationRow) => void }) {
-  const icon = TYPE_ICONS[notification.type] || '🔔';
+  const icon = TYPE_ICONS[notification.type] || '○';
   const color = TYPE_COLORS[notification.type] || '#9CA3AF';
   const label = TYPE_LABELS[notification.type] || notification.type;
   const dateStr = new Date(notification.created_at).toLocaleDateString('tr-TR', {
@@ -256,7 +256,7 @@ function NotificationCard({ notification, onMarkRead }: { notification: Notifica
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)' },
+  page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 },
   kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 26, margin: '5px 0 3px' },
@@ -266,7 +266,7 @@ const S: Record<string, React.CSSProperties> = {
   tabs: { display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 4, padding: 4, borderRadius: 15, background: '#0e151f', border: '1px solid var(--border)', marginBottom: 14 },
   tab: { position: 'relative', padding: '10px 4px', textAlign: 'center', borderRadius: 12, border: 0, background: 'transparent', color: '#898DA0', fontSize: 11, fontWeight: 800, cursor: 'pointer' },
   tabActive: { background: 'rgba(60,200,237,.09)', boxShadow: 'inset 0 0 0 1px rgba(60,200,237,.18)', color: 'var(--text)' },
-  badgeDot: { position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9, background: '#A855F7', color: '#fff', fontSize: 9, fontWeight: 900, display: 'grid', placeItems: 'center', padding: '0 5px' },
+  badgeDot: { position: 'absolute', top: 4, right: 4, minWidth: 18, height: 18, borderRadius: 9, background: 'var(--negative)', color: '#fff', fontSize: 9, fontWeight: 800, display: 'grid', placeItems: 'center', padding: '0 5px' },
   markAll: { width: '100%', padding: 11, borderRadius: 13, border: '1px solid var(--border)', background: 'rgba(255,255,255,.035)', color: 'var(--text-secondary)', fontWeight: 750, fontSize: 13, marginBottom: 14 },
   section: { marginBottom: 16 },
   sectionTitle: { fontSize: 10, color: '#7F8499', marginBottom: 10, fontWeight: 900, letterSpacing: 1 },

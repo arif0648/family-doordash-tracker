@@ -46,15 +46,15 @@ export function SignupPage() {
 
   if (success) {
     return (
-      <div style={styles.page}>
-        <div style={styles.card}>
+      <div className="auth-page" style={styles.page}>
+        <div className="auth-card" style={styles.card}>
           <div style={styles.success}>
             <div style={styles.check}>✓</div>
             <h2 style={{ color: 'white', fontSize: 20, margin: '0 0 8px' }}>Hesap oluşturuldu</h2>
             <p style={{ color: '#A7ABC0', fontSize: 13, lineHeight: 1.5 }}>
               Devam etmek için e-postanızı doğrulamanız gerekebilir. Ardından giriş yapabilirsiniz.
             </p>
-            <Link to="/giris" style={styles.primaryButton}>Giriş ekranına dön</Link>
+            <Link className="auth-primary" to="/giris" style={styles.primaryButton}>Giriş ekranına dön</Link>
             <p style={{ color: '#7F8499', fontSize: 11, marginTop: 16 }}>
               Not: Aile üyeliğinizin eklenmesi için bir aile yöneticisinin sizi aileye eklemesi gerekir.
             </p>
@@ -65,14 +65,14 @@ export function SignupPage() {
   }
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
+    <div className="auth-page" style={styles.page}>
+      <div className="auth-card" style={styles.card}>
         <h1 style={styles.title}>HESAP OLUŞTUR</h1>
         <p style={styles.subtitle}>Aile hesabına katıl</p>
         <form onSubmit={handleSubmit} style={styles.form}>
           <label style={styles.label}>Adınız</label>
           <input
-            style={styles.input}
+            className="auth-input" style={styles.input}
             type="text"
             placeholder="Ad Soyad"
             value={displayName}
@@ -80,7 +80,7 @@ export function SignupPage() {
           />
           <label style={styles.label}>E-posta</label>
           <input
-            style={styles.input}
+            className="auth-input" style={styles.input}
             type="email"
             placeholder="ornek@email.com"
             value={email}
@@ -89,7 +89,7 @@ export function SignupPage() {
           />
           <label style={styles.label}>Şifre</label>
           <input
-            style={styles.input}
+            className="auth-input" style={styles.input}
             type="password"
             placeholder="En az 6 karakter"
             value={password}
@@ -97,7 +97,7 @@ export function SignupPage() {
             autoComplete="new-password"
           />
           {error && <p style={styles.error}>{error}</p>}
-          <button style={styles.primaryButton} type="submit" disabled={loading}>
+          <button className="auth-primary" style={styles.primaryButton} type="submit" disabled={loading}>
             {loading ? 'Hesap oluşturuluyor…' : 'Kayıt Ol'}
           </button>
           <Link to="/giris" style={{ ...styles.link, marginTop: 14 }}>
@@ -116,16 +116,16 @@ const styles: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     padding: '20px 16px',
-    background: 'radial-gradient(circle at 50% 0%, rgba(168,85,247,.10), transparent 40%), #050711',
+    background: 'var(--bg)',
   },
   card: {
     width: '100%',
     maxWidth: 380,
     padding: 26,
-    borderRadius: 24,
-    background: 'linear-gradient(145deg, rgba(25,18,56,.95), rgba(7,9,21,.98))',
-    border: '1px solid rgba(168,85,247,.22)',
-    boxShadow: '0 24px 60px rgba(0,0,0,.45)',
+    borderRadius: 20,
+    background: 'linear-gradient(145deg,#111925,#0a1018)',
+    border: '1px solid var(--border)',
+    boxShadow: 'var(--shadow-card)',
   },
   title: {
     color: '#C4B5FD',
@@ -162,7 +162,7 @@ const styles: Record<string, React.CSSProperties> = {
     padding: '14px',
     borderRadius: 14,
     border: 'none',
-    background: 'linear-gradient(135deg, #A855F7, #6366F1)',
+    background: 'rgba(60,200,237,.1)',
     color: 'white',
     fontWeight: 900,
     fontSize: 15,

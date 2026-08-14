@@ -160,7 +160,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
                     </div>
                     <div style={S.rowSub}>{r.sub}</div>
                   </div>
-                  <div style={{ ...S.amount, color: r.kind === 'income' ? '#A855F7' : '#F43F5E' }}>
+                  <div style={{ ...S.amount, color: r.kind === 'income' ? 'var(--positive)' : 'var(--negative)' }}>
                     {r.kind === 'income' ? '+' : '−'}${r.amount.toLocaleString('en-US')}
                   </div>
                   <div style={S.actions}>
@@ -188,7 +188,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
+  page: { padding: '16px 14px var(--page-bottom-space)', maxWidth: 680, margin: '0 auto', color: 'var(--text)' },
   kicker: { fontSize: 9, letterSpacing: 2.2, color: '#C084FC', fontWeight: 900 },
   h1: { fontSize: 29, margin: '5px 0 3px' },
   sub: { fontSize: 12, color: '#7F8499', margin: 0 },
@@ -206,6 +206,6 @@ const S: Record<string, React.CSSProperties> = {
   amount: { fontSize: 15, fontWeight: 700, minWidth: 80, textAlign: 'right' },
   actions: { display: 'flex', gap: 6 },
   editInput: { width: 70, padding: 8, borderRadius: 8, border: '1px solid var(--border)', background: '#0c121b', color: 'var(--text)', fontSize: 13, textAlign: 'right' },
-  editBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(168,85,247,.14)', color: '#D8B4FE', fontWeight: 800, fontSize: 11 },
+  editBtn: { border: '1px solid rgba(60,200,237,.16)', borderRadius: 10, padding: '9px 10px', background: 'rgba(60,200,237,.07)', color: '#bdeafa', fontWeight: 750, fontSize: 11 },
   deleteBtn: { border: 0, borderRadius: 10, padding: '9px 10px', background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontWeight: 800, fontSize: 11 },
 };

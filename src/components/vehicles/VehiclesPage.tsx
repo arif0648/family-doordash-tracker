@@ -12,6 +12,7 @@ import { monthBoundary, toPacificDateString } from '../../lib/timezone';
 import { sumMilesInPeriod, MileageEntry } from '../../lib/mileageEngine';
 import { VehicleCard } from '../home/VehicleCard';
 import { VehicleComparison } from '../home/VehicleComparison';
+import { Button, Modal } from '../ui/primitives';
 import { supabase } from '../../lib/supabaseClient';
 
 export function VehiclesPage({ familyId }: { familyId: string }) {
@@ -31,7 +32,7 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
   if (loading) return <LoadingScreen label="Araçlar yükleniyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
   if (!vehicles || vehicles.length === 0) {
-    return <EmptyState message="Henüz araç tanımlanmamış" icon="🚗" />;
+    return <EmptyState message="Henüz araç tanımlanmamış" icon="◇" />;
   }
 
   const incomeRecords: IncomeRecord[] = (income ?? []).map((r) => ({
@@ -158,7 +159,6 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
 
       {vehicleSummaries.length > 0 && (
         <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Araç Karşılaştırma</h2>
           <VehicleComparison summaries={vehicleSummaries} />
         </div>
       )}
@@ -256,9 +256,7 @@ function AddVehicleForm({ familyId, onClose, onSaved }: { familyId: string; onCl
   }
 
   return (
-    <div style={styles.modalOverlay} onClick={onClose}>
-      <div style={styles.modal} onClick={e => e.stopPropagation()}>
-        <h3 style={styles.modalTitle}>Yeni Araç Ekle</h3>
+    <Modal open title="Yeni Araç Ekle" onClose={onClose}>
         <form onSubmit={handleSubmit} style={styles.form}>
           <input
             style={styles.input}
@@ -306,12 +304,11 @@ function AddVehicleForm({ familyId, onClose, onSaved }: { familyId: string; onCl
           </select>
           {error && <p style={styles.error}>{error}</p>}
           <div style={styles.modalActions}>
-            <button type="button" onClick={onClose} style={styles.cancelBtn}>İptal</button>
-            <button type="submit" style={styles.submitBtn} disabled={saving}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</button>
+            <Button type="button" onClick={onClose}>İptal</Button>
+            <Button type="submit" tone="positive" disabled={saving}>{saving ? 'Kaydediliyor…' : 'Kaydet'}</Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
@@ -334,14 +331,7 @@ function VehicleDetailModal({
   ].sort((a, b) => (a.date < b.date ? 1 : -1));
 
   return (
-    <div style={styles.modalOverlay} onClick={onClose}>
-      <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <h2 style={styles.modalTitle}>{vehicle.short_name}</h2>
-          <button style={styles.closeButton} onClick={onClose}>
-            Geri
-          </button>
-        </div>
+    <Modal open title={vehicle.short_name} onClose={onClose}>
 
         <p style={styles.modalSubtitle}>Toplam Mil: {mileageEntries.reduce((s, m) => s + m.milesDriven, 0)} mi</p>
 
@@ -353,7 +343,7 @@ function VehicleDetailModal({
               <div key={idx} style={styles.historyRow}>
                 <span>{item.type}</span>
                 <span>{item.date}</span>
-                <span style={{ color: item.amount >= 0 ? '#A855F7' : '#F87171' }}>
+                <span style={{ color: item.amount >= 0 ? 'var(--positive)' : 'var(--negative)' }}>
                   {item.amount >= 0 ? '+' : ''}
                   {item.amount.toLocaleString('en-US')}$
                 </span>
@@ -361,13 +351,12 @@ function VehicleDetailModal({
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
-  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
+  page: { padding: '16px 14px var(--page-bottom-space)', color: 'var(--text)', maxWidth: 680, margin: '0 auto' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
   heading: { fontSize: 20, fontWeight: 700, margin: 0 },
   addButton: { border: '1px solid rgba(141,114,220,.22)', borderRadius: 12, padding: '10px 14px', background: 'rgba(141,114,220,.12)', color: '#c5b8eb', fontWeight: 750, fontSize: 13 },

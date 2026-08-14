@@ -24,7 +24,7 @@ export function VehicleContributions({ income, vehicles, now }: VehicleContribut
   return (
     <section style={S.section}>
       <div style={S.head}>
-        <span style={S.kicker}>🚗 HAFTALIK ARAÇ KATKILARI</span>
+        <span style={S.kicker}>HAFTALIK ARAÇ KATKILARI</span>
         <span style={S.total}>{formatMoney(total, true)}</span>
       </div>
       <div style={S.list}>

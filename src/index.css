@@ -23,6 +23,17 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   --font-mono: "SF Mono", ui-monospace, monospace;
   --safe-bottom: env(safe-area-inset-bottom);
+  --page-bottom-space: calc(116px + var(--safe-bottom));
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+  --control-bg: #090e16;
+  --control-height: 48px;
 }
 
 .home-page {
@@ -109,6 +120,65 @@ body {
   border: 1px solid var(--border) !important;
   box-shadow: var(--shadow-card);
 }
+
+.ui-page {
+  min-height: 100vh;
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 16px 14px var(--page-bottom-space);
+  color: var(--text);
+}
+
+.ui-page-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 14px; }
+.ui-page-heading { min-width: 0; }
+.ui-eyebrow { display: block; color: #9aa7b7; font-size: 9px; font-weight: 750; letter-spacing: 1.5px; text-transform: uppercase; }
+.ui-page-heading h1 { margin: 3px 0 2px; color: var(--text); font-size: 22px; line-height: 1.15; font-weight: 760; letter-spacing: -.45px; }
+.ui-page-heading p { margin: 0; color: var(--text-secondary); font-size: 12px; line-height: 1.45; }
+.ui-page-action { flex-shrink: 0; }
+
+.ui-surface {
+  position: relative;
+  padding: 15px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(145deg, rgba(17,25,37,.97), rgba(10,15,23,.99));
+  box-shadow: var(--shadow-card);
+}
+.ui-section-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 18px 0 10px; }
+.ui-section-header h2 { margin: 0; color: var(--text-secondary); font-size: 13px; font-weight: 720; }
+
+.ui-button { min-height: 44px; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); font-weight: 740; font-size: 13px; color: var(--text); background: rgba(255,255,255,.035); }
+.ui-button-primary { color: #bdeafa; border-color: rgba(60,200,237,.22); background: rgba(60,200,237,.1); }
+.ui-button-positive { color: #08150e; border-color: rgba(53,201,121,.25); background: rgba(53,201,121,.88); }
+.ui-button-negative { color: #f7b2be; border-color: rgba(239,107,130,.2); background: rgba(239,107,130,.1); }
+.ui-button-danger { color: #f4a0af; border-color: rgba(239,107,130,.18); background: rgba(239,107,130,.07); }
+.ui-button:disabled { cursor: default; opacity: .55; }
+
+.ui-page input:not([type="checkbox"]):not([type="radio"]),
+.ui-page select,
+.ui-page textarea,
+.ui-modal input:not([type="checkbox"]):not([type="radio"]),
+.ui-modal select,
+.ui-modal textarea {
+  width: 100%;
+  min-height: var(--control-height);
+  padding: 11px 13px;
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--control-bg);
+}
+
+.ui-modal-overlay { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(0,0,0,.62); }
+.ui-modal { width: min(100%, 420px); max-height: calc(100dvh - 32px); overflow: auto; padding: 18px; border: 1px solid var(--border); border-radius: 20px; color: var(--text); background: #0d141e; box-shadow: 0 24px 60px rgba(0,0,0,.45); }
+.ui-modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.ui-modal-header h2 { margin: 0; font-size: 18px; font-weight: 750; }
+.ui-icon-button { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--border); border-radius: 11px; color: var(--text-secondary); background: rgba(255,255,255,.035); font-size: 20px; }
+
+.auth-page { background: radial-gradient(circle at 50% 0, rgba(60,200,237,.035), transparent 32rem), var(--bg) !important; }
+.auth-card { padding: 24px !important; border: 1px solid var(--border) !important; border-radius: 20px !important; background: linear-gradient(145deg,#111925,#0a1018) !important; box-shadow: var(--shadow-card) !important; }
+.auth-input { min-height: 48px !important; border: 1px solid var(--border) !important; border-radius: 12px !important; color: var(--text) !important; background: var(--control-bg) !important; }
+.auth-primary { min-height: 48px !important; border: 1px solid rgba(60,200,237,.22) !important; border-radius: 14px !important; color: #bdeafa !important; background: rgba(60,200,237,.1) !important; box-shadow: none !important; }
 
 button,
 input,
