@@ -12,6 +12,7 @@ import { formatMoney } from '../../lib/format';
 import { NavLink, useSearchParams } from 'react-router-dom';
 
 const labels: Record<Period, string> = { today: 'Bugün', week: 'Bu Hafta', month: 'Bu Ay' };
+const summaryLabels: Record<Period, string> = { today: 'Bugünün Özeti', week: 'Haftanın Özeti', month: 'Ayın Özeti' };
 
 interface HomePageProps {
   familyId: string;
@@ -80,7 +81,7 @@ export function HomePage({ familyId }: HomePageProps) {
   const lastMinutes = lastMovement ? Math.max(0, Math.floor((now.getTime() - new Date(lastMovement.at).getTime()) / 60_000)) : null;
 
   return (
-    <main style={S.page}>
+    <main className="home-page" style={S.page}>
       <header style={S.header}>
         <div>
           <h1 style={S.title}>BARBİN AİLESİ</h1>
@@ -90,15 +91,16 @@ export function HomePage({ familyId }: HomePageProps) {
 
       <MarketRatesStrip realtimeStatus={realtimeStatus} />
 
-      <div style={S.periods}>
+      <div className="home-glass" style={S.periods}>
         {(['today', 'week', 'month'] as Period[]).map((p) => (
           <button
             key={p}
             onClick={() => setParams({ period: p })}
             style={{
               ...S.period,
-              background: period === p ? 'var(--accent)' : 'transparent',
-              color: period === p ? '#062D46' : 'var(--text-secondary)',
+              background: period === p ? 'rgba(60,200,237,.12)' : 'transparent',
+              color: period === p ? 'var(--text)' : 'var(--text-secondary)',
+              boxShadow: period === p ? 'inset 0 0 0 1px rgba(60,200,237,.28), 0 5px 18px rgba(60,200,237,.06)' : 'none',
             }}
           >
             {labels[p]}
@@ -106,8 +108,8 @@ export function HomePage({ familyId }: HomePageProps) {
         ))}
       </div>
 
-      <section style={S.netCard}>
-        <span style={S.netKicker}>DÖNEM NETİ</span>
+      <section className="home-glass" style={S.netCard}>
+        <span style={S.netKicker}>{summaryLabels[period]}</span>
         <div style={{ ...S.netValue, color: isPositive ? 'var(--positive)' : 'var(--negative)' }}>
           {formatMoney(net, true)}
         </div>
@@ -121,13 +123,14 @@ export function HomePage({ familyId }: HomePageProps) {
             <b style={{ ...S.netAmount, color: 'var(--negative)' }}>{formatMoney(selectedSummary.totalIncome - net, true)}</b>
           </div>
         </div>
+        {lastMovement && <div style={S.lastMovement}><span style={S.activityDot} />Son hareket <b style={S.activityAmount}>{lastMovement.amount >= 0 ? '+' : '−'}{formatMoney(Math.abs(lastMovement.amount), true)}</b><span>·</span><span style={S.activityLabel}>{lastMovement.label}</span><span>·</span><span>{lastMinutes === 0 ? 'şimdi' : `${lastMinutes} dk önce`}</span></div>}
       </section>
 
       <div style={S.quickTop}>
-        <NavLink to="/kazanc" style={{ ...S.quickBtn, background: 'var(--positive)' }}>
+        <NavLink className="home-pressable" to="/kazanc" style={{ ...S.quickBtn, ...S.incomeBtn }}>
           ＋ Gelir Ekle
         </NavLink>
-        <NavLink to="/gider" style={{ ...S.quickBtn, background: 'var(--negative)' }}>
+        <NavLink className="home-pressable" to="/gider" style={{ ...S.quickBtn, ...S.expenseBtn }}>
           − Gider Ekle
         </NavLink>
       </div>
@@ -139,37 +142,42 @@ export function HomePage({ familyId }: HomePageProps) {
 
       <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions} onSessionsChanged={retry} />
 
-      {lastMovement && <div style={S.lastMovement}>Son hareket: {lastMovement.amount >= 0 ? '+' : '−'}{formatMoney(Math.abs(lastMovement.amount), true)} {lastMovement.label} • {lastMinutes === 0 ? 'şimdi' : `${lastMinutes} dk önce`}</div>}
-
       <Upcoming7Days creditCards={creditCards} fixedExpenses={fixedExpenses} appointments={appointments} />
     </main>
   );
 }
 
 const S: Record<string, React.CSSProperties> = {
-  page: { padding: '18px 14px calc(120px + var(--safe-bottom))', color: 'var(--text)', background: 'var(--bg)', minHeight: '100vh' },
-  header: { display: 'flex', alignItems: 'center', marginBottom: 14 },
-  lastMovement: { margin: '4px 4px 10px', color: 'var(--text-secondary)', fontSize: 11, textAlign: 'center' },
-  title: { fontSize: 24, fontWeight: 900, letterSpacing: 2, textTransform: 'uppercase', margin: 0, color: 'var(--text)' },
+  page: { padding: '16px 14px calc(116px + var(--safe-bottom))', color: 'var(--text)', minHeight: '100vh' },
+  header: { display: 'flex', alignItems: 'center', marginBottom: 12 },
+  lastMovement: { minWidth: 0, marginTop: 14, paddingTop: 11, borderTop: '1px solid var(--border)', color: 'var(--text-secondary)', fontSize: 10, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 5, whiteSpace: 'nowrap' },
+  activityDot: { width: 5, height: 5, borderRadius: 999, background: 'var(--accent)', boxShadow: '0 0 9px rgba(60,200,237,.45)' },
+  activityAmount: { color: 'var(--text)', fontWeight: 750 },
+  activityLabel: { overflow: 'hidden', textOverflow: 'ellipsis' },
+  title: { fontSize: 23, fontWeight: 800, letterSpacing: 1.7, textTransform: 'uppercase', margin: 0, color: 'var(--text)' },
   date: { fontSize: 12, color: 'var(--text-secondary)', margin: '4px 0 0' },
-  periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 6, padding: 5, borderRadius: 16, background: 'var(--surface)', border: '1px solid var(--border)', marginBottom: 14 },
-  period: { padding: '12px 4px', textAlign: 'center', borderRadius: 12, border: 0, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 12, fontWeight: 800, background: 'transparent', transition: 'color 120ms ease, background 120ms ease' },
-  netCard: { padding: 22, borderRadius: 'var(--radius-card)', background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)', marginBottom: 14, textAlign: 'center' },
-  netKicker: { fontSize: 10, letterSpacing: 2, color: 'var(--accent)', fontWeight: 900 },
-  netValue: { fontSize: 48, fontWeight: 900, letterSpacing: -2, margin: '10px 0 14px' },
+  periods: { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 4, padding: 4, borderRadius: 15, marginBottom: 14 },
+  period: { minHeight: 40, padding: '9px 4px', textAlign: 'center', borderRadius: 11, border: 0, color: 'var(--text-secondary)', textDecoration: 'none', fontSize: 12, fontWeight: 750, background: 'transparent', transition: 'color 160ms ease, background 160ms ease, box-shadow 160ms ease' },
+  netCard: { padding: '18px 18px 14px', borderRadius: 'var(--radius-card)', marginBottom: 10, textAlign: 'center' },
+  netKicker: { fontSize: 12, letterSpacing: .2, color: 'var(--text-secondary)', fontWeight: 650 },
+  netValue: { fontSize: 'clamp(38px,11vw,44px)', fontWeight: 800, letterSpacing: -1.8, margin: '5px 0 10px', fontVariantNumeric: 'tabular-nums' },
   netRow: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, padding: '0 10px' },
   netCell: { display: 'flex', flexDirection: 'column', gap: 4 },
   netLabel: { fontSize: 11, color: 'var(--text-secondary)', fontWeight: 700 },
-  netAmount: { fontSize: 18, fontWeight: 900 },
+  netAmount: { fontSize: 16, fontWeight: 750 },
   quickTop: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 },
   quickBtn: {
     padding: '14px 12px',
-    borderRadius: 16,
-    color: '#fff',
+    borderRadius: 15,
+    color: 'var(--text)',
     textAlign: 'center',
     fontSize: 13,
-    fontWeight: 900,
+    fontWeight: 750,
     textDecoration: 'none',
+    border: '1px solid var(--border)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.045)',
     transition: 'transform 120ms ease, background 120ms ease',
   },
+  incomeBtn: { background: 'linear-gradient(135deg,rgba(53,201,121,.16),rgba(15,22,32,.76))', color: '#79dda7', borderColor: 'rgba(53,201,121,.22)' },
+  expenseBtn: { background: 'linear-gradient(135deg,rgba(239,107,130,.15),rgba(15,22,32,.76))', color: '#f39aac', borderColor: 'rgba(239,107,130,.2)' },
 };

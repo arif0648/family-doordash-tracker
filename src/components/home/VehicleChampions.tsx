@@ -8,11 +8,7 @@ type ChampionPeriod = 'today' | 'week' | 'month';
 
 const periodButtons: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
 
-const VEHICLE_ICONS: Record<string, string> = {
-  'Kia Sportage Prestige': '🚙',
-  'Toyota Corolla XLE': '🚗',
-  'Honda Accord Sport': '🚘',
-};
+const titles: Record<ChampionPeriod, string> = { today: 'Günün Birincisi', week: 'Haftanın Birincisi', month: 'Ayın Birincisi' };
 
 interface VehicleChampionsProps {
   income: IncomeRecord[];
@@ -45,9 +41,9 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
   }
 
   return (
-    <section style={S.section}>
+    <section className="home-glass" style={S.section}>
       <div style={S.head}>
-        <span style={S.kicker}>KAZANÇ SIRALAMASI</span>
+        <span style={S.kicker}>{titles[period]}</span>
         <div style={S.tabsSmall}>
           {(['today', 'week', 'month'] as ChampionPeriod[]).map((p) => (
             <button
@@ -55,8 +51,9 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
               type="button"
               style={{
                 ...S.tabSmall,
-                background: period === p ? 'var(--accent)' : 'var(--surface-raised)',
-                color: period === p ? '#062D46' : 'var(--text-secondary)',
+                background: period === p ? 'rgba(60,200,237,.11)' : 'transparent',
+                color: period === p ? 'var(--text)' : 'var(--text-secondary)',
+                boxShadow: period === p ? 'inset 0 0 0 1px rgba(60,200,237,.2)' : 'none',
               }}
               onClick={() => setPeriod(p)}
             >
@@ -70,12 +67,11 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
         <div style={S.podium}>
           {podiumOrder.filter(v => v).map((v, i) => {
             const rankIndex = podiumOrder.length === 1 ? 0 : i === 0 ? 1 : i === 1 ? 0 : 2; // Map back to original rank
-            const medal = ['🥇', '🥈', '🥉'][rankIndex];
             const isFirst = rankIndex === 0;
+            const accents = ['#d7ad61', '#9ca8b6', '#a87855'];
             return (
-              <div key={v.vehicleId} style={{ ...S.podiumItem, flex: isFirst ? 1.4 : 1 }}>
-                <div style={S.podiumRank}>{medal}</div>
-                <div style={S.podiumIcon}>{VEHICLE_ICONS[v.shortName] || '🚗'}</div>
+              <div key={v.vehicleId} style={{ ...S.podiumItem, ...(isFirst ? S.firstItem : {}), borderTopColor: accents[rankIndex] }}>
+                <div style={{ ...S.podiumRank, color: accents[rankIndex] }}>{rankIndex + 1}</div>
                 <div style={S.podiumName}>{v.shortName}</div>
                 <div style={S.podiumAmount}>{formatMoney(v.amount, true)}</div>
               </div>
@@ -84,7 +80,6 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
         </div>
       ) : (
         <div style={S.empty}>
-          <span style={S.emptyIcon}>🚗</span>
           <span>{periodButtons[period]} için henüz gelir kaydı yok.</span>
         </div>
       )}
@@ -96,60 +91,61 @@ const S: Record<string, React.CSSProperties> = {
   section: {
     padding: 16,
     borderRadius: 'var(--radius-card)',
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    boxShadow: 'var(--shadow-card)',
     marginBottom: 14,
   },
   head: {
     display: 'flex',
-    flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: 14,
-    gap: 12,
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    gap: 8,
   },
   kicker: {
-    fontSize: 10,
-    letterSpacing: 1.4,
-    fontWeight: 900,
-    color: 'var(--gold)',
+    fontSize: 13,
+    letterSpacing: .1,
+    fontWeight: 750,
+    color: 'var(--text)',
   },
   tabsSmall: {
     display: 'grid',
     gridTemplateColumns: 'repeat(3, 1fr)',
     gap: 6,
-    width: '100%',
+    width: 150,
+    padding: 3,
+    borderRadius: 10,
+    background: 'rgba(255,255,255,.025)',
   },
   tabSmall: {
     border: 0,
-    borderRadius: 12,
-    padding: '10px 8px',
-    fontSize: 12,
-    fontWeight: 800,
+    borderRadius: 8,
+    padding: '6px 5px',
+    fontSize: 10,
+    fontWeight: 700,
     transition: 'color 120ms ease, background 120ms ease',
   },
   podium: {
     display: 'flex',
-    gap: 8,
+    gap: 7,
     alignItems: 'flex-end',
+    minHeight: 112,
   },
   podiumItem: {
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: 6,
-    padding: 12,
-    borderRadius: 16,
-    background: 'var(--surface-raised)',
+    gap: 5,
+    padding: '13px 7px 11px',
+    borderRadius: 14,
+    background: 'linear-gradient(160deg,rgba(255,255,255,.045),rgba(255,255,255,.012))',
     border: '1px solid var(--border)',
+    borderTop: '2px solid',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.04)',
   },
+  firstItem: { paddingTop: 18, paddingBottom: 15, transform: 'translateY(-7px)', background: 'radial-gradient(circle at 50% 0,rgba(215,173,97,.095),transparent 66%),linear-gradient(160deg,rgba(255,255,255,.055),rgba(255,255,255,.014))' },
   podiumRank: {
-    fontSize: 24,
-    lineHeight: 1,
-  },
-  podiumIcon: {
-    fontSize: 36,
+    fontSize: 15,
+    fontWeight: 800,
     lineHeight: 1,
   },
   podiumName: {
@@ -159,7 +155,11 @@ const S: Record<string, React.CSSProperties> = {
     textAlign: 'center',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
+    whiteSpace: 'normal',
+    lineHeight: 1.2,
+    minHeight: 27,
+    display: 'grid',
+    placeItems: 'center',
     width: '100%',
   },
   podiumAmount: {
@@ -174,14 +174,11 @@ const S: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    padding: '26px 12px',
+    padding: '18px 12px',
     borderRadius: 18,
     background: 'var(--surface-raised)',
     color: 'var(--text-secondary)',
     fontSize: 13,
     textAlign: 'center',
-  },
-  emptyIcon: {
-    fontSize: 24,
   },
 };

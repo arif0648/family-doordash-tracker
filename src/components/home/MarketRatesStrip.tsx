@@ -6,12 +6,12 @@ export function MarketRatesStrip({ realtimeStatus }: { realtimeStatus: 'connecti
   const ageMinutes = updatedAt ? Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / 60_000)) : null;
 
   return (
-    <section style={styles.wrap} aria-label="Piyasa kurları" title="USD/TRY: Frankfurter. Çeyrek altın: PAX Gold spot ons fiyatından 1,608 g saf altın karşılığı; kuyumcu satış fiyatı değildir.">
+    <section className="home-glass" style={styles.wrap} aria-label="Piyasa kurları" title="USD/TRY: Frankfurter. Çeyrek altın: PAX Gold spot ons fiyatından 1,608 g saf altın karşılığı; kuyumcu satış fiyatı değildir.">
       <div style={styles.item}>
         <span style={styles.icon}>$</span>
         <div>
           <span style={styles.label}>USD / TRY</span>
-          <strong style={styles.value}>{usdTry ? usdTry.toFixed(2) : '—'}</strong>
+          <strong style={styles.value}>{usdTry ? usdTry.toFixed(2) : <span style={styles.waiting}>Veri bekleniyor</span>}</strong>
         </div>
       </div>
       <div style={styles.divider} />
@@ -20,29 +20,29 @@ export function MarketRatesStrip({ realtimeStatus }: { realtimeStatus: 'connecti
         <div>
           <span style={styles.label}>Çeyrek Altın</span>
           <strong style={styles.value}>
-            {quarterGoldTry ? `₺${quarterGoldTry.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}` : '—'}
+            {quarterGoldTry ? `₺${quarterGoldTry.toLocaleString('tr-TR', { maximumFractionDigits: 0 })}` : <span style={styles.waiting}>Veri bekleniyor</span>}
           </strong>
         </div>
       </div>
-      <span style={{ ...styles.live, color: realtimeStatus === 'live' ? '#34D399' : '#94A3B8' }}>● {realtimeStatus === 'live' ? 'Canlı' : realtimeStatus === 'offline' ? 'Bağlantı kesildi' : 'Bağlanıyor'}{ageMinutes !== null ? ` • ${ageMinutes === 0 ? 'şimdi' : `${ageMinutes} dk önce`}` : ''}</span>
+      <span style={{ ...styles.live, color: realtimeStatus === 'live' ? 'var(--positive)' : 'var(--text-secondary)' }}>● {realtimeStatus === 'live' ? 'Canlı' : realtimeStatus === 'offline' ? 'Çevrimdışı' : 'Bağlanıyor'}{ageMinutes !== null ? <small style={styles.age}>{ageMinutes === 0 ? 'şimdi' : `${ageMinutes} dk`}</small> : null}</span>
     </section>
   );
 }
 
 const styles: Record<string, React.CSSProperties> = {
   wrap: {
-    display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
-    border: '1px solid rgba(168,85,247,.22)', borderRadius: 18,
-    background: 'rgba(255,255,255,.045)', backdropFilter: 'blur(18px)',
-    boxShadow: 'inset 0 1px 0 rgba(255,255,255,.06)',
+    display: 'flex', alignItems: 'center', gap: 9, padding: '7px 10px',
+    minHeight: 50, borderRadius: 16, marginBottom: 10,
   },
   item: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 8 },
   icon: {
-    width: 30, height: 30, borderRadius: 10, display: 'grid', placeItems: 'center',
-    background: 'rgba(168,85,247,.12)', color: '#C084FC', fontWeight: 800,
+    width: 28, height: 28, borderRadius: 9, display: 'grid', placeItems: 'center',
+    background: 'rgba(141,114,220,.1)', color: '#aa96e3', fontWeight: 750,
   },
   label: { display: 'block', color: '#94A3B8', fontSize: 9, textTransform: 'uppercase', letterSpacing: .6 },
-  value: { display: 'block', color: '#F8FAFC', fontSize: 13, marginTop: 2 },
+  value: { display: 'block', color: 'var(--text)', fontSize: 12, marginTop: 1, whiteSpace: 'nowrap' },
+  waiting: { color: 'var(--muted)', fontSize: 9, fontWeight: 600 },
   divider: { width: 1, height: 28, background: 'rgba(255,255,255,.08)' },
-  live: { color: '#34D399', fontSize: 9, whiteSpace: 'nowrap' },
+  live: { fontSize: 8, whiteSpace: 'nowrap', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', lineHeight: 1.25 },
+  age: { color: 'var(--muted)', fontSize: 7, fontWeight: 500 },
 };

@@ -23,7 +23,8 @@ export function BottomNav() {
           style={{
             ...S.tab,
             color: activeFor('/') ? 'var(--accent)' : 'var(--text-secondary)',
-            background: activeFor('/') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+            background: activeFor('/') ? 'rgba(60,200,237,.065)' : 'transparent',
+            boxShadow: activeFor('/') ? 'inset 0 -2px 0 rgba(60,200,237,.55)' : 'none',
           }}
         >
           <span style={S.icon}>⌂</span>
@@ -36,7 +37,7 @@ export function BottomNav() {
           style={{
             ...S.tab,
             color: activeFor('/islemler') ? 'var(--accent)' : 'var(--text-secondary)',
-            background: activeFor('/islemler') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+            background: activeFor('/islemler') ? 'rgba(60,200,237,.065)' : 'transparent',
           }}
         >
           <span style={S.icon}>⇄</span>
@@ -46,11 +47,11 @@ export function BottomNav() {
         {/* + button (3rd column, centered) */}
         <button
           type="button"
-          style={{ ...S.action, background: 'var(--positive)' }}
+          style={S.action}
           onClick={() => setQuickOpen(true)}
           aria-label="Yeni işlem"
         >
-          <span style={{ ...S.actionIcon, color: '#062C1B' }}>＋</span>
+          <span style={S.actionIcon}>＋</span>
         </button>
 
         {/* Kartlar */}
@@ -59,7 +60,7 @@ export function BottomNav() {
           style={{
             ...S.tab,
             color: activeFor('/kredi-kartlari') ? 'var(--accent)' : 'var(--text-secondary)',
-            background: activeFor('/kredi-kartlari') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+            background: activeFor('/kredi-kartlari') ? 'rgba(60,200,237,.065)' : 'transparent',
           }}
         >
           <span style={S.icon}>💳</span>
@@ -72,7 +73,7 @@ export function BottomNav() {
           style={{
             ...S.tab,
             color: menuActive ? 'var(--accent)' : 'var(--text-secondary)',
-            background: menuActive ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+            background: menuActive ? 'rgba(60,200,237,.065)' : 'transparent',
           }}
           onClick={() => setMenuOpen(true)}
           aria-label="Menü"
@@ -100,9 +101,11 @@ const S: Record<string, React.CSSProperties> = {
     alignItems: 'center',
     padding: 6,
     borderRadius: 26,
-    background: 'var(--surface-raised)',
+    background: 'rgba(10,16,24,.84)',
+    backdropFilter: 'blur(18px)',
+    WebkitBackdropFilter: 'blur(18px)',
     border: '1px solid var(--border)',
-    boxShadow: 'var(--shadow-nav)',
+    boxShadow: '0 -10px 36px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.07)',
     zIndex: 50,
     height: 64,
   },
@@ -122,15 +125,17 @@ const S: Record<string, React.CSSProperties> = {
   label: { fontSize: 10 },
   action: {
     justifySelf: 'center',
-    width: 56,
-    height: 56,
+    width: 50,
+    height: 50,
     borderRadius: '50%',
-    border: 'none',
+    border: '1px solid rgba(53,201,121,.28)',
+    background: 'linear-gradient(145deg,rgba(53,201,121,.92),rgba(38,159,96,.92))',
+    boxShadow: '0 8px 20px rgba(53,201,121,.16), inset 0 1px 0 rgba(255,255,255,.22)',
     display: 'grid',
     placeItems: 'center',
     transition: 'transform 120ms ease, background 120ms ease',
-    minWidth: 56,
-    minHeight: 56,
+    minWidth: 50,
+    minHeight: 50,
   },
-  actionIcon: { fontSize: 26, fontWeight: 900, lineHeight: 1 },
+  actionIcon: { color: '#07170f', fontSize: 24, fontWeight: 800, lineHeight: 1 },
 };

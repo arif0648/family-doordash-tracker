@@ -173,12 +173,12 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
   const activeTotal = todaySummary.totalSeconds + elapsedSeconds;
 
   return (
-    <section id="work-card" style={S.section}>
+    <section id="work-card" className="home-glass" style={S.section}>
       <div style={S.header}>
-        <span style={S.kicker}>ÇALIŞMA ZAMANI</span>
+        <span style={S.kicker}>Çalışma</span>
         <div style={S.status}>
           <span style={{ ...S.dot, background: isActive ? '#34D399' : '#F87171' }} />
-          <span style={S.statusText}>{isActive ? 'ÇALIŞIYOR' : 'ÇALIŞMIYOR'}</span>
+          <span style={S.statusText}>{isActive ? 'Çalışıyor' : 'Çalışmıyor'}</span>
         </div>
       </div>
 
@@ -202,25 +202,25 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
 
       <div style={S.grid}>
         <div style={S.cell}>
-          <div style={S.cellLabel}>💰 Bugünkü Gelir</div>
+          <div style={S.cellLabel}>Bugünkü gelir</div>
           <div style={S.cellValue}>{currency(todayIncome)}</div>
         </div>
         <div style={S.cell}>
-          <div style={S.cellLabel}>📈 Saatlik Gelir</div>
+          <div style={S.cellLabel}>Saatlik gelir</div>
           <div style={S.cellValue}>
             {hourlyRateLabel(todayIncome, activeTotal)}
           </div>
         </div>
         <div style={S.cell}>
-          <div style={S.cellLabel}>🗓️ Bu Hafta</div>
+          <div style={S.cellLabel}>Bu hafta</div>
           <div style={S.cellValue}>{formatDuration(weekSummary.totalSeconds)}</div>
         </div>
         <div style={S.cell}>
-          <div style={S.cellLabel}>💰 Haftalık Gelir</div>
+          <div style={S.cellLabel}>Haftalık gelir</div>
           <div style={S.cellValue}>{currency(weekIncome)}</div>
         </div>
         <div style={{ ...S.cell, gridColumn: '1 / -1' }}>
-          <div style={S.cellLabel}>📈 Ort. Saatlik</div>
+          <div style={S.cellLabel}>Ort. saatlik</div>
           <div style={S.cellValue}>
             {hourlyRateLabel(weekIncome, weekSummary.totalSeconds)}
           </div>
@@ -232,25 +232,22 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
 
 const S: Record<string, React.CSSProperties> = {
   section: {
-    padding: 10,
-    borderRadius: 16,
-    background: 'linear-gradient(145deg, rgba(25,18,56,.96), rgba(7,9,21,.98))',
-    border: '1px solid rgba(168,85,247,.15)',
-    boxShadow: '0 8px 20px rgba(0,0,0,.2)',
-    marginBottom: 8,
-    color: '#fff',
+    padding: 15,
+    borderRadius: 'var(--radius-card)',
+    marginBottom: 14,
+    color: 'var(--text)',
   },
   header: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   kicker: {
-    fontSize: 9,
-    letterSpacing: 2,
-    color: '#9C8BEF',
-    fontWeight: 900,
+    fontSize: 13,
+    letterSpacing: .1,
+    color: 'var(--text)',
+    fontWeight: 750,
   },
   status: {
     display: 'flex',
@@ -258,7 +255,8 @@ const S: Record<string, React.CSSProperties> = {
     gap: 8,
     padding: '6px 10px',
     borderRadius: 999,
-    background: 'rgba(255,255,255,.06)',
+    background: 'rgba(255,255,255,.035)',
+    border: '1px solid var(--border)',
   },
   dot: {
     width: 8,
@@ -267,14 +265,14 @@ const S: Record<string, React.CSSProperties> = {
   },
   statusText: {
     fontSize: 11,
-    fontWeight: 800,
+    fontWeight: 650,
   },
   main: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 10,
-    marginBottom: 10,
+    marginBottom: 12,
   },
   timerBox: {
     flex: 1,
@@ -285,8 +283,8 @@ const S: Record<string, React.CSSProperties> = {
     marginBottom: 2,
   },
   timerValue: {
-    fontSize: 22,
-    fontWeight: 900,
+    fontSize: 26,
+    fontWeight: 780,
     letterSpacing: -1,
   },
   timerSub: {
@@ -296,34 +294,33 @@ const S: Record<string, React.CSSProperties> = {
   },
   btn: {
     border: 'none',
-    borderRadius: 12,
-    padding: '10px 14px',
-    color: 'white',
-    fontWeight: 800,
+    borderRadius: 13,
+    padding: '11px 14px',
+    color: '#07120d',
+    fontWeight: 750,
     fontSize: 12,
     cursor: 'pointer',
   },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(2, 1fr)',
-    gap: 6,
+    gap: '8px 14px',
   },
   cell: {
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 6,
-    padding: 8,
-    borderRadius: 10,
-    background: 'rgba(255,255,255,.04)',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: 2,
+    padding: '7px 0',
+    borderTop: '1px solid rgba(255,255,255,.045)',
   },
   cellLabel: {
-    fontSize: 10,
+    fontSize: 9,
     color: '#9CA3AF',
   },
   cellValue: {
     fontSize: 12,
-    fontWeight: 800,
+    fontWeight: 750,
   },
   error: { padding: 10, borderRadius: 10, background: 'rgba(251,113,133,.1)', color: '#FDA4AF', fontSize: 12, marginBottom: 10 },
 };

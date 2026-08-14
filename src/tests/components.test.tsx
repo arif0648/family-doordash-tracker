@@ -63,7 +63,7 @@ describe('VehicleChampions', () => {
   for (const count of [0, 1, 2, 3]) {
     it(`${count} araç durumunu crash olmadan gösterir`, () => {
       render(<VehicleChampions vehicles={vehicles.slice(0, count)} income={income.slice(0, count)} now={now} />);
-      expect(screen.getByText('KAZANÇ SIRALAMASI')).toBeInTheDocument();
+      expect(screen.getByText('Günün Birincisi')).toBeInTheDocument();
       if (count === 0) expect(screen.getByText(/henüz gelir kaydı yok/i)).toBeInTheDocument();
       else expect(screen.getByText('Araç 1')).toBeInTheDocument();
     });

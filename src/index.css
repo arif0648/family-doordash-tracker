@@ -13,6 +13,7 @@
   --gold: #FBBF24;
   --border: rgba(255, 255, 255, 0.08);
   --border-strong: rgba(255, 255, 255, 0.14);
+  --glass-inner: rgba(255, 255, 255, 0.045);
   --radius-card: 22px;
   --radius-button: 16px;
   --radius-input: 16px;
@@ -22,6 +23,56 @@
   --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   --font-mono: "SF Mono", ui-monospace, monospace;
   --safe-bottom: env(safe-area-inset-bottom);
+}
+
+.home-page {
+  --bg: #05080d;
+  --page-bg-elevated: #080d14;
+  --surface: rgba(15, 22, 32, 0.72);
+  --surface-raised: rgba(20, 29, 42, 0.62);
+  --text: #f4f7fb;
+  --text-secondary: #a1adbc;
+  --muted: #697688;
+  --accent: #3cc8ed;
+  --positive: #35c979;
+  --negative: #ef6b82;
+  --brand: #8d72dc;
+  --gold: #d7ad61;
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.13);
+  --shadow-card: 0 18px 45px rgba(0, 0, 0, 0.28), inset 0 1px 0 var(--glass-inner);
+  position: relative;
+  isolation: isolate;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 92% 4%, rgba(60, 200, 237, .055), transparent 25rem),
+    radial-gradient(circle at 5% 42%, rgba(141, 114, 220, .04), transparent 22rem),
+    var(--bg);
+}
+
+.home-glass {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, rgba(20, 29, 42, .72), rgba(9, 14, 22, .82));
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.home-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 42%;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,.035), transparent);
+}
+
+.home-pressable:active { transform: translateY(1px) scale(.99); }
+
+@media (min-width: 700px) {
+  .home-page { max-width: 680px; margin: 0 auto; }
 }
 
 * { box-sizing: border-box; }

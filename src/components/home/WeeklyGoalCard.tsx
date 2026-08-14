@@ -55,45 +55,30 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
   }, [familyPercent, weekStart]);
 
   return (
-    <section style={S.section}>
+    <section className="home-glass" style={S.section}>
       <div style={S.head}>
         <div>
-          <span style={S.kicker}>🎯 HAFTALIK AİLE HEDEFİ</span>
+          <span style={S.kicker}>Haftalık Hedef</span>
           <h2 style={S.title}>{formatMoney(familyIncome, true)} / {formatMoney(familyGoal, true)}</h2>
           <span style={S.percentText}>%{familyPercent.toFixed(0)} tamamlandı</span>
         </div>
-        <div style={S.badge}>
-          {familyPercent >= 100 ? '🏆 HEDEF!' : `${formatMoney(familyRemaining, true)} kaldı`}
-        </div>
+        <div style={S.badge}>{familyPercent >= 100 ? 'Hedef tamamlandı' : `${formatMoney(familyRemaining, true)} kaldı`}</div>
       </div>
 
       <div style={S.track}>
         <div style={{ ...S.fill, width: `${familyPercent}%` }} />
-        <div style={S.milestones}>
-          {MILESTONES.map((m) => (
-            <div key={m} style={{ ...S.dot, background: familyPercent >= m ? 'var(--positive)' : 'var(--surface-raised)' }}>
-              <span style={S.dotLabel}>{m}%</span>
-            </div>
-          ))}
-        </div>
       </div>
 
       <div style={S.divider} />
-      <div style={S.vehicleHead}>
-        <span style={S.vehicleTitle}>ARAÇ HEDEF İLERLEMESİ</span>
-        <span style={S.vehicleHint}>Her araç kendi haftalık hedefinde</span>
-      </div>
+      <div style={S.vehicleHead}><span style={S.vehicleTitle}>Araç hedefleri</span></div>
 
       <div style={S.vehicleList}>
         {vehicleProgress.map((vehicle) => (
           <div key={vehicle.vehicleId} style={S.vehicleRow}>
             <div style={S.vehicleTopline}>
               <strong style={S.vehicleName}>{vehicle.shortName}</strong>
+              <span style={S.vehicleAmounts}>{formatMoney(vehicle.amount, true)} / {formatMoney(vehicle.target, true)}</span>
               <span style={S.vehiclePct}>%{vehicle.percent}</span>
-            </div>
-            <div style={S.vehicleAmounts}>
-              <span>{formatMoney(vehicle.amount, true)} / {formatMoney(vehicle.target, true)}</span>
-              <span>{vehicle.remaining > 0 ? `${formatMoney(vehicle.remaining, true)} kaldı` : 'Hedef tamamlandı'}</span>
             </div>
             <div style={S.vehicleTrack}>
               <div style={{ ...S.vehicleFill, width: `${vehicle.percent}%` }} />
@@ -107,30 +92,26 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
 }
 
 const S: Record<string, React.CSSProperties> = {
-  section: { padding: 16, borderRadius: 'var(--radius-card)', background: 'var(--surface)', border: '1px solid var(--border)', boxShadow: 'var(--shadow-card)', marginBottom: 14, color: 'var(--text)' },
-  head: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 },
-  kicker: { fontSize: 10, letterSpacing: 1.5, color: 'var(--positive)', fontWeight: 900 },
-  title: { fontSize: 22, fontWeight: 900, margin: '5px 0 2px', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
-  percentText: { fontSize: 12, color: 'var(--text-secondary)', fontWeight: 800 },
-  badge: { padding: '6px 9px', borderRadius: 10, background: 'rgba(34,197,94,.12)', color: 'var(--positive)', fontSize: 11, fontWeight: 800, whiteSpace: 'nowrap' },
-  track: { position: 'relative', height: 12, borderRadius: 12, background: 'var(--surface-raised)', overflow: 'hidden', marginBottom: 8 },
+  section: { padding: 15, borderRadius: 'var(--radius-card)', marginBottom: 14, color: 'var(--text)' },
+  head: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10 },
+  kicker: { fontSize: 11, letterSpacing: .2, color: 'var(--text-secondary)', fontWeight: 700 },
+  title: { fontSize: 20, fontWeight: 780, margin: '3px 0 1px', color: 'var(--text)', fontVariantNumeric: 'tabular-nums' },
+  percentText: { fontSize: 10, color: 'var(--text-secondary)', fontWeight: 650 },
+  badge: { padding: '5px 8px', borderRadius: 10, background: 'rgba(53,201,121,.09)', color: '#79dda7', fontSize: 9, fontWeight: 700, whiteSpace: 'nowrap', border: '1px solid rgba(53,201,121,.12)' },
+  track: { position: 'relative', height: 6, borderRadius: 12, background: 'rgba(255,255,255,.055)', overflow: 'hidden', marginBottom: 4 },
   fill: { height: '100%', borderRadius: 12, background: 'linear-gradient(90deg, var(--positive), var(--accent))', transition: 'width 0.6s ease' },
-  milestones: { position: 'absolute', inset: 0, display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 6px' },
-  dot: { width: 10, height: 10, borderRadius: 5, position: 'relative' },
-  dotLabel: { display: 'none' },
   summaryRow: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 7 },
   summaryItem: { minWidth: 0, display: 'flex', flexDirection: 'column', gap: 4, padding: 9, borderRadius: 12, background: 'var(--surface-raised)', fontSize: 10, color: 'var(--text-secondary)' },
-  divider: { height: 1, background: 'var(--border)', margin: '14px 0 12px' },
-  vehicleHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, marginBottom: 9 },
-  vehicleTitle: { fontSize: 10, fontWeight: 900, letterSpacing: 1.2, color: 'var(--accent)' },
-  vehicleHint: { fontSize: 9, color: 'var(--muted)', textAlign: 'right' },
-  vehicleList: { display: 'flex', flexDirection: 'column', gap: 8 },
-  vehicleRow: { padding: '9px 10px', borderRadius: 12, background: 'var(--surface-raised)', border: '1px solid var(--border)' },
+  divider: { height: 1, background: 'var(--border)', margin: '10px 0 8px' },
+  vehicleHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 5 },
+  vehicleTitle: { fontSize: 9, fontWeight: 750, letterSpacing: .7, color: 'var(--text-secondary)' },
+  vehicleList: { display: 'flex', flexDirection: 'column', gap: 4 },
+  vehicleRow: { padding: '6px 7px', borderRadius: 10, background: 'rgba(255,255,255,.022)' },
   vehicleTopline: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 },
-  vehicleName: { minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 12, color: 'var(--text)' },
-  vehiclePct: { fontSize: 13, fontWeight: 900, color: 'var(--positive)', fontVariantNumeric: 'tabular-nums' },
-  vehicleAmounts: { display: 'flex', justifyContent: 'space-between', gap: 8, marginTop: 3, fontSize: 10, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums' },
-  vehicleTrack: { height: 6, marginTop: 7, borderRadius: 999, background: 'var(--surface)', overflow: 'hidden' },
+  vehicleName: { minWidth: 0, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontSize: 11, color: 'var(--text)', fontWeight: 700 },
+  vehiclePct: { width: 29, textAlign: 'right', fontSize: 10, fontWeight: 750, color: 'var(--positive)', fontVariantNumeric: 'tabular-nums' },
+  vehicleAmounts: { fontSize: 9, color: 'var(--text-secondary)', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' },
+  vehicleTrack: { height: 3, marginTop: 5, borderRadius: 999, background: 'rgba(255,255,255,.055)', overflow: 'hidden' },
   vehicleFill: { height: '100%', borderRadius: 999, background: 'linear-gradient(90deg, var(--accent), var(--positive))', transition: 'width 0.45s ease' },
   milestoneText: { marginTop: 10, fontSize: 11, color: 'var(--text-secondary)', textAlign: 'center' },
 };
