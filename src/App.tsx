@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { useAuth } from './hooks/useAuth';
 import { useFamilyId } from './hooks/useFamilyId';
@@ -12,18 +12,19 @@ import { SignupPage } from './components/auth/SignupPage';
 import { ForgotPasswordPage, ResetPasswordPage } from './components/auth/PasswordResetPages';
 
 import { HomePage } from './components/home/HomePage';
-import { IncomeForm } from './components/income/IncomeForm';
-import { ExpenseForm } from './components/expense/ExpenseForm';
-import { FixedExpensesPanel } from './components/expense/FixedExpensesPanel';
-import { VehiclesPage } from './components/vehicles/VehiclesPage';
-import { CreditCardsPage } from './components/vehicles/CreditCardsPage';
-import { ProfilePage } from './components/profile/ProfilePage';
-import { ReportsPage } from './components/reports/ReportsPage';
-import { TransactionsPage } from './components/transactions/TransactionsPage';
-import { AppointmentsPage } from './components/appointments/AppointmentsPage';
-import { NotificationsPage } from './components/notifications/NotificationsPage';
 import { IncomeRow } from './types/database';
 import { initializeAudioManager } from './lib/sound';
+
+const IncomeForm = lazy(() => import('./components/income/IncomeForm').then((module) => ({ default: module.IncomeForm })));
+const ExpenseForm = lazy(() => import('./components/expense/ExpenseForm').then((module) => ({ default: module.ExpenseForm })));
+const FixedExpensesPanel = lazy(() => import('./components/expense/FixedExpensesPanel').then((module) => ({ default: module.FixedExpensesPanel })));
+const VehiclesPage = lazy(() => import('./components/vehicles/VehiclesPage').then((module) => ({ default: module.VehiclesPage })));
+const CreditCardsPage = lazy(() => import('./components/vehicles/CreditCardsPage').then((module) => ({ default: module.CreditCardsPage })));
+const ProfilePage = lazy(() => import('./components/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })));
+const ReportsPage = lazy(() => import('./components/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })));
+const TransactionsPage = lazy(() => import('./components/transactions/TransactionsPage').then((module) => ({ default: module.TransactionsPage })));
+const AppointmentsPage = lazy(() => import('./components/appointments/AppointmentsPage').then((module) => ({ default: module.AppointmentsPage })));
+const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage').then((module) => ({ default: module.NotificationsPage })));
 
 export default function App() {
   useEffect(() => initializeAudioManager(), []);
@@ -71,7 +72,8 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', paddingBottom: 'calc(96px + var(--safe-bottom))' }}>
-      <Routes>
+      <Suspense fallback={<LoadingScreen label="Sayfa yükleniyor…" />}>
+        <Routes>
         <Route
           path="/"
           element={
@@ -162,7 +164,8 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
           }
         />
         <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+        </Routes>
+      </Suspense>
       <BottomNav />
     </div>
   );
