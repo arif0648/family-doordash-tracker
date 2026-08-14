@@ -28,7 +28,7 @@ export function VehicleCard({ vehicle, summary }: { vehicle: Vehicle; summary: V
         <span style={S.value}>{summary.milesDriven.toLocaleString('en-US')} mi</span>
       </div>
       <div style={S.row}>
-        <span style={S.label}>Toplam Kazanç</span>
+        <span style={S.label}>Toplam Gelir</span>
         <span style={{ ...S.value, color: '#10B981' }}>${summary.income.toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
       </div>
       <div style={S.row}>

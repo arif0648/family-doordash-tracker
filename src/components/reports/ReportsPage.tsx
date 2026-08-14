@@ -52,7 +52,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
 
   const vehicleSummaries = vehicles.map((v) =>
     computeVehicleSummary({
-      vehicle: { id: v.id, shortName: v.short_name },
+      vehicle: { id: v.id, short_name: v.short_name },
       period: 'month',
       boundary,
       income: incomeRecords,
@@ -106,7 +106,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
       ) : (
         <>
           <div style={styles.grid}>
-            <Stat label="Toplam Kazanç" value={familySummary.totalIncome} />
+            <Stat label="Toplam Gelir" value={familySummary.totalIncome} />
             <Stat label="Toplam Gider" value={familySummary.gas + familySummary.vehicleExpense + familySummary.market + familySummary.otherFamily + familySummary.otherVehicle + familySummary.fixedExpense} />
             <Stat label="Net Sonuç" value={familySummary.net} highlight />
             <Stat label="Toplam Mil" value={totalMiles} isMiles />
@@ -137,7 +137,7 @@ export function ReportsPage({ familyId }: { familyId: string }) {
 
           <h2 style={styles.sectionTitle}>Dışa Aktar (CSV)</h2>
           <div style={styles.exportRow}>
-            <button style={styles.exportButton} onClick={exportIncomeCsv}>Kazanç</button>
+            <button style={styles.exportButton} onClick={exportIncomeCsv}>Gelir</button>
             <button style={styles.exportButton} onClick={exportExpensesCsv}>Gider</button>
             <button style={styles.exportButton} onClick={exportMileageCsv}>Kilometre</button>
           </div>

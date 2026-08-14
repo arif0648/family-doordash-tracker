@@ -5,22 +5,27 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import './index.css';
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.getRegistrations().then((regs) => {
-      for (const r of regs) r.unregister();
-    }).finally(() => {
-      navigator.serviceWorker.register('/sw.js?v=4').catch(() => {
-        // PWA registration is best-effort; the app still works without it.
-      });
-    });
+  window.addEventListener('load', async () => {
+    if (import.meta.env.PROD) {
+      navigator.serviceWorker.register('/sw.js?v=5').catch(() => {});
+      return;
+    }
+
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map((registration) => registration.unregister()));
+
+    const cacheNames = await caches.keys();
+    await Promise.all(
+      cacheNames
+        .filter((name) => name.startsWith('barbin-'))
+        .map((name) => caches.delete(name))
+    );
   });
 }
 
 const rootElement = document.getElementById('root');
 
 if (!rootElement) {
-  // Should be structurally impossible given index.html, but guard anyway
-  // rather than silently failing into a blank screen.
   document.body.innerHTML =
     '<div style="color:white;padding:24px;font-family:sans-serif">Uygulama başlatılamadı: kök element bulunamadı.</div>';
 } else {

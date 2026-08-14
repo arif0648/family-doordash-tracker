@@ -16,6 +16,14 @@ import {
 } from '../types/database';
 import { playIncomeSound, playExpenseSound, speak } from '../lib/sound';
 
+// Central vehicle normalization: short_name -> shortName
+function normalizeVehicle(dbVehicle: Vehicle): Vehicle {
+  return {
+    ...dbVehicle,
+    short_name: dbVehicle.short_name,
+  };
+}
+
 interface FamilyData {
   vehicles: Vehicle[];
   income: IncomeRow[];
@@ -81,8 +89,9 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
       const { data: goals, error: goalsError } = await supabase.rpc('get_family_weekly_goals', { p_family_id: familyId });
       if (goalsError) throw goalsError;
       if (!mounted.current) return;
+      const normalizedVehicles = (v.data ?? []).map(normalizeVehicle);
       setState({
-        vehicles: v.data ?? [],
+        vehicles: normalizedVehicles,
         income,
         expenses,
         mileageLog: m.data ?? [],

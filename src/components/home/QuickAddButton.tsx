@@ -7,7 +7,7 @@ export function QuickAddButton() {
     <div style={S.wrap}>
       {open && (
         <div style={S.menu}>
-          <NavLink to="/kazanc" style={S.item} onClick={() => setOpen(false)}>Kazanç</NavLink>
+          <NavLink to="/kazanc" style={S.item} onClick={() => setOpen(false)}>Gelir</NavLink>
           <NavLink to="/gider" style={S.item} onClick={() => setOpen(false)}>Gider</NavLink>
           <NavLink to="/kredi-kartlari" style={S.item} onClick={() => setOpen(false)}>Kart Ödemesi</NavLink>
         </div>

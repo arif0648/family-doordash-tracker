@@ -3,12 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { QuickActionsSheet } from './QuickActionsSheet';
 import { MenuSheet } from './MenuSheet';
 
-const mainTabs = [
-  { path: '/', label: 'Ana', icon: '⌂' },
-  { path: '/islemler', label: 'Hareketler', icon: '⇄' },
-  { path: '/kredi-kartlari', label: 'Kartlar', icon: '💳' },
-];
-
 const menuPaths = ['/araclar', '/sabit-giderler', '/randevular', '/bildirimler', '/raporlar', '/profil'];
 
 export function BottomNav() {
@@ -22,25 +16,34 @@ export function BottomNav() {
   return (
     <>
       <nav style={S.nav}>
-        {mainTabs.map((t) => {
-          const active = activeFor(t.path);
-          return (
-            <NavLink
-              key={t.path}
-              to={t.path}
-              end={t.path === '/'}
-              style={{
-                ...S.tab,
-                color: active ? 'var(--accent)' : 'var(--text-secondary)',
-                background: active ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
-              }}
-            >
-              <span style={S.icon}>{t.icon}</span>
-              <span style={S.label}>{t.label}</span>
-            </NavLink>
-          );
-        })}
+        {/* Ana */}
+        <NavLink
+          to="/"
+          end
+          style={{
+            ...S.tab,
+            color: activeFor('/') ? 'var(--accent)' : 'var(--text-secondary)',
+            background: activeFor('/') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+          }}
+        >
+          <span style={S.icon}>⌂</span>
+          <span style={S.label}>Ana</span>
+        </NavLink>
 
+        {/* Hareketler */}
+        <NavLink
+          to="/islemler"
+          style={{
+            ...S.tab,
+            color: activeFor('/islemler') ? 'var(--accent)' : 'var(--text-secondary)',
+            background: activeFor('/islemler') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+          }}
+        >
+          <span style={S.icon}>⇄</span>
+          <span style={S.label}>Hareketler</span>
+        </NavLink>
+
+        {/* + button (3rd column, centered) */}
         <button
           type="button"
           style={{ ...S.action, background: 'var(--positive)' }}
@@ -50,6 +53,20 @@ export function BottomNav() {
           <span style={{ ...S.actionIcon, color: '#062C1B' }}>＋</span>
         </button>
 
+        {/* Kartlar */}
+        <NavLink
+          to="/kredi-kartlari"
+          style={{
+            ...S.tab,
+            color: activeFor('/kredi-kartlari') ? 'var(--accent)' : 'var(--text-secondary)',
+            background: activeFor('/kredi-kartlari') ? 'rgba(56, 189, 248, 0.10)' : 'transparent',
+          }}
+        >
+          <span style={S.icon}>💳</span>
+          <span style={S.label}>Kartlar</span>
+        </NavLink>
+
+        {/* Menü */}
         <button
           type="button"
           style={{
@@ -78,7 +95,7 @@ const S: Record<string, React.CSSProperties> = {
     right: 12,
     bottom: 'calc(10px + var(--safe-bottom))',
     display: 'grid',
-    gridTemplateColumns: '1fr 1fr 64px 1fr 1fr',
+    gridTemplateColumns: 'repeat(5, 1fr)',
     gap: 4,
     alignItems: 'center',
     padding: 6,
@@ -105,14 +122,15 @@ const S: Record<string, React.CSSProperties> = {
   label: { fontSize: 10 },
   action: {
     justifySelf: 'center',
-    width: 54,
-    height: 54,
+    width: 56,
+    height: 56,
     borderRadius: '50%',
     border: 'none',
     display: 'grid',
     placeItems: 'center',
     transition: 'transform 120ms ease, background 120ms ease',
-    margin: '0 auto',
+    minWidth: 56,
+    minHeight: 56,
   },
   actionIcon: { fontSize: 26, fontWeight: 900, lineHeight: 1 },
 };

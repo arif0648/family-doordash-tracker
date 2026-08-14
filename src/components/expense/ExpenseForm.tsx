@@ -61,7 +61,7 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
     }
 
     playExpenseSound();
-    speak(`${amountNum} dolar ${CATEGORY_LABELS[categoryTab]} gideri kaydedildi.`);
+    speak('Para gitti.');
 
     setAmount('');
     onSaved?.();

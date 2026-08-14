@@ -6,8 +6,19 @@ import { formatMoney } from '../../lib/format';
 
 type ChampionPeriod = 'today' | 'week' | 'month';
 
-const labels: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
-const emptyLabels: Record<ChampionPeriod, string> = { today: 'Günün', week: 'Haftanın', month: 'Ayın' };
+const periodTitles: Record<ChampionPeriod, string> = {
+  today: 'GÜNÜN İLK 3\'Ü',
+  week: 'HAFTANIN İLK 3\'Ü',
+  month: 'AYIN İLK 3\'Ü',
+};
+
+const periodButtons: Record<ChampionPeriod, string> = { today: 'Gün', week: 'Hafta', month: 'Ay' };
+
+const VEHICLE_ICONS: Record<string, string> = {
+  'Kia Sportage Prestige': '🚙',
+  'Toyota Corolla XLE': '🚗',
+  'Honda Accord Sport': '🚘',
+};
 
 interface VehicleChampionsProps {
   income: IncomeRecord[];
@@ -22,55 +33,65 @@ export function VehicleChampions({ income, vehicles, now }: VehicleChampionsProp
     () => computeVehicleIncomeLeaderboard({ income, vehicles, boundary }),
     [income, vehicles, boundary]
   );
+  const top3 = result.hasData ? result.ranking.slice(0, 3) : [];
+
+  // Reorder for podium display: [2nd, 1st, 3rd]
+  // If only 1 vehicle, show only 1st in center
+  // If 2 vehicles, show [2nd, 1st]
+  // If 3 vehicles, show [2nd, 1st, 3rd]
+  let podiumOrder: typeof top3;
+  if (top3.length === 1) {
+    podiumOrder = [top3[0]]; // Only 1st, will be centered
+  } else if (top3.length === 2) {
+    podiumOrder = [top3[1], top3[0]]; // [2nd, 1st]
+  } else if (top3.length >= 3) {
+    podiumOrder = [top3[1], top3[0], top3[2]]; // [2nd, 1st, 3rd]
+  } else {
+    podiumOrder = [];
+  }
 
   return (
     <section style={S.section}>
       <div style={S.head}>
-        <span style={S.kicker}>🏆 ARAÇ ŞAMPİYONLARI</span>
-        <div style={S.tabs}>
+        <span style={S.kicker}>{periodTitles[period]}</span>
+        <div style={S.tabsSmall}>
           {(['today', 'week', 'month'] as ChampionPeriod[]).map((p) => (
             <button
               key={p}
               type="button"
               style={{
-                ...S.tab,
-                background: period === p ? 'var(--accent)' : 'transparent',
+                ...S.tabSmall,
+                background: period === p ? 'var(--accent)' : 'var(--surface-raised)',
                 color: period === p ? '#062D46' : 'var(--text-secondary)',
               }}
               onClick={() => setPeriod(p)}
             >
-              {labels[p]}
+              {periodButtons[p]}
             </button>
           ))}
         </div>
       </div>
 
-      {result.hasData ? (
-        <div style={S.body}>
-          <div style={S.podium}>
-            <span style={S.rank}>🥇</span>
-            <div style={S.winner}>
-              <div style={S.winnerName}>{result.winner.shortName}</div>
-              <div style={S.winnerAmount}>{formatMoney(result.winner.amount, true)}</div>
-            </div>
-          </div>
-          {result.second ? (
-            <div style={S.second}>
-              <span>2. {result.second.shortName}</span>
-              <span>{formatMoney(result.second.amount, true)}</span>
-            </div>
-          ) : null}
-          <div style={S.gap}>
-            {result.second
-              ? `+${formatMoney(result.winner.amount - result.second.amount, true)} fark`
-              : `${result.ranking.length} araç arasında lider`}
-          </div>
+      {podiumOrder.length > 0 ? (
+        <div style={S.podium}>
+          {podiumOrder.filter(v => v).map((v, i) => {
+            const rankIndex = podiumOrder.length === 1 ? 0 : i === 0 ? 1 : i === 1 ? 0 : 2; // Map back to original rank
+            const medal = ['🥇', '🥈', '🥉'][rankIndex];
+            const isFirst = rankIndex === 0;
+            return (
+              <div key={v.vehicleId} style={{ ...S.podiumItem, flex: isFirst ? 1.4 : 1 }}>
+                <div style={S.podiumRank}>{medal}</div>
+                <div style={S.podiumIcon}>{VEHICLE_ICONS[v.shortName] || '🚗'}</div>
+                <div style={S.podiumName}>{v.shortName}</div>
+                <div style={S.podiumAmount}>{formatMoney(v.amount, true)}</div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div style={S.empty}>
-          <span style={S.emptyIcon}>🚀</span>
-          <span>{emptyLabels[period]} lideri henüz belli değil.</span>
-          <span>İlk kazançla yarış başlıyor.</span>
+          <span style={S.emptyIcon}>🚗</span>
+          <span>{periodButtons[period]} için henüz gelir kaydı yok.</span>
         </div>
       )}
     </section>
@@ -88,89 +109,78 @@ const S: Record<string, React.CSSProperties> = {
   },
   head: {
     display: 'flex',
-    justifyContent: 'space-between',
+    flexDirection: 'column',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 14,
+    gap: 12,
   },
   kicker: {
     fontSize: 10,
-    letterSpacing: 1.5,
+    letterSpacing: 1.4,
     fontWeight: 900,
     color: 'var(--gold)',
   },
-  tabs: {
-    display: 'flex',
-    gap: 4,
-    padding: 4,
-    borderRadius: 12,
-    background: 'var(--surface-raised)',
+  tabsSmall: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3, 1fr)',
+    gap: 6,
+    width: '100%',
   },
-  tab: {
+  tabSmall: {
     border: 0,
-    borderRadius: 10,
-    padding: '6px 12px',
-    fontSize: 11,
+    borderRadius: 12,
+    padding: '10px 8px',
+    fontSize: 12,
     fontWeight: 800,
-    color: 'var(--text-secondary)',
-    background: 'transparent',
     transition: 'color 120ms ease, background 120ms ease',
-  },
-  body: {
-    display: 'flex',
-    flexDirection: 'column',
-    gap: 8,
   },
   podium: {
     display: 'flex',
-    alignItems: 'center',
-    gap: 14,
-    padding: 16,
-    borderRadius: 18,
-    background: 'rgba(251, 191, 36, 0.08)',
-    border: '1px solid rgba(251, 191, 36, 0.18)',
+    gap: 8,
+    alignItems: 'flex-end',
   },
-  rank: {
-    fontSize: 28,
+  podiumItem: {
+    flex: 1,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: 6,
+    padding: 12,
+    borderRadius: 16,
+    background: 'var(--surface-raised)',
+    border: '1px solid var(--border)',
+  },
+  podiumRank: {
+    fontSize: 24,
     lineHeight: 1,
   },
-  winner: {
-    flex: 1,
+  podiumIcon: {
+    fontSize: 36,
+    lineHeight: 1,
   },
-  winnerName: {
-    fontSize: 17,
-    fontWeight: 900,
-    color: 'var(--gold)',
-    marginBottom: 4,
+  podiumName: {
+    fontSize: 11,
+    fontWeight: 800,
+    color: 'var(--text)',
+    textAlign: 'center',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    width: '100%',
   },
-  winnerAmount: {
-    fontSize: 22,
+  podiumAmount: {
+    fontSize: 13,
     fontWeight: 900,
     color: 'var(--text)',
-    letterSpacing: -1,
-  },
-  second: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    padding: '10px 12px',
-    borderRadius: 14,
-    background: 'var(--surface-raised)',
-    fontSize: 13,
-    fontWeight: 700,
-    color: 'var(--text-secondary)',
-  },
-  gap: {
-    fontSize: 12,
-    fontWeight: 700,
-    color: 'var(--positive)',
-    textAlign: 'center',
+    fontVariantNumeric: 'tabular-nums',
   },
   empty: {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 4,
-    padding: '24px 12px',
+    gap: 6,
+    padding: '26px 12px',
     borderRadius: 18,
     background: 'var(--surface-raised)',
     color: 'var(--text-secondary)',

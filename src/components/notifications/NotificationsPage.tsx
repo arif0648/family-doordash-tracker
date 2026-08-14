@@ -179,11 +179,6 @@ export function NotificationsPage({ familyId }: { familyId: string }) {
           )}
         </>
       )}
-
-      <div style={S.quickActions}>
-        <NavLink to="/kazanc" style={S.quickIncome}>＋ Kazanç</NavLink>
-        <NavLink to="/gider" style={S.quickExpense}>− Gider</NavLink>
-      </div>
     </main>
   );
 }
@@ -290,7 +285,4 @@ const S: Record<string, React.CSSProperties> = {
   alertMeta: { fontSize: 12, color: '#7F8499', marginTop: 2 },
   alertAmount: { fontSize: 15, fontWeight: 900, whiteSpace: 'nowrap' },
   goArrow: { color: '#C084FC', fontSize: 20, marginLeft: 4 },
-  quickActions: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 18 },
-  quickIncome: { padding: '13px 4px', borderRadius: 14, textAlign: 'center', textDecoration: 'none', color: '#04120D', fontWeight: 900, fontSize: 14, background: 'linear-gradient(135deg,#34D399,#10B981)' },
-  quickExpense: { padding: '13px 4px', borderRadius: 14, textAlign: 'center', textDecoration: 'none', color: '#fff', fontWeight: 900, fontSize: 14, background: 'linear-gradient(135deg,#F472B6,#EC4899)' },
 };

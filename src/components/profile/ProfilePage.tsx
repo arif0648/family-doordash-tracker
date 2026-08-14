@@ -11,6 +11,14 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -87,6 +95,56 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
     setSavingGoal(false);
   }
 
+  async function handlePasswordChange(e: React.FormEvent) {
+    e.preventDefault();
+    setPasswordError(null);
+    setPasswordSuccess(false);
+
+    // Validation
+    if (newPassword.length < 8) {
+      setPasswordError('Parola en az 8 karakter olmalı.');
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Parolalar eşleşmiyor.');
+      return;
+    }
+
+    setChangingPassword(true);
+
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      if (updateError) {
+        // Translate common Supabase errors to Turkish
+        if (updateError.message.includes('Password should be at least')) {
+          setPasswordError('Parola en az 8 karakter olmalı.');
+        } else if (updateError.message.includes('Invalid login')) {
+          setPasswordError('Oturum süresi doldu. Lütfen tekrar giriş yapın.');
+        } else {
+          setPasswordError('Parola güncellenirken bir hata oluştu: ' + updateError.message);
+        }
+        return;
+      }
+
+      // Success
+      setPasswordSuccess(true);
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordError(null);
+
+      // Hide success message after 3 seconds
+      setTimeout(() => setPasswordSuccess(false), 3000);
+    } catch (err) {
+      setPasswordError('Beklenmeyen bir hata oluştu.');
+    } finally {
+      setChangingPassword(false);
+    }
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
   }
@@ -123,6 +181,43 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
         />
         <button type="submit" style={styles.goalButton} disabled={savingGoal}>
           {savingGoal ? 'Kaydediliyor…' : 'Kaydet'}
+        </button>
+      </form>
+
+      <h2 style={styles.sectionTitle}>Parola Değiştir</h2>
+      <form onSubmit={handlePasswordChange} style={styles.card}>
+        <label style={styles.goalLabel}>Yeni parola</label>
+        <div style={styles.passwordContainer}>
+          <input
+            style={styles.passwordInput}
+            type={showPassword ? 'text' : 'password'}
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="En az 8 karakter"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            style={styles.toggleVisibilityButton}
+          >
+            {showPassword ? '🙈' : '👁️'}
+          </button>
+        </div>
+
+        <label style={styles.goalLabel}>Yeni parola tekrar</label>
+        <input
+          style={styles.goalInput}
+          type={showPassword ? 'text' : 'password'}
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          placeholder="Parolayı tekrar girin"
+        />
+
+        {passwordError && <p style={styles.passwordError}>{passwordError}</p>}
+        {passwordSuccess && <p style={styles.passwordSuccess}>Parola başarıyla güncellendi!</p>}
+
+        <button type="submit" style={styles.goalButton} disabled={changingPassword}>
+          {changingPassword ? 'Güncelleniyor…' : 'Parolayı Güncelle'}
         </button>
       </form>
 
@@ -204,5 +299,40 @@ const styles: Record<string, React.CSSProperties> = {
     color: 'white',
     fontWeight: 700,
     fontSize: 14,
+  },
+  passwordContainer: {
+    display: 'flex',
+    gap: 8,
+    marginBottom: 10,
+  },
+  passwordInput: {
+    flex: 1,
+    padding: 10,
+    borderRadius: 10,
+    border: '1px solid rgba(255,255,255,.1)',
+    background: '#0B1120',
+    color: 'white',
+    fontSize: 15,
+    boxSizing: 'border-box',
+  },
+  toggleVisibilityButton: {
+    padding: '10px 12px',
+    borderRadius: 10,
+    border: '1px solid rgba(255,255,255,.1)',
+    background: '#0B1120',
+    fontSize: 16,
+    cursor: 'pointer',
+  },
+  passwordError: {
+    color: '#F87171',
+    fontSize: 12,
+    marginBottom: 10,
+    margin: 0,
+  },
+  passwordSuccess: {
+    color: '#34D399',
+    fontSize: 12,
+    marginBottom: 10,
+    margin: 0,
   },
 };

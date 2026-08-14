@@ -83,7 +83,7 @@ export function WeeklyGoalCard({ goals, income, vehicles, now }: WeeklyGoalCardP
 
       <div style={S.summaryRow}>
         <div style={S.summaryItem}><span>Toplam hedef</span><b>{formatMoney(familyGoal, true)}</b></div>
-        <div style={S.summaryItem}><span>Toplam kazanç</span><b>{formatMoney(familyIncome, true)}</b></div>
+        <div style={S.summaryItem}><span>Toplam gelir</span><b>{formatMoney(familyIncome, true)}</b></div>
         <div style={S.summaryItem}><span>Kalan</span><b>{formatMoney(familyRemaining, true)}</b></div>
       </div>
 

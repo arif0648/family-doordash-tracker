@@ -105,7 +105,7 @@ console.log('\n=== TEST A — Boş veri: Bugün/Bu Hafta/Bu Ay ===');
   assertEqual(month.fixedExpense, 6660, 'TEST A — Bu Ay fixedExpense = 6660 (tam bir kez)');
   assertEqual(month.net, -6660, 'TEST A — Bu Ay net = -6660');
 
-  const kia: Vehicle = { id: 'kia', shortName: 'Kia Sportage' };
+  const kia: Vehicle = { id: 'kia', short_name: 'Kia Sportage' };
   const kiaMonthly = computeVehicleSummary({
     vehicle: kia,
     period: 'month',
@@ -145,7 +145,7 @@ console.log('\n=== TEST B — Kia income $1000, gas $100, vehicle expense $50, m
   });
   assertEqual(family.net, -6010, 'TEST B — Aile Net = -6010');
 
-  const kia: Vehicle = { id: 'kia', shortName: 'Kia Sportage' };
+  const kia: Vehicle = { id: 'kia', short_name: 'Kia Sportage' };
   const kiaSummary = computeVehicleSummary({
     vehicle: kia,
     period: 'month',
@@ -160,7 +160,7 @@ console.log('\n=== TEST B — Kia income $1000, gas $100, vehicle expense $50, m
   assertEqual(kiaSummary.net, 850, 'TEST B — Kia operational net = 850');
   assertEqual(kiaSummary.estimatedNet, -1370, 'TEST B — Kia estimated net = -1370');
 
-  const toyota: Vehicle = { id: 'toyota', shortName: 'Toyota Corolla' };
+  const toyota: Vehicle = { id: 'toyota', short_name: 'Toyota Corolla' };
   const toyotaSummary = computeVehicleSummary({
     vehicle: toyota,
     period: 'month',
@@ -214,7 +214,7 @@ console.log('\n=== TEST D — Market family-only, never vehicle-attributed ===')
   assertEqual(family.market, 400, 'TEST D — Aile Market = 400');
 
   for (const vid of ['kia', 'toyota', 'honda']) {
-    const v: Vehicle = { id: vid, shortName: vid };
+    const v: Vehicle = { id: vid, short_name: vid };
     const vs = computeVehicleSummary({
       vehicle: v,
       period: 'month',

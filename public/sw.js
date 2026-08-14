@@ -1,4 +1,7 @@
-const CACHE_NAME = 'barbin-v4';
+const CACHE_NAME = 'barbin-v5';
+
+const isDevHost = (hostname) => hostname === 'localhost' || hostname === '127.0.0.1';
+const isDevAsset = (pathname) => pathname.startsWith('/@vite') || pathname.startsWith('/src/') || pathname.startsWith('/node_modules/.vite');
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -22,12 +25,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Never cache Supabase REST/Realtime traffic so the UI always reflects current data
-  if (url.hostname.endsWith('supabase.co')) {
-    return;
-  }
+  if (url.hostname.endsWith('supabase.co')) return;
+  if (isDevHost(url.hostname) || isDevAsset(url.pathname)) return;
 
-  // Navigation (HTML pages): always try network first, fall back to cache
   if (event.request.mode === 'navigate' || event.request.destination === 'document') {
     event.respondWith(
       fetch(event.request)
@@ -43,7 +43,6 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Static assets: cache first, network fallback
   event.respondWith(
     caches.match(event.request).then((cached) => {
       if (cached) return cached;

@@ -122,7 +122,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
     }
     if (data) setOptimisticSessionId(data as string);
     playWorkStartSound();
-    speak('Çalışma başladı');
+    speak('Hayırlı işler olsun.');
     isProcessing.current = false;
     setLoading(false);
     onSessionsChanged?.();
@@ -153,7 +153,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
     }
     setOptimisticSessionId(null);
     playWorkEndSound();
-    speak('Çalışma sona erdi');
+    speak('İyi istirahatler.');
     isProcessing.current = false;
     setLoading(false);
     onSessionsChanged?.();
@@ -198,11 +198,11 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
 
       <div style={S.grid}>
         <div style={S.cell}>
-          <div style={S.cellLabel}>💰 Bugünkü Kazanç</div>
+          <div style={S.cellLabel}>💰 Bugünkü Gelir</div>
           <div style={S.cellValue}>{currency(todayIncome)}</div>
         </div>
         <div style={S.cell}>
-          <div style={S.cellLabel}>📈 Saatlik Kazanç</div>
+          <div style={S.cellLabel}>📈 Saatlik Gelir</div>
           <div style={S.cellValue}>
             {activeTotal > 0 ? `${currency(todayIncome / (activeTotal / 3600))}/saat` : '—'}
           </div>
@@ -212,7 +212,7 @@ export function WorkTimeCard({ familyId, todayIncome, weekIncome, workSessions, 
           <div style={S.cellValue}>{formatDuration(weekSummary.totalSeconds)}</div>
         </div>
         <div style={S.cell}>
-          <div style={S.cellLabel}>💰 Haftalık Kazanç</div>
+          <div style={S.cellLabel}>💰 Haftalık Gelir</div>
           <div style={S.cellValue}>{currency(weekIncome)}</div>
         </div>
         <div style={{ ...S.cell, gridColumn: '1 / -1' }}>

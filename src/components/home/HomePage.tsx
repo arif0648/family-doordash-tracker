@@ -7,9 +7,8 @@ import { Upcoming7Days } from './Upcoming7Days';
 import { FixedExpensesSummary } from './FixedExpensesSummary';
 import { WeeklyGoalCard } from './WeeklyGoalCard';
 import { VehicleChampions } from './VehicleChampions';
-import { FamilyStatus } from './FamilyStatus';
 import { computeFamilySummary, Period, IncomeRecord, ExpenseRecord, FixedExpenseVersion } from '../../lib/financialEngine';
-import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary, monthBoundary } from '../../lib/timezone';
+import { boundaryForPeriod, toPacificDateString, weekBoundary, todayBoundary } from '../../lib/timezone';
 import { formatMoney } from '../../lib/format';
 import { NavLink, useSearchParams } from 'react-router-dom';
 
@@ -65,10 +64,8 @@ export function HomePage({ familyId }: HomePageProps) {
 
   const todayB = todayBoundary(now);
   const weekB = weekBoundary(now);
-  const monthB = monthBoundary(now);
   const todaySummary = computeFamilySummary({ period: 'today', boundary: todayB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
   const weekSummary = computeFamilySummary({ period: 'week', boundary: weekB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
-  const monthSummary = computeFamilySummary({ period: 'month', boundary: monthB, income: inc, expenses: exp, fixedExpenseVersions: fixed, monthAnchorDate: monthAnchor });
 
   const todayLabel = now.toLocaleDateString('tr-TR', {
     timeZone: 'America/Los_Angeles',
@@ -113,7 +110,7 @@ export function HomePage({ familyId }: HomePageProps) {
         </div>
         <div style={S.netRow}>
           <div style={S.netCell}>
-            <span style={S.netLabel}>Kazanç</span>
+            <span style={S.netLabel}>Gelir</span>
             <b style={{ ...S.netAmount, color: 'var(--positive)' }}>{formatMoney(selectedSummary.totalIncome, true)}</b>
           </div>
           <div style={S.netCell}>
@@ -123,21 +120,19 @@ export function HomePage({ familyId }: HomePageProps) {
         </div>
       </section>
 
-      <FamilyStatus net={monthSummary.net} />
+      <div style={S.quickTop}>
+        <NavLink to="/kazanc" style={{ ...S.quickBtn, background: 'var(--positive)' }}>
+          ＋ Gelir Ekle
+        </NavLink>
+        <NavLink to="/gider" style={{ ...S.quickBtn, background: 'var(--negative)' }}>
+          − Gider Ekle
+        </NavLink>
+      </div>
 
       <WeeklyGoalCard goals={goals} income={inc} vehicles={vehicles} now={now} />
 
 
       <VehicleChampions income={inc} vehicles={vehicles} now={now} />
-
-      <div style={S.quickTop}>
-        <NavLink to="/kazanc" style={{ ...S.quickBtn, background: 'var(--positive)' }}>
-          ＋ Kazanç
-        </NavLink>
-        <NavLink to="/gider" style={{ ...S.quickBtn, background: 'var(--negative)' }}>
-          − Gider
-        </NavLink>
-      </div>
 
       <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions} onSessionsChanged={retry} />
 

@@ -74,7 +74,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     const amountNum = parseFloat(amount.replace(',', '.'));
     const mileageNum = parseFloat(closingMileage.replace(',', '.'));
     if (!vehicleId) return setError('Araç seçimi zorunludur.');
-    if (!Number.isFinite(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir kazanç tutarı girin.');
+    if (!Number.isFinite(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir gelir tutarı girin.');
     if (amountNum > MAX_AMOUNT) return setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     if (!Number.isFinite(mileageNum) || closingMileage.trim() === '' || mileageNum < 0) return setError('Kapanış mili zorunludur. Aracın gösterge kilometresini girin (örn. 94150).');
     setSaving(true);
@@ -103,7 +103,7 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
     setSaving(false);
     if (rpcError) { setError(translateError(rpcError.message)); return; }
     playIncomeSound();
-    speak(`${amountNum.toFixed(2)} dolar ${editingIncome ? 'düzenlendi' : 'eklendi'}.`);
+    speak('Oo, para geldi!');
     setAmount(''); setClosingMileage(''); setNote(''); setWarning(null);
     onSaved?.();
     if (editingIncome) onCancelEdit?.();
@@ -114,12 +114,12 @@ export function IncomeForm({ familyId, vehicles, mileageLog, onSaved, editingInc
       <form onSubmit={handleSubmit} style={styles.form}>
         <div style={styles.hero}>
           <span style={styles.eyebrow}>GELİR</span>
-          <h1 style={styles.title}>{editingIncome ? 'Kazancı Düzenle' : 'Kazanç Ekle'}</h1>
-          <p style={styles.subtitle}>{editingIncome ? 'Var olan kazancı güncelle.' : 'Bugünkü kazancını aile hesabına anında işle.'}</p>
+          <h1 style={styles.title}>{editingIncome ? 'Kazancı Düzenle' : 'Gelir Ekle'}</h1>
+          <p style={styles.subtitle}>{editingIncome ? 'Var olan geliri güncelle.' : 'Bugünkü gelirini aile hesabına anında işle.'}</p>
         </div>
         <label style={styles.label}>Araç</label>
         <select style={styles.input} value={vehicleId} onChange={(e) => setVehicleId(e.target.value)}>{vehicles.map(v => <option key={v.id} value={v.id}>{v.short_name}</option>)}</select>
-        <label style={styles.label}>Kazanç ($)</label>
+        <label style={styles.label}>Gelir ($)</label>
         <input style={styles.moneyInput} type="text" inputMode="decimal" placeholder="0.00" value={amount} onChange={e => setAmount(e.target.value.replace(/[^0-9.,-]/g, '').replace(',', '.'))} />
         <label style={styles.label}>Kapanış Mili</label>
         <input style={styles.input} type="text" inputMode="decimal" placeholder="Aracın gösterge kilometresi (örn. 94150)" value={closingMileage} onChange={e => { const v = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.'); setClosingMileage(v); checkMileage(v); }} />

@@ -44,7 +44,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
     return [
       ...safeIncome.map(x => {
         const amount = Number(x.amount);
-        return { kind: 'income' as const, id: x.id ?? '', date: safeDate(x.record_date), amount: Number.isFinite(amount) ? amount : 0, title: `${names[x.vehicle_id!] ?? 'Araç'} kazancı`, sub: 'Kazanç', vehicleId: x.vehicle_id ?? null, category: 'income', raw: x };
+        return { kind: 'income' as const, id: x.id ?? '', date: safeDate(x.record_date), amount: Number.isFinite(amount) ? amount : 0, title: `${names[x.vehicle_id!] ?? 'Araç'} geliri`, sub: 'Gelir', vehicleId: x.vehicle_id ?? null, category: 'income', raw: x };
       }),
       ...safeExpenses.map(x => {
         const amount = Number(x.amount);
@@ -120,7 +120,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
     <main style={S.page}>
       <header>
         <span style={S.kicker}>HAREKETLER</span>
-        <h1 style={S.h1}>Kazanç & Giderler</h1>
+        <h1 style={S.h1}>Gelir & Giderler</h1>
         <p style={S.sub}>Yanlış girilen tutarı düzelt veya kaydı sil.</p>
       </header>
       {note && <div style={S.note}>{note}</div>}
@@ -129,7 +129,7 @@ export function TransactionsPage({ familyId }: { familyId: string }) {
         <input style={S.filterInput} placeholder="Ara…" value={search} onChange={e => setSearch(e.target.value)} />
         <select style={S.filterInput} value={kind} onChange={e => setKind(e.target.value as any)}>
           <option value="all">Tümü</option>
-          <option value="income">Kazanç</option>
+          <option value="income">Gelir</option>
           <option value="expense">Gider</option>
         </select>
         <select style={S.filterInput} value={vehicle} onChange={e => setVehicle(e.target.value)}>

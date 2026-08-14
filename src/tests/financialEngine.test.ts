@@ -55,7 +55,7 @@ describe('TEST A — Boş veri', () => {
   });
 
   it('Araç aylık sabit pay her zaman 2220, asla 148 değil', () => {
-    const kia: Vehicle = { id: 'kia', shortName: 'Kia Sportage' };
+    const kia: Vehicle = { id: 'kia', short_name: 'Kia Sportage' };
     const summary = computeVehicleSummary({
       vehicle: kia,
       period: 'month',
@@ -94,7 +94,7 @@ describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $20
   });
 
   it('Kia operational net = 850, estimated net = -1370', () => {
-    const kia: Vehicle = { id: 'kia', shortName: 'Kia Sportage' };
+    const kia: Vehicle = { id: 'kia', short_name: 'Kia Sportage' };
     const summary = computeVehicleSummary({
       vehicle: kia,
       period: 'month',
@@ -113,7 +113,7 @@ describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $20
   });
 
   it('Toyota operational net = 0, estimated net = -2220', () => {
-    const toyota: Vehicle = { id: 'toyota', shortName: 'Toyota Corolla' };
+    const toyota: Vehicle = { id: 'toyota', short_name: 'Toyota Corolla' };
     const summary = computeVehicleSummary({
       vehicle: toyota,
       period: 'month',
@@ -140,7 +140,7 @@ describe('TEST D — Market never vehicle-attributed', () => {
     const boundary = { start: '2026-08-01', end: '2026-08-31' };
 
     for (const vid of ['kia', 'toyota', 'honda']) {
-      const v: Vehicle = { id: vid, shortName: vid };
+      const v: Vehicle = { id: vid, short_name: vid };
       const summary = computeVehicleSummary({
         vehicle: v,
         period: 'month',
@@ -190,8 +190,8 @@ describe('Credit card spending does not double count', () => {
 
 describe('Vehicle income leaderboard — gelir bazlı şampiyon', () => {
   const vehicles = [
-    { id: 'kia', shortName: 'Kia Sportage' },
-    { id: 'toyota', shortName: 'Toyota Corolla' },
+    { id: 'kia', short_name: 'Kia Sportage' },
+    { id: 'toyota', short_name: 'Toyota Corolla' },
   ];
 
   it('vehicle_id=null gelir family total\'e girer ama şampiyonlara değil', () => {
@@ -286,9 +286,9 @@ describe('Vehicle weekly goal progress — aile hedefi + araç hedefleri', () =>
     { user_id: 'u3', weekly_goal: 1400 },
   ];
   const vehicles = [
-    { id: 'kia', shortName: 'Kia Sportage' },
-    { id: 'toyota', shortName: 'Toyota Corolla' },
-    { id: 'honda', shortName: 'Honda Accord' },
+    { id: 'kia', short_name: 'Kia Sportage' },
+    { id: 'toyota', short_name: 'Toyota Corolla' },
+    { id: 'honda', short_name: 'Honda Accord' },
   ];
 
   it('aracı geçmiş gelirde en çok kullanan üyenin hedefini araç hedefi yapar', () => {

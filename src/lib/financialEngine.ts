@@ -44,7 +44,7 @@ export interface FixedExpenseVersion {
 
 export interface Vehicle {
   id: string;
-  shortName: string;
+  short_name: string;
 }
 
 export type Period = 'today' | 'week' | 'month';
@@ -239,7 +239,7 @@ export function computeVehicleSummary(args: {
 
   return {
     vehicleId: vehicle.id,
-    shortName: vehicle.shortName,
+    shortName: vehicle.short_name,
     income: roundCurrency(vIncome),
     gas: roundCurrency(gas),
     vehicleExpense: roundCurrency(vehicleExpense),
@@ -311,7 +311,7 @@ export type VehicleIncomeLeaderboardResult =
  */
 export function computeVehicleIncomeLeaderboard(args: {
   income: IncomeRecord[];
-  vehicles: Array<{ id: string; short_name?: string; shortName?: string }>;
+  vehicles: Array<{ id: string; short_name: string }>;
   boundary: PeriodBoundary;
 }): VehicleIncomeLeaderboardResult {
   const { income, vehicles, boundary } = args;
@@ -323,15 +323,13 @@ export function computeVehicleIncomeLeaderboard(args: {
     vehicleMap.set(r.vehicleId, (vehicleMap.get(r.vehicleId) || 0) + r.amount);
   });
 
-  const vehicleNameMap = Object.fromEntries(
-    vehicles.map((v) => [v.id, v.short_name ?? (v as any).shortName ?? 'Araç'])
-  );
+  const vehicleNameMap = new Map(vehicles.map((v) => [v.id, v.short_name]));
 
   const ranking = [...vehicleMap.entries()]
-    .filter(([vehicleId]) => Boolean(vehicleNameMap[vehicleId]))
+    .filter(([vehicleId]) => vehicleNameMap.has(vehicleId))
     .map(([vehicleId, amount]) => ({
       vehicleId,
-      shortName: vehicleNameMap[vehicleId],
+      shortName: vehicleNameMap.get(vehicleId)!,
       amount: roundCurrency(amount),
     }))
     .sort((a, b) => b.amount - a.amount);
@@ -362,7 +360,7 @@ export interface VehicleGoalProgressEntry {
  */
 export function computeVehicleGoalProgress(args: {
   income: IncomeRecord[];
-  vehicles: Array<{ id: string; short_name?: string; shortName?: string }>;
+  vehicles: Array<{ id: string; short_name: string }>;
   goals: Array<{ user_id: string; weekly_goal: number }>;
   boundary: PeriodBoundary;
 }): VehicleGoalProgressEntry[] {
@@ -398,7 +396,7 @@ export function computeVehicleGoalProgress(args: {
     const percent = target > 0 ? Math.min(Math.round((amount / target) * 100), 100) : 0;
     return {
       vehicleId: vehicle.id,
-      shortName: vehicle.short_name ?? vehicle.shortName ?? 'Araç',
+      shortName: vehicle.short_name,
       amount,
       target: roundCurrency(target),
       remaining,

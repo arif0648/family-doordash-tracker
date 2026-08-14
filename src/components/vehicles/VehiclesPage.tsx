@@ -68,7 +68,7 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
   const vehicleSummaries = activeVehicles.map((vehicle) => {
     try {
       return computeVehicleSummary({
-        vehicle: { id: vehicle.id, shortName: vehicle.short_name },
+        vehicle: { id: vehicle.id, short_name: vehicle.short_name },
         period: 'month',
         boundary,
         income: incomeRecords,
@@ -113,7 +113,7 @@ export function VehiclesPage({ familyId }: { familyId: string }) {
             let summary;
             try {
               summary = computeVehicleSummary({
-                vehicle: { id: vehicle.id, shortName: vehicle.short_name },
+                vehicle: { id: vehicle.id, short_name: vehicle.short_name },
                 period: 'month',
                 boundary,
                 income: incomeRecords,
@@ -329,7 +329,7 @@ function VehicleDetailModal({
   onClose: () => void;
 }) {
   const combined = [
-    ...income.map((r) => ({ type: 'Kazanç', date: r.recordDate, amount: r.amount })),
+    ...income.map((r) => ({ type: 'Gelir', date: r.recordDate, amount: r.amount })),
     ...expenses.map((r) => ({ type: r.category, date: r.recordDate, amount: -r.amount })),
   ].sort((a, b) => (a.date < b.date ? 1 : -1));
 

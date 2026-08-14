@@ -80,7 +80,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
         <Route
           path="/kazanc"
           element={
-            <ErrorBoundary boundaryName="Kazanç">
+            <ErrorBoundary boundaryName="Gelir">
               <IncomeFormWrapper familyId={familyId} />
             </ErrorBoundary>
           }
@@ -88,7 +88,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
         <Route
           path="/kazanc/duzenle"
           element={
-            <ErrorBoundary boundaryName="Kazanç Düzenle">
+            <ErrorBoundary boundaryName="Gelir Düzenle">
               <IncomeEditWrapper familyId={familyId} />
             </ErrorBoundary>
           }
