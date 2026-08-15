@@ -60,6 +60,33 @@ describe('Integration Tests - Family Operations Center', () => {
       expect(sql).toContain('greatest(0, v_current_balance - p_amount)');
       expect(sql).not.toContain('current_balance - p_amount,\n    statement_balance');
     });
+
+    it('card purchase creates one expense and increases only selected liability atomically', () => {
+      const sql = readFileSync('supabase/migrations/0033_cross_device_realtime_and_card_purchases.sql', 'utf8');
+      expect(sql).toContain('create or replace function public.create_expense_with_payment');
+      expect(sql).toContain('for update');
+      expect(sql).toContain('insert into public.expenses');
+      expect(sql).toContain('current_balance = current_balance + p_amount');
+      expect(sql).toContain("p_payment_method = 'credit_card'");
+    });
+
+    it('card payment reduces liability without inserting a second expense', () => {
+      const paymentSql = readFileSync('supabase/migrations/0031_fix_credit_card_payment_trigger.sql', 'utf8');
+      expect(paymentSql).toContain('greatest(0, v_current_balance - p_amount)');
+      expect(paymentSql).toContain('insert into public.credit_card_payments');
+      expect(paymentSql).not.toContain('insert into public.expenses');
+    });
+  });
+
+  describe('Cross-device family source of truth', () => {
+    it('resolves the largest shared family deterministically and publishes full delete rows', () => {
+      const sql = readFileSync('supabase/migrations/0033_cross_device_realtime_and_card_purchases.sql', 'utf8');
+      expect(sql).toContain('create or replace function public.resolve_current_family_id');
+      expect(sql).toContain('count(*) from public.family_members peers');
+      expect(sql).toContain('fm.joined_at asc');
+      expect(sql).toContain('replica identity full');
+      expect(sql).toContain("'monthly_financial_summaries'");
+    });
   });
 
   describe('Vehicle Archiving', () => {

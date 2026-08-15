@@ -9,7 +9,7 @@ interface FamilyIdState {
 
 /**
  * useFamilyId — mevcut authenticated kullanıcının hangi family_id'ye üye
- * olduğunu family_members tablosundan çözer (Bölüm 4.1). Bu, "kim kimin
+ * olduğunu veritabanının deterministic family resolver'ından çözer. Bu, "kim kimin
  * ailesini görebilir" sorusunun tek kaynağıdır — RLS zaten bunu zorunlu
  * kılar, bu hook sadece UI'ın doğru family_id ile sorgu yapmasını sağlar.
  */
@@ -23,16 +23,12 @@ export function useFamilyId(userId: string | undefined): FamilyIdState {
     }
 
     let mounted = true;
-    setState((s) => ({ ...s, loading: true, error: null }));
+    // Never keep the previous authenticated user's family in React state.
+    setState({ familyId: null, loading: true, error: null });
 
     void (async () => {
       try {
-        const { data, error } = await supabase
-          .from('family_members')
-          .select('family_id')
-          .eq('user_id', userId)
-          .limit(1)
-          .maybeSingle();
+        const { data, error } = await supabase.rpc('resolve_current_family_id');
 
         if (!mounted) return;
         if (error) {
@@ -47,7 +43,7 @@ export function useFamilyId(userId: string | undefined): FamilyIdState {
           });
           return;
         }
-        setState({ familyId: data.family_id, loading: false, error: null });
+        setState({ familyId: data as string, loading: false, error: null });
       } catch (err: unknown) {
         if (!mounted) return;
         const message = err instanceof Error ? err.message : 'Bilinmeyen bir hata oluştu.';

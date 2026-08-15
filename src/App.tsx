@@ -218,8 +218,8 @@ function FixedExpensesWrapper({ familyId }: { familyId: string }) {
 }
 
 function ExpenseFormWrapper({ familyId }: { familyId: string }) {
-  const { vehicles, loading, error, retry } = useFamilyRealtimeData(familyId);
+  const { vehicles, creditCards, loading, error, retry } = useFamilyRealtimeData(familyId);
   if (loading) return <LoadingScreen label="Formlar hazırlanıyor…" />;
   if (error) return <ErrorScreen message={error} onRetry={retry} />;
-  return <ExpenseForm familyId={familyId} vehicles={vehicles} onSaved={retry} />;
+  return <ExpenseForm familyId={familyId} vehicles={vehicles} creditCards={creditCards} onSaved={retry} />;
 }

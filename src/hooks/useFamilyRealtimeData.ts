@@ -7,6 +7,7 @@ import {
   FixedExpenseRow,
   Vehicle,
   CreditCardRow,
+  CreditCardPaymentRow,
   AppointmentRow,
   NotificationRow,
   MonthlyFinancialSummaryRow,
@@ -15,6 +16,7 @@ import {
   WeeklyGoalRow,
   RealtimeStatus,
 } from '../types/database';
+import { createDebouncedRefetch } from '../lib/realtimeSync';
 
 // Central vehicle normalization: short_name -> shortName
 function normalizeVehicle(dbVehicle: Vehicle): Vehicle {
@@ -31,6 +33,7 @@ interface FamilyData {
   mileageLog: MileageLogRow[];
   fixedExpenses: FixedExpenseRow[];
   creditCards: CreditCardRow[];
+  creditCardPayments: CreditCardPaymentRow[];
   appointments: AppointmentRow[];
   notifications: NotificationRow[];
   monthlySummaries: MonthlyFinancialSummaryRow[];
@@ -54,6 +57,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     mileageLog: [],
     fixedExpenses: [],
     creditCards: [],
+    creditCardPayments: [],
     appointments: [],
     notifications: [],
     monthlySummaries: [],
@@ -65,19 +69,22 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
     realtimeStatus: 'connecting',
   });
   const mounted = useRef(true);
+  const latestRequest = useRef(0);
   const [retryCount, setRetryCount] = useState(0);
 
   const fetchAll = useCallback(async (background = false) => {
     if (!familyId) return;
+    const requestId = ++latestRequest.current;
     if (!background) setState((s) => ({ ...s, loading: true, error: null }));
     try {
-      const [v, i, e, m, f, c, a, n, ms, ws, goalRows] = await Promise.all([
+      const [v, i, e, m, f, c, cp, a, n, ms, ws, goalRows] = await Promise.all([
         supabase.from('vehicles').select('*').eq('family_id', familyId),
         supabase.from('income').select('*').eq('family_id', familyId),
         supabase.from('expenses').select('*').eq('family_id', familyId),
         supabase.from('mileage_log').select('*').eq('family_id', familyId),
         supabase.from('fixed_expenses').select('*').eq('family_id', familyId).order('effective_from', { ascending: false }),
         supabase.from('credit_cards').select('*').eq('family_id', familyId),
+        supabase.from('credit_card_payments').select('*').eq('family_id', familyId).order('payment_date', { ascending: false }),
         supabase.from('appointments').select('*').eq('family_id', familyId).order('start_at', { ascending: true }),
         supabase.from('notifications').select('*').eq('family_id', familyId).order('created_at', { ascending: false }).limit(50),
         supabase.from('monthly_financial_summaries').select('*').eq('family_id', familyId).order('year', { ascending: false }).order('month', { ascending: false }).limit(12),
@@ -87,7 +94,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
       // Finance data is the critical core. Optional dashboard modules must not
       // blank Home, Reports and Transactions when one newer table is missing,
       // temporarily unavailable or has a narrower RLS policy.
-      const coreError = v.error || i.error || e.error || m.error || f.error || c.error;
+      const coreError = v.error || i.error || e.error || m.error || f.error || c.error || cp.error;
       if (coreError) throw coreError;
       if (import.meta.env.DEV) {
         const optionalErrors = [a.error, n.error, ms.error, ws.error, goalRows.error].filter(Boolean);
@@ -100,7 +107,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         ? await supabase.from('profiles').select('*').in('user_id', userIds)
         : { data: [] as Profile[], error: null };
       if (p.error && import.meta.env.DEV) console.warn('[family data] profiles unavailable', p.error);
-      if (!mounted.current) return;
+      if (!mounted.current || requestId !== latestRequest.current) return;
       const normalizedVehicles = (v.data ?? []).map(normalizeVehicle);
       setState((previous) => ({
         vehicles: normalizedVehicles,
@@ -109,6 +116,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         mileageLog: m.data ?? [],
         fixedExpenses: f.data ?? [],
         creditCards: c.data ?? [],
+        creditCardPayments: cp.data ?? [],
         appointments: a.error ? previous.appointments : (a.data ?? []),
         notifications: n.error ? previous.notifications : (n.data ?? []),
         monthlySummaries: ms.error ? previous.monthlySummaries : (ms.data ?? []),
@@ -120,7 +128,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         realtimeStatus: previous.realtimeStatus,
       }));
     } catch (err) {
-      if (!mounted.current) return;
+      if (!mounted.current || requestId !== latestRequest.current) return;
       const message =
         err instanceof Error ? err.message :
         typeof err === 'string' ? err :
@@ -138,13 +146,33 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
   }, []);
 
   useEffect(() => {
-    if (!familyId) return;
+    if (!familyId) {
+      latestRequest.current += 1;
+      setState({
+        vehicles: [], income: [], expenses: [], mileageLog: [], fixedExpenses: [],
+        creditCards: [], creditCardPayments: [], appointments: [], notifications: [],
+        monthlySummaries: [], workSessions: [], profiles: [], goals: [],
+        loading: false, error: null, realtimeStatus: 'connecting',
+      });
+      return;
+    }
+    // Invalidate requests and remove any previous user's/family's cached rows.
+    latestRequest.current += 1;
+    setState((previous) => ({
+      vehicles: [], income: [], expenses: [], mileageLog: [], fixedExpenses: [],
+      creditCards: [], creditCardPayments: [], appointments: [], notifications: [],
+      monthlySummaries: [], workSessions: [], profiles: [], goals: [],
+      loading: true, error: null, realtimeStatus: previous.realtimeStatus,
+    }));
     void fetchAll();
 
-    const onRemote = () => { void fetchAll(true); };
+    const refetch = createDebouncedRefetch(() => { void fetchAll(true); });
+    const onRemote = () => { refetch.schedule(); };
+
+    const channelName = `family-${familyId}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
     const channel = supabase
-      .channel(`family-${familyId}`)
+      .channel(channelName)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'income', filter: `family_id=eq.${familyId}` }, onRemote)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses', filter: `family_id=eq.${familyId}` }, onRemote)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'mileage_log', filter: `family_id=eq.${familyId}` }, onRemote)
@@ -160,13 +188,25 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
       .subscribe((status) => {
         if (import.meta.env.DEV) console.debug(`[realtime] ${status}`);
         setState((s) => ({ ...s, realtimeStatus: status === 'SUBSCRIBED' ? 'live' : status === 'TIMED_OUT' || status === 'CHANNEL_ERROR' || status === 'CLOSED' ? 'offline' : 'connecting' }));
-        if (shouldRefetchForRealtimeStatus(status)) void fetchAll(true);
+        if (shouldRefetchForRealtimeStatus(status)) refetch.schedule(true);
       });
 
-    const onVisibility = () => { if (document.visibilityState === 'visible') void fetchAll(true); };
+    const onVisibility = () => { if (document.visibilityState === 'visible') refetch.schedule(true); };
+    const onResume = () => { refetch.schedule(true); };
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('focus', onResume);
+    window.addEventListener('pageshow', onResume);
+    window.addEventListener('online', onResume);
 
-    return () => { document.removeEventListener('visibilitychange', onVisibility); void supabase.removeChannel(channel); };
+    return () => {
+      latestRequest.current += 1;
+      refetch.cancel();
+      document.removeEventListener('visibilitychange', onVisibility);
+      window.removeEventListener('focus', onResume);
+      window.removeEventListener('pageshow', onResume);
+      window.removeEventListener('online', onResume);
+      void supabase.removeChannel(channel);
+    };
   }, [familyId, fetchAll, retryCount]);
 
   return { ...state, retry: () => setRetryCount((c) => c + 1) };

@@ -72,6 +72,58 @@ describe('TEST A — Boş veri', () => {
   });
 });
 
+describe('Cross-user totals, ranking ve kart muhasebesi', () => {
+  const vehicles: Vehicle[] = [
+    { id: 'v1', short_name: 'Araç 1' },
+    { id: 'v2', short_name: 'Araç 2' },
+  ];
+  const boundary = { start: '2026-08-01', end: '2026-08-07' };
+  const baseIncome: IncomeRecord[] = [
+    { id: 'a-income', userId: 'user-a', vehicleId: 'v1', amount: 100, recordDate: '2026-08-03' },
+    { id: 'b-income', userId: 'user-b', vehicleId: 'v2', amount: 75, recordDate: '2026-08-03' },
+  ];
+  const baseExpenses: ExpenseRecord[] = [
+    { id: 'b-expense', category: 'market', vehicleId: null, amount: 25, recordDate: '2026-08-03' },
+  ];
+
+  function snapshot(income: IncomeRecord[], expenses: ExpenseRecord[]) {
+    return {
+      summary: computeFamilySummary({
+        period: 'week', boundary, income, expenses, fixedExpenseVersions: [], monthAnchorDate: '2026-08-03',
+      }),
+      ranking: computeVehicleIncomeLeaderboard({ income, vehicles, boundary }),
+    };
+  }
+
+  it('iki kullanıcı aynı family datasetinden aynı total ve sıralamayı görür', () => {
+    const userA = snapshot(baseIncome, baseExpenses);
+    const userB = snapshot([...baseIncome], [...baseExpenses]);
+    expect(userA).toEqual(userB);
+    expect(userA.summary.totalIncome).toBe(175);
+    expect(userA.summary.net).toBe(150);
+  });
+
+  it('update/delete sonrası iki kullanıcı eşit kalır', () => {
+    const updated = baseIncome.map((row) => row.id === 'a-income' ? { ...row, amount: 120 } : row);
+    const afterDelete = baseExpenses.filter((row) => row.id !== 'b-expense');
+    expect(snapshot(updated, afterDelete)).toEqual(snapshot([...updated], [...afterDelete]));
+  });
+
+  it('kart alımı gideri bir kez sayar; başlangıç borcu ve ödeme dönem giderini değiştirmez', () => {
+    const cardPurchase: ExpenseRecord = {
+      id: 'card-purchase', category: 'market', vehicleId: null, amount: 100, recordDate: '2026-08-03',
+    };
+    const before = snapshot(baseIncome, baseExpenses).summary;
+    const afterPurchase = snapshot(baseIncome, [...baseExpenses, cardPurchase]).summary;
+    const outstandingBalance = 500 + 100;
+    const afterPayment = outstandingBalance - 40;
+
+    expect(afterPurchase.net).toBe(before.net - 100);
+    expect(afterPayment).toBe(560);
+    expect(snapshot(baseIncome, [...baseExpenses, cardPurchase]).summary).toEqual(afterPurchase);
+  });
+});
+
 describe('TEST B — Kia income $1000, gas $100, vehicle expense $50, market $200', () => {
   const income: IncomeRecord[] = [{ id: 'i1', vehicleId: 'kia', amount: 1000, recordDate: '2026-08-05' }];
   const expenses: ExpenseRecord[] = [

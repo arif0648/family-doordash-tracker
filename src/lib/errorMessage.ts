@@ -10,6 +10,10 @@ export function translateError(message: string | null | undefined): string {
     INVALID_AMOUNT: 'Geçerli bir tutar girin.',
     INVALID_MILEAGE: 'Geçerli bir kapanış mili girin.',
     VEHICLE_NOT_FOUND: 'Seçilen araç bulunamadı veya aktif değil.',
+    VEHICLE_FAMILY_MISMATCH: 'Seçilen araç bu aileye ait değil.',
+    CREDIT_CARD_REQUIRED: 'Kredi kartı seçimi zorunludur.',
+    CREDIT_CARD_NOT_FOUND: 'Seçilen kredi kartı bulunamadı veya aktif değil.',
+    INVALID_PAYMENT_METHOD: 'Geçerli bir ödeme yöntemi seçin.',
   };
 
   for (const [code, text] of Object.entries(known)) {

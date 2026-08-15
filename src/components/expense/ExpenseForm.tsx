@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { supabase } from '../../lib/supabaseClient';
-import { Vehicle, ExpenseCategory } from '../../types/database';
+import { Vehicle, ExpenseCategory, CreditCardRow } from '../../types/database';
 import { playExpenseSound } from '../../lib/sound';
 import { translateError } from '../../lib/errorMessage';
 import { toPacificDateString } from '../../lib/timezone';
@@ -9,6 +9,7 @@ import { MAX_AMOUNT } from '../../lib/format';
 interface Props {
   familyId: string;
   vehicles: Vehicle[];
+  creditCards: CreditCardRow[];
   onSaved?: () => void;
 }
 
@@ -19,11 +20,13 @@ const CATEGORY_LABELS: Record<'benzin' | 'arac_gideri' | 'market' | 'diger', str
   diger: 'Diğer',
 };
 
-export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
+export function ExpenseForm({ familyId, vehicles, creditCards, onSaved }: Props) {
   const [categoryTab, setCategoryTab] = useState<'benzin' | 'arac_gideri' | 'market' | 'diger'>('benzin');
   const [vehicleId, setVehicleId] = useState(vehicles[0]?.id ?? '');
   const [amount, setAmount] = useState('');
   const [recordDate, setRecordDate] = useState(() => toPacificDateString(new Date()));
+  const [paymentMethod, setPaymentMethod] = useState<'cash_bank' | 'credit_card'>('cash_bank');
+  const [creditCardId, setCreditCardId] = useState(creditCards[0]?.id ?? '');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -38,22 +41,24 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
     setSuccess(null);
 
     const amountNum = parseFloat(amount.replace(',', '.'));
-    if (isNaN(amountNum) || amountNum < 0) return setError('Tutar negatif olamaz. Geçerli bir tutar girin (örn. 12.50).');
+    if (isNaN(amountNum) || amountNum <= 0) return setError('Sıfırdan büyük geçerli bir tutar girin (örn. 12.50).');
     if (amountNum > MAX_AMOUNT) return setError(`Tutar ${MAX_AMOUNT.toLocaleString('en-US')} $ üzerinde olamaz.`);
     if (requiresVehicle && !vehicleId) return setError('Araç seçimi zorunludur.');
+    if (paymentMethod === 'credit_card' && !creditCardId) return setError('Kredi kartı seçimi zorunludur.');
     
 
     const currentUser = (await supabase.auth.getUser()).data.user;
     if (!currentUser) return setError('Oturum bulunamadı.');
     setSaving(true);
-    const { error: insertError } = await supabase.from('expenses').insert({
-      family_id: familyId,
-      user_id: currentUser.id,
-      category: resolvedCategory,
-      vehicle_id: requiresVehicle ? vehicleId : null,
-      amount: amountNum,
-      record_date: recordDate,
-      note: null,
+    const { error: insertError } = await supabase.rpc('create_expense_with_payment', {
+      p_family_id: familyId,
+      p_category: resolvedCategory,
+      p_vehicle_id: requiresVehicle ? vehicleId : null,
+      p_amount: amountNum,
+      p_record_date: recordDate,
+      p_note: null,
+      p_payment_method: paymentMethod,
+      p_credit_card_id: paymentMethod === 'credit_card' ? creditCardId : null,
     });
     setSaving(false);
 
@@ -120,6 +125,37 @@ export function ExpenseForm({ familyId, vehicles, onSaved }: Props) {
         value={recordDate}
         onChange={(e) => setRecordDate(e.target.value)}
       />
+
+      <label style={styles.label}>Ödeme Yöntemi</label>
+      <select
+        style={styles.input}
+        value={paymentMethod}
+        onChange={(e) => {
+          const next = e.target.value as 'cash_bank' | 'credit_card';
+          setPaymentMethod(next);
+          setError(null);
+          setSuccess(null);
+        }}
+      >
+        <option value="cash_bank">Nakit / Banka</option>
+        <option value="credit_card">Kredi Kartı</option>
+      </select>
+
+      {paymentMethod === 'credit_card' && (
+        <>
+          <label style={styles.label}>Kredi Kartı</label>
+          <select
+            style={styles.input}
+            value={creditCardId}
+            onChange={(e) => { setCreditCardId(e.target.value); setError(null); setSuccess(null); }}
+          >
+            <option value="">Kart seçin</option>
+            {creditCards.filter((card) => card.is_active).map((card) => (
+              <option key={card.id} value={card.id}>{card.card_name}</option>
+            ))}
+          </select>
+        </>
+      )}
 
       {error && <p style={styles.error}>{error}</p>}
       {success && <p style={styles.success}>{success}</p>}

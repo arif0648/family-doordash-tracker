@@ -14,6 +14,7 @@ import { calculateHourlyRate } from '../lib/hourlyRate';
 import { calculateQuarterGoldTry, parseUsdTry } from '../lib/marketRates';
 import { unlockAudio, setSoundEnabled } from '../lib/sound';
 import { shouldRefetchForRealtimeStatus } from '../hooks/useFamilyRealtimeData';
+import { createDebouncedRefetch } from '../lib/realtimeSync';
 
 function Bomb(): React.ReactElement {
   throw new Error('Kasıtlı test hatası');
@@ -99,6 +100,23 @@ describe('Realtime refresh policy', () => {
   it('subscribe/reconnect sonrası refetch ister', () => {
     expect(shouldRefetchForRealtimeStatus('SUBSCRIBED')).toBe(true);
     expect(shouldRefetchForRealtimeStatus('CHANNEL_ERROR')).toBe(false);
+  });
+
+  it('event burstünü tek merkezi refetch çağrısında birleştirir', () => {
+    vi.useFakeTimers();
+    const refetch = vi.fn();
+    const scheduler = createDebouncedRefetch(refetch, 120);
+
+    scheduler.schedule();
+    scheduler.schedule();
+    scheduler.schedule();
+    vi.advanceTimersByTime(119);
+    expect(refetch).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1);
+    expect(refetch).toHaveBeenCalledTimes(1);
+
+    scheduler.cancel();
+    vi.useRealTimers();
   });
 });
 
