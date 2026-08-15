@@ -14,6 +14,7 @@ import { ForgotPasswordPage, ResetPasswordPage } from './components/auth/Passwor
 import { HomePage } from './components/home/HomePage';
 import { IncomeRow } from './types/database';
 import { initializeAudioManager } from './lib/sound';
+import { supabase } from './lib/supabaseClient';
 import {
   loadAppointments,
   loadCreditCards,
@@ -76,7 +77,7 @@ export default function App() {
 }
 
 function AuthenticatedApp({ userId, email }: { userId: string; email: string }) {
-  const { familyId, loading: familyLoading, error: familyError } = useFamilyId(userId);
+  const { familyId, loading: familyLoading, error: familyError, membershipStatus } = useFamilyId(userId);
 
   useEffect(() => {
     if (!familyId) return;
@@ -94,6 +95,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
   }, [familyId]);
 
   if (familyLoading) return <LoadingScreen label="Aile bilgisi yükleniyor…" />;
+  if (!familyId && membershipStatus) return <MembershipWaitingScreen status={membershipStatus} />;
   if (familyError || !familyId) {
     return <ErrorScreen message={familyError ?? 'Aile bilgisi bulunamadı.'} />;
   }
@@ -106,7 +108,7 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
           path="/"
           element={
             <ErrorBoundary boundaryName="Ana Sayfa">
-              <HomePage familyId={familyId} />
+              <HomePage familyId={familyId} userId={userId} />
             </ErrorBoundary>
           }
         />
@@ -197,6 +199,19 @@ function AuthenticatedApp({ userId, email }: { userId: string; email: string }) 
       <BottomNav />
     </div>
   );
+}
+
+function MembershipWaitingScreen({ status }: { status: 'approved' | 'pending' | 'rejected' | 'none' }) {
+  const message = status === 'rejected'
+    ? 'Üyelik isteğiniz reddedildi. Aile yöneticisiyle iletişime geçebilirsiniz.'
+    : 'BARBIN AİLESİ üyelik isteğiniz yönetici onayı bekliyor.';
+  return <div className="auth-page" style={{ minHeight: '100vh', display: 'grid', placeItems: 'center', padding: 20 }}>
+    <div className="auth-card" style={{ maxWidth: 380, padding: 24, textAlign: 'center' }}>
+      <h1 style={{ fontSize: 20, marginBottom: 10 }}>Üyelik Durumu</h1>
+      <p style={{ color: 'var(--text-secondary)', lineHeight: 1.55 }}>{message}</p>
+      <button type="button" onClick={() => void supabase.auth.signOut()} style={{ marginTop: 14, width: '100%' }}>Çıkış Yap</button>
+    </div>
+  </div>;
 }
 
 // IncomeForm / ExpenseForm need vehicle + mileage + settings data, which

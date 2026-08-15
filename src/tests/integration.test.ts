@@ -119,6 +119,36 @@ describe('Integration Tests - Family Operations Center', () => {
     });
   });
 
+  describe('Canonical family approval regression', () => {
+    it('provisions signups as pending and gates all existing RLS through approval', () => {
+      const sql = readFileSync('supabase/migrations/0037_canonical_family_membership_approval.sql', 'utf8');
+      expect(sql).toContain("'00000000-0000-0000-0000-000000000001'");
+      expect(sql).toContain("'BARBIN AİLESİ'");
+      expect(sql).toContain("values ('00000000-0000-0000-0000-000000000001', new.id, 'member', 'pending')");
+      expect(sql).toContain("fm.approval_status = 'approved'");
+      expect(sql).toContain('function public.review_membership_request');
+      expect(sql).toContain("v_status text := case when p_approve then 'approved' else 'rejected' end");
+      expect(sql).not.toContain('v_family_name := v_display_name');
+    });
+
+    it('keeps work sessions personal while allowing family aggregate reads', () => {
+      const sql = readFileSync('supabase/migrations/0037_canonical_family_membership_approval.sql', 'utf8');
+      const home = readFileSync('src/components/home/HomePage.tsx', 'utf8');
+      expect(sql).toContain('idx_work_sessions_one_open_per_user');
+      expect(sql).toContain('user_id = auth.uid() and public.is_family_member');
+      expect(home).toContain('workSessions.filter((session) => session.user_id === userId)');
+    });
+
+    it('has no seven-row fixed expense limit and renames without versioning the amount', () => {
+      const sql = readFileSync('supabase/migrations/0037_canonical_family_membership_approval.sql', 'utf8');
+      const panel = readFileSync('src/components/expense/FixedExpensesPanel.tsx', 'utf8');
+      expect(panel).not.toMatch(/limit\(7\)|slice\(0,\s*7\)/);
+      expect(sql).toContain('function public.rename_fixed_expense');
+      expect(sql).toContain('set label = v_label');
+      expect(sql).not.toContain('set monthly_amount = v_label');
+    });
+  });
+
   describe('Vehicle Archiving', () => {
     it('should archive vehicle while preserving historical data', async () => {
       // This test verifies the archive_vehicle RPC

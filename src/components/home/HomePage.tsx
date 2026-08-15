@@ -16,9 +16,10 @@ const summaryLabels: Record<Period, string> = { today: 'BUGÜNÜN ÖZETİ', week
 
 interface HomePageProps {
   familyId: string;
+  userId: string;
 }
 
-export function HomePage({ familyId }: HomePageProps) {
+export function HomePage({ familyId, userId }: HomePageProps) {
   const { income, expenses, fixedExpenses, vehicles, creditCards, appointments, workSessions, goals, loading, error, retry, realtimeStatus } = useFamilyRealtimeData(familyId);
   const [params, setParams] = useSearchParams();
   const raw = params.get('period');
@@ -150,7 +151,7 @@ export function HomePage({ familyId }: HomePageProps) {
 
       <VehicleChampions income={inc} vehicles={vehicles} now={now} />
 
-      <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions} onSessionsChanged={retry} />
+      <WorkTimeCard familyId={familyId} todayIncome={todaySummary.totalIncome} weekIncome={weekSummary.totalIncome} workSessions={workSessions.filter((session) => session.user_id === userId)} onSessionsChanged={retry} />
 
       <Upcoming7Days creditCards={creditCards} fixedExpenses={fixedExpenses} appointments={appointments} />
     </main>

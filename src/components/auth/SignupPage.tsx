@@ -52,11 +52,11 @@ export function SignupPage() {
             <div style={styles.check}>✓</div>
             <h2 style={{ color: 'white', fontSize: 20, margin: '0 0 8px' }}>Hesap oluşturuldu</h2>
             <p style={{ color: '#A7ABC0', fontSize: 13, lineHeight: 1.5 }}>
-              Devam etmek için e-postanızı doğrulamanız gerekebilir. Ardından giriş yapabilirsiniz.
+              E-postanızı doğruladıktan sonra giriş yapabilirsiniz. Aile verileri yönetici onayından sonra açılır.
             </p>
             <Link className="auth-primary" to="/giris" style={styles.primaryButton}>Giriş ekranına dön</Link>
             <p style={{ color: '#7F8499', fontSize: 11, marginTop: 16 }}>
-              Not: Aile üyeliğinizin eklenmesi için bir aile yöneticisinin sizi aileye eklemesi gerekir.
+              Üyelik isteğiniz BARBIN AİLESİ yöneticisine gönderildi.
             </p>
           </div>
         </div>

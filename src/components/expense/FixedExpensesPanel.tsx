@@ -12,6 +12,7 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
   const [saving,setSaving]=useState(false);
   const [error,setError]=useState<string|null>(null);
   const [edits,setEdits]=useState<Record<string,string>>({});
+  const [labelEdits,setLabelEdits]=useState<Record<string,string>>({});
   const active = expenses.filter(e=>!e.effective_to);
   const total = active.reduce((s,e)=>s+Number(e.monthly_amount||0),0);
 
@@ -50,6 +51,17 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
     if(e.key==='Enter'){ (e.currentTarget as HTMLInputElement).blur(); }
   }
 
+  async function saveLabel(row: FixedExpenseRow) {
+    const next = (labelEdits[row.id] ?? row.label).trim();
+    if (!next) { setError('Sabit gider adı boş olamaz.'); return; }
+    if (next === row.label) { setLabelEdits((prev) => { const copy = { ...prev }; delete copy[row.id]; return copy; }); return; }
+    const { error: renameError } = await supabase.rpc('rename_fixed_expense', { p_expense_id: row.id, p_label: next });
+    if (renameError) { setError(translateError(renameError.message)); return; }
+    setError(null);
+    setLabelEdits((prev) => { const copy = { ...prev }; delete copy[row.id]; return copy; });
+    onChanged();
+  }
+
   async function remove(row:FixedExpenseRow){
     if(!confirm(`${row.label} sabit giderini silmek istiyor musun?`))return;
     const {error}=await supabase.from('fixed_expenses').delete().eq('id',row.id).eq('family_id',familyId);
@@ -63,9 +75,10 @@ export function FixedExpensesPanel({ familyId, expenses, onChanged }: { familyId
       {error&&<div style={styles.error}>{error}</div>}
       <div style={styles.list}>{active.map(row=>{
       const val = edits[row.id] ?? row.monthly_amount.toString();
-      return <div key={row.id} style={styles.item}><div style={{minWidth:0}}><strong style={styles.name}>{row.label}</strong><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input aria-label={`${row.label} tutarı`} type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={keySave} style={styles.edit}/><Button type="button" tone="danger" onClick={()=>void remove(row)} style={styles.delete}>Sil</Button></div></div>
+      const labelValue = labelEdits[row.id] ?? row.label;
+      return <div key={row.id} style={styles.item}><div style={{minWidth:0,flex:1}}><input aria-label={`${row.label} adı`} value={labelValue} onChange={(e)=>setLabelEdits((prev)=>({...prev,[row.id]:e.target.value}))} onBlur={()=>void saveLabel(row)} onKeyDown={keySave} style={styles.nameEdit}/><span style={styles.meta}>Aylık düzenli ödeme</span></div><div style={styles.actions}><span>$</span><input aria-label={`${row.label} tutarı`} type="number" step="0.01" value={val} onChange={e=>startEdit(row,e.target.value)} onBlur={()=>blurSave(row)} onKeyDown={keySave} style={styles.edit}/><Button type="button" tone="danger" onClick={()=>void remove(row)} style={styles.delete}>Sil</Button></div></div>
       })}</div>
     </Surface>
   </PageShell>
 }
-const styles:Record<string,React.CSSProperties>={total:{padding:'7px 9px',borderRadius:11,border:'1px solid rgba(60,200,237,.15)',background:'rgba(60,200,237,.06)',color:'#bdeafa',fontSize:15},addRow:{display:'grid',gridTemplateColumns:'1.45fr .7fr 46px',gap:7,marginBottom:10},list:{display:'flex',flexDirection:'column'},item:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'11px 0',borderTop:'1px solid var(--border)'},name:{display:'block',fontSize:13,color:'var(--text)',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'},meta:{display:'block',fontSize:10,color:'var(--muted)'},actions:{display:'flex',alignItems:'center',gap:5,color:'var(--text-secondary)'},edit:{width:82,minHeight:38,padding:'7px',color:'var(--positive)',textAlign:'right',fontWeight:750},delete:{minHeight:38,padding:'7px 9px',fontSize:11},error:{color:'var(--negative)',fontSize:12,marginBottom:8}}
+const styles:Record<string,React.CSSProperties>={total:{padding:'7px 9px',borderRadius:11,border:'1px solid rgba(60,200,237,.15)',background:'rgba(60,200,237,.06)',color:'#bdeafa',fontSize:15},addRow:{display:'grid',gridTemplateColumns:'1.45fr .7fr 46px',gap:7,marginBottom:10},list:{display:'flex',flexDirection:'column'},item:{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'11px 0',borderTop:'1px solid var(--border)'},nameEdit:{width:'100%',minHeight:34,padding:'5px 7px',fontSize:13,color:'var(--text)',fontWeight:700},meta:{display:'block',fontSize:10,color:'var(--muted)',marginTop:2},actions:{display:'flex',alignItems:'center',gap:5,color:'var(--text-secondary)'},edit:{width:82,minHeight:38,padding:'7px',color:'var(--positive)',textAlign:'right',fontWeight:750},delete:{minHeight:38,padding:'7px 9px',fontSize:11},error:{color:'var(--negative)',fontSize:12,marginBottom:8}}

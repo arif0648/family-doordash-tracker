@@ -4,6 +4,8 @@ import { setSoundEnabled, setSpeechEnabled } from '../../lib/sound';
 import { LoadingScreen, ErrorScreen } from '../common/StateScreens';
 import { UserSettingsRow, Vehicle } from '../../types/database';
 
+interface MembershipRequest { user_id: string; display_name: string; email: string; approval_status: 'pending' | 'rejected'; requested_at: string }
+
 export function ProfilePage({ userId, email, familyId }: { userId: string; email: string; familyId: string }) {
   const [settings, setSettings] = useState<UserSettingsRow | null>(null);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -11,6 +13,8 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
   const [savingGoal, setSavingGoal] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [requests, setRequests] = useState<MembershipRequest[] | null>(null);
+  const [reviewing, setReviewing] = useState<string | null>(null);
 
   // Password change state
   const [newPassword, setNewPassword] = useState('');
@@ -23,10 +27,11 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     setError(null);
-    const [settingsRes, vehiclesRes, goalRes] = await Promise.all([
+    const [settingsRes, vehiclesRes, goalRes, requestsRes] = await Promise.all([
       supabase.from('user_settings').select('*').eq('user_id', userId).maybeSingle(),
       supabase.from('vehicles').select('*').eq('family_id', familyId).eq('is_active', true).order('created_at'),
       supabase.from('family_member_goals').select('vehicle_id,weekly_goal').eq('family_id', familyId).not('vehicle_id', 'is', null),
+      supabase.rpc('list_membership_requests'),
     ]);
 
     if (settingsRes.error) {
@@ -39,6 +44,7 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
     setVehicles((vehiclesRes.data ?? []) as Vehicle[]);
     const goalMap = Object.fromEntries((goalRes.data ?? []).map((g) => [g.vehicle_id, String(g.weekly_goal)]));
     setVehicleGoals(Object.fromEntries((vehiclesRes.data ?? []).map((v) => [v.id, goalMap[v.id] ?? '1400'])));
+    setRequests(requestsRes.error ? null : (requestsRes.data as MembershipRequest[] ?? []));
 
     if (!settingsRes.data) {
       const { data: created, error: createError } = await supabase
@@ -148,6 +154,14 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
     }
   }
 
+  async function reviewRequest(requestUserId: string, approve: boolean) {
+    setReviewing(requestUserId);
+    const { error: reviewError } = await supabase.rpc('review_membership_request', { p_user_id: requestUserId, p_approve: approve });
+    setReviewing(null);
+    if (reviewError) { setError(reviewError.message); return; }
+    await fetchSettings();
+  }
+
   async function handleLogout() {
     await supabase.auth.signOut();
   }
@@ -163,6 +177,20 @@ export function ProfilePage({ userId, email, familyId }: { userId: string; email
       <div style={styles.card}>
         <p style={styles.email}>{email}</p>
       </div>
+
+      {requests !== null && <>
+        <h2 style={styles.sectionTitle}>Üyelik İstekleri</h2>
+        <div style={styles.card}>
+          {requests.length === 0 && <p style={styles.empty}>Bekleyen üyelik isteği yok.</p>}
+          {requests.map((request) => <div key={request.user_id} style={styles.requestRow}>
+            <div style={{ minWidth: 0 }}><strong>{request.display_name}</strong><span style={styles.meta}>{request.email} · {request.approval_status === 'pending' ? 'Bekliyor' : 'Reddedildi'}</span></div>
+            <div style={styles.requestActions}>
+              <button type="button" disabled={reviewing === request.user_id} onClick={() => void reviewRequest(request.user_id, true)} style={styles.approve}>Onayla</button>
+              <button type="button" disabled={reviewing === request.user_id} onClick={() => void reviewRequest(request.user_id, false)} style={styles.reject}>Reddet</button>
+            </div>
+          </div>)}
+        </div>
+      </>}
 
       <h2 style={styles.sectionTitle}>Ayarlar</h2>
       <div style={styles.card}>
@@ -337,4 +365,10 @@ const styles: Record<string, React.CSSProperties> = {
     marginBottom: 10,
     margin: 0,
   },
+  empty: { margin: 0, color: 'var(--text-secondary)', fontSize: 12 },
+  requestRow: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: '1px solid var(--border)' },
+  meta: { display: 'block', color: 'var(--text-secondary)', fontSize: 10, marginTop: 3, overflow: 'hidden', textOverflow: 'ellipsis' },
+  requestActions: { display: 'flex', gap: 6 },
+  approve: { minHeight: 38, padding: '7px 9px', borderRadius: 10, color: 'var(--positive)', border: '1px solid rgba(53,201,121,.25)', background: 'rgba(53,201,121,.08)', fontSize: 11 },
+  reject: { minHeight: 38, padding: '7px 9px', borderRadius: 10, color: 'var(--negative)', border: '1px solid rgba(239,111,108,.25)', background: 'rgba(239,111,108,.08)', fontSize: 11 },
 };
