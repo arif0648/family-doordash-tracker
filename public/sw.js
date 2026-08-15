@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barbin-v5';
+const CACHE_NAME = 'barbin-v6';
 
 const isDevHost = (hostname) => hostname === 'localhost' || hostname === '127.0.0.1';
 const isDevAsset = (pathname) => pathname.startsWith('/@vite') || pathname.startsWith('/src/') || pathname.startsWith('/node_modules/.vite');
@@ -28,7 +28,7 @@ self.addEventListener('fetch', (event) => {
   if (url.hostname.endsWith('supabase.co')) return;
   if (isDevHost(url.hostname) || isDevAsset(url.pathname)) return;
 
-  if (event.request.mode === 'navigate' || event.request.destination === 'document') {
+  if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/manifest.json') {
     event.respondWith(
       fetch(event.request)
         .then((response) => {

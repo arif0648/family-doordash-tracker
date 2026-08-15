@@ -120,15 +120,25 @@ function Card({ card, onChanged, onPayment, onQuickPay }: { card: CreditCardRow;
   const urgent = days !== null && days >= 0 && days <= 7;
   const overdue = days !== null && days < 0;
   const [error, setError] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const balance = Number(card.current_balance || 0);
   const limit = Number(card.credit_limit || 0);
   const pct = limit > 0 ? Math.min((balance / limit) * 100, 100) : 0;
 
   async function del() {
     if (!confirm(`${card.card_name} silinsin mi?`)) return;
-    const { error: delError } = await supabase.from('credit_cards').delete().eq('id', card.id);
+    setError(null);
+    setDeleting(true);
+    const { data, error: delError } = await supabase.rpc('delete_credit_card', {
+      p_card_id: card.id,
+    });
+    setDeleting(false);
     if (delError) {
       setError(translateError(delError.message));
+      return;
+    }
+    if (!data?.length || data[0].deleted_card_id !== card.id) {
+      setError('Kart silinemedi. Lütfen tekrar deneyin.');
       return;
     }
     onChanged();
@@ -144,7 +154,9 @@ function Card({ card, onChanged, onPayment, onQuickPay }: { card: CreditCardRow;
         </div>
         <div style={S.actions}>
           <button onClick={onPayment} style={S.payBtn}>Öde</button>
-          <button onClick={del} style={S.del}>Sil</button>
+          <button onClick={del} style={S.del} disabled={deleting}>
+            {deleting ? 'Siliniyor…' : 'Sil'}
+          </button>
         </div>
       </div>
       {error && <p style={{ ...S.error, marginTop: 8 }}>{error}</p>}

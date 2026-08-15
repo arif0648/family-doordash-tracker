@@ -78,6 +78,36 @@ describe('Integration Tests - Family Operations Center', () => {
     });
   });
 
+  describe('Credit card hard delete regression', () => {
+    it('preserves purchase expenses while deleting the card and payment history atomically', () => {
+      const sql = readFileSync('supabase/migrations/0035_safe_credit_card_delete.sql', 'utf8');
+      expect(sql).toContain('function public.delete_credit_card');
+      expect(sql).toContain('credit_card_name_snapshot');
+      expect(sql).toContain('credit_card_id = null');
+      expect(sql).toContain('delete from public.credit_cards');
+      expect(sql).toContain('public.is_family_member');
+      expect(sql).toContain('deleted_payment_count');
+      const triggerSql = readFileSync('supabase/migrations/0036_fix_card_payment_delete_trigger.sql', 'utf8');
+      expect(triggerSql.indexOf("if tg_op = 'DELETE'")).toBeLessThan(
+        triggerSql.indexOf("elsif tg_table_name = 'credit_card_payments'"),
+      );
+      expect(triggerSql).toContain('old.payment_date');
+    });
+  });
+
+  describe('Single-tap navigation regression', () => {
+    it('preloads lazy routes and does not attach a duplicate touchstart closer', () => {
+      const app = readFileSync('src/App.tsx', 'utf8');
+      const nav = readFileSync('src/components/common/BottomNav.tsx', 'utf8');
+      const sheet = readFileSync('src/components/common/BottomSheet.tsx', 'utf8');
+      const sw = readFileSync('public/sw.js', 'utf8');
+      expect(app).toContain('preloadPrimaryRoutes');
+      expect(nav).toContain('onPointerDown');
+      expect(sheet).not.toContain("addEventListener('touchstart'");
+      expect(sw).toContain("barbin-v6");
+    });
+  });
+
   describe('Cross-device family source of truth', () => {
     it('resolves the largest shared family deterministically and publishes full delete rows', () => {
       const sql = readFileSync('supabase/migrations/0033_cross_device_realtime_and_card_purchases.sql', 'utf8');

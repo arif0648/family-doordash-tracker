@@ -77,6 +77,7 @@ export interface ExpenseRow {
   note: string | null;
   payment_method: 'cash_bank' | 'credit_card';
   credit_card_id: string | null;
+  credit_card_name_snapshot: string | null;
   created_at: string;
 }
 

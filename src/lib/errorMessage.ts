@@ -13,6 +13,7 @@ export function translateError(message: string | null | undefined): string {
     VEHICLE_FAMILY_MISMATCH: 'Seçilen araç bu aileye ait değil.',
     CREDIT_CARD_REQUIRED: 'Kredi kartı seçimi zorunludur.',
     CREDIT_CARD_NOT_FOUND: 'Seçilen kredi kartı bulunamadı veya aktif değil.',
+    CREDIT_CARD_DELETE_FAILED: 'Kredi kartı silinemedi. Lütfen tekrar deneyin.',
     INVALID_PAYMENT_METHOD: 'Geçerli bir ödeme yöntemi seçin.',
   };
 

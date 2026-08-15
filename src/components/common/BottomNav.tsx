@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router';
 import { QuickActionsSheet } from './QuickActionsSheet';
 import { MenuSheet } from './MenuSheet';
+import { preloadMenuRoutes, preloadRoute } from '../../lib/routePreload';
 
 const menuPaths = ['/araclar', '/sabit-giderler', '/randevular', '/bildirimler', '/raporlar', '/profil'];
 
@@ -18,8 +19,10 @@ export function BottomNav() {
       <nav style={S.nav}>
         {/* Ana */}
         <NavLink
+          className="nav-tap"
           to="/"
           end
+          onPointerDown={() => preloadRoute('/')}
           style={{
             ...S.tab,
             color: activeFor('/') ? 'var(--accent)' : 'var(--text-secondary)',
@@ -33,7 +36,9 @@ export function BottomNav() {
 
         {/* Hareketler */}
         <NavLink
+          className="nav-tap"
           to="/islemler"
+          onPointerDown={() => preloadRoute('/islemler')}
           style={{
             ...S.tab,
             color: activeFor('/islemler') ? 'var(--accent)' : 'var(--text-secondary)',
@@ -46,8 +51,10 @@ export function BottomNav() {
 
         {/* + button (3rd column, centered) */}
         <button
+          className="nav-tap"
           type="button"
           style={S.action}
+          onPointerDown={() => { preloadRoute('/kazanc'); preloadRoute('/gider'); }}
           onClick={() => setQuickOpen(true)}
           aria-label="Yeni işlem"
         >
@@ -56,7 +63,9 @@ export function BottomNav() {
 
         {/* Kartlar */}
         <NavLink
+          className="nav-tap"
           to="/kredi-kartlari"
+          onPointerDown={() => preloadRoute('/kredi-kartlari')}
           style={{
             ...S.tab,
             color: activeFor('/kredi-kartlari') ? 'var(--accent)' : 'var(--text-secondary)',
@@ -69,6 +78,7 @@ export function BottomNav() {
 
         {/* Menü */}
         <button
+          className="nav-tap"
           type="button"
           style={{
             ...S.tab,
@@ -76,6 +86,7 @@ export function BottomNav() {
             background: menuActive ? 'rgba(60,200,237,.065)' : 'transparent',
           }}
           onClick={() => setMenuOpen(true)}
+          onPointerDown={preloadMenuRoutes}
           aria-label="Menü"
         >
           <span style={S.icon}>☰</span>

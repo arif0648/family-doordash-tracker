@@ -1,6 +1,6 @@
 # BARBİN AİLESİ — YAPILACAKLAR LİSTESİ (Masaüstü Geliştirme Talimatı)
 
-**Proje:** https://barbin-ailesi.surge.sh
+**Proje:** https://barbin.surge.sh
 **Backend:** Supabase — `bbxcfkcsivyzscfbarmp.supabase.co`
 **Teknoloji:** React + Vite (SPA), Supabase (PostgreSQL + Auth + Realtime), surge.sh deploy
 **Hazırlayan:** Devin — canlı uygulamanın tam fonksiyonel testi sonucunda

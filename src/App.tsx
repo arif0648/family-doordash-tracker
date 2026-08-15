@@ -14,17 +14,30 @@ import { ForgotPasswordPage, ResetPasswordPage } from './components/auth/Passwor
 import { HomePage } from './components/home/HomePage';
 import { IncomeRow } from './types/database';
 import { initializeAudioManager } from './lib/sound';
+import {
+  loadAppointments,
+  loadCreditCards,
+  loadExpenseForm,
+  loadFixedExpenses,
+  loadIncomeForm,
+  loadNotifications,
+  loadProfile,
+  loadReports,
+  loadTransactions,
+  loadVehicles,
+  preloadPrimaryRoutes,
+} from './lib/routePreload';
 
-const IncomeForm = lazy(() => import('./components/income/IncomeForm').then((module) => ({ default: module.IncomeForm })));
-const ExpenseForm = lazy(() => import('./components/expense/ExpenseForm').then((module) => ({ default: module.ExpenseForm })));
-const FixedExpensesPanel = lazy(() => import('./components/expense/FixedExpensesPanel').then((module) => ({ default: module.FixedExpensesPanel })));
-const VehiclesPage = lazy(() => import('./components/vehicles/VehiclesPage').then((module) => ({ default: module.VehiclesPage })));
-const CreditCardsPage = lazy(() => import('./components/vehicles/CreditCardsPage').then((module) => ({ default: module.CreditCardsPage })));
-const ProfilePage = lazy(() => import('./components/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })));
-const ReportsPage = lazy(() => import('./components/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })));
-const TransactionsPage = lazy(() => import('./components/transactions/TransactionsPage').then((module) => ({ default: module.TransactionsPage })));
-const AppointmentsPage = lazy(() => import('./components/appointments/AppointmentsPage').then((module) => ({ default: module.AppointmentsPage })));
-const NotificationsPage = lazy(() => import('./components/notifications/NotificationsPage').then((module) => ({ default: module.NotificationsPage })));
+const IncomeForm = lazy(() => loadIncomeForm().then((module) => ({ default: module.IncomeForm })));
+const ExpenseForm = lazy(() => loadExpenseForm().then((module) => ({ default: module.ExpenseForm })));
+const FixedExpensesPanel = lazy(() => loadFixedExpenses().then((module) => ({ default: module.FixedExpensesPanel })));
+const VehiclesPage = lazy(() => loadVehicles().then((module) => ({ default: module.VehiclesPage })));
+const CreditCardsPage = lazy(() => loadCreditCards().then((module) => ({ default: module.CreditCardsPage })));
+const ProfilePage = lazy(() => loadProfile().then((module) => ({ default: module.ProfilePage })));
+const ReportsPage = lazy(() => loadReports().then((module) => ({ default: module.ReportsPage })));
+const TransactionsPage = lazy(() => loadTransactions().then((module) => ({ default: module.TransactionsPage })));
+const AppointmentsPage = lazy(() => loadAppointments().then((module) => ({ default: module.AppointmentsPage })));
+const NotificationsPage = lazy(() => loadNotifications().then((module) => ({ default: module.NotificationsPage })));
 
 export default function App() {
   useEffect(() => initializeAudioManager(), []);
@@ -64,6 +77,21 @@ export default function App() {
 
 function AuthenticatedApp({ userId, email }: { userId: string; email: string }) {
   const { familyId, loading: familyLoading, error: familyError } = useFamilyId(userId);
+
+  useEffect(() => {
+    if (!familyId) return;
+    const start = () => preloadPrimaryRoutes();
+    const idleWindow = window as Window & {
+      requestIdleCallback?: (callback: () => void, options?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (typeof idleWindow.requestIdleCallback === 'function') {
+      const id = idleWindow.requestIdleCallback(start, { timeout: 1200 });
+      return () => idleWindow.cancelIdleCallback?.(id);
+    }
+    const id = globalThis.setTimeout(start, 250);
+    return () => globalThis.clearTimeout(id);
+  }, [familyId]);
 
   if (familyLoading) return <LoadingScreen label="Aile bilgisi yükleniyor…" />;
   if (familyError || !familyId) {

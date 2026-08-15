@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect } from 'react';
 
 interface BottomSheetProps {
   open: boolean;
@@ -8,23 +8,15 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
-    const onTouch = (e: TouchEvent) => {
-      const target = e.target as HTMLElement;
-      if (target === overlayRef.current) onClose();
-    };
     window.addEventListener('keydown', onKey);
-    overlayRef.current?.addEventListener('touchstart', onTouch);
     document.body.style.overflow = 'hidden';
     return () => {
       window.removeEventListener('keydown', onKey);
-      overlayRef.current?.removeEventListener('touchstart', onTouch);
       document.body.style.overflow = '';
     };
   }, [open, onClose]);
@@ -33,7 +25,6 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
 
   return (
     <div
-      ref={overlayRef}
       style={S.overlay}
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();

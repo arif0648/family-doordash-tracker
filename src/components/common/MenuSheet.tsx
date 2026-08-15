@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { BottomSheet } from './BottomSheet';
+import { preloadRoute } from '../../lib/routePreload';
 
 interface MenuSheetProps {
   open: boolean;
@@ -20,8 +21,8 @@ export function MenuSheet({ open, onClose }: MenuSheetProps) {
   const navigate = useNavigate();
 
   const onSelect = (path: string) => {
-    onClose();
     navigate(path);
+    onClose();
   };
 
   return (
@@ -31,6 +32,8 @@ export function MenuSheet({ open, onClose }: MenuSheetProps) {
           <button
             key={item.path}
             style={S.item}
+            className="nav-tap"
+            onPointerDown={() => preloadRoute(item.path)}
             onClick={() => onSelect(item.path)}
             aria-label={item.label}
           >

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router';
 import { BottomSheet } from './BottomSheet';
+import { preloadRoute } from '../../lib/routePreload';
 
 interface QuickActionsSheetProps {
   open: boolean;
@@ -11,8 +12,8 @@ export function QuickActionsSheet({ open, onClose }: QuickActionsSheetProps) {
   const navigate = useNavigate();
 
   const onSelect = (path: string) => {
-    onClose();
     navigate(path);
+    onClose();
   };
 
   const actions = [
@@ -29,6 +30,8 @@ export function QuickActionsSheet({ open, onClose }: QuickActionsSheetProps) {
           <button
             key={a.path}
             style={S.row}
+            className="nav-tap"
+            onPointerDown={() => preloadRoute(a.path)}
             onClick={() => onSelect(a.path)}
             aria-label={a.label}
           >
