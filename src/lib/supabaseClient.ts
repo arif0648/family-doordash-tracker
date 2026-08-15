@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { hasPasswordRecoveryParameters } from './authRedirect';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
@@ -10,6 +11,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     'VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY tanımlı değil. .env dosyasını kontrol edin.'
   );
 }
+
+// Capture this before the auth client consumes/cleans callback parameters.
+// ResetPasswordPage uses it if PASSWORD_RECOVERY fired during client startup.
+export const passwordRecoveryUrlDetectedAtStartup =
+  typeof window !== 'undefined' && hasPasswordRecoveryParameters(window.location.href);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {

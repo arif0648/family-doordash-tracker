@@ -1,6 +1,8 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useEffect, useState, FormEvent } from 'react';
+import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { Link, useNavigate } from 'react-router';
-import { supabase } from '../../lib/supabaseClient';
+import { passwordRecoveryUrlDetectedAtStartup, supabase } from '../../lib/supabaseClient';
+import { getPasswordResetRedirectUrl, hasPasswordRecoveryParameters } from '../../lib/authRedirect';
 import { translateAuthError } from './LoginPage';
 
 export function ForgotPasswordPage() {
@@ -20,7 +22,7 @@ export function ForgotPasswordPage() {
 
     setLoading(true);
     const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/sifre-sifirla`,
+      redirectTo: getPasswordResetRedirectUrl(import.meta.env.DEV, window.location.origin),
     });
     setLoading(false);
 
@@ -77,11 +79,49 @@ export function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [recoveryReady, setRecoveryReady] = useState(false);
+  const [checkingRecovery, setCheckingRecovery] = useState(true);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    let mounted = true;
+    const recoveryUrl =
+      passwordRecoveryUrlDetectedAtStartup || hasPasswordRecoveryParameters(window.location.href);
+
+    const acceptRecoverySession = (event: AuthChangeEvent, session: Session | null) => {
+      if (!mounted) return;
+      if (session && (event === 'PASSWORD_RECOVERY' || recoveryUrl)) {
+        setRecoveryReady(true);
+        setError(null);
+      }
+      setCheckingRecovery(false);
+    };
+
+    const { data: listener } = supabase.auth.onAuthStateChange(acceptRecoverySession);
+    supabase.auth.getSession().then(({ data, error: sessionError }) => {
+      if (!mounted) return;
+      if (sessionError) {
+        setError(translateAuthError(sessionError.message));
+        setCheckingRecovery(false);
+        return;
+      }
+      acceptRecoverySession('INITIAL_SESSION', data.session);
+    });
+
+    return () => {
+      mounted = false;
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!recoveryReady) {
+      setError('Bu şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş. Yeni bir bağlantı isteyin.');
+      return;
+    }
 
     if (password.length < 6) {
       setError('Şifre en az 6 karakter olmalıdır.');
@@ -104,7 +144,8 @@ export function ResetPasswordPage() {
     }
 
     setSuccess(true);
-    setTimeout(() => navigate('/'), 1500);
+    await supabase.auth.signOut({ scope: 'local' });
+    setTimeout(() => navigate('/giris', { replace: true }), 1200);
   }
 
   if (success) {
@@ -113,6 +154,30 @@ export function ResetPasswordPage() {
         <div className="auth-card" style={styles.box}>
           <h2 style={{ color: 'white', fontSize: 20 }}>Şifreniz güncellendi</h2>
           <p style={{ color: '#94A3B8', marginTop: 8 }}>Yönlendiriliyorsunuz…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (checkingRecovery) {
+    return (
+      <div className="auth-page" style={styles.container}>
+        <div className="auth-card" style={styles.box}>
+          <h2 style={{ color: 'white', fontSize: 20 }}>Bağlantı doğrulanıyor…</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (!recoveryReady) {
+    return (
+      <div className="auth-page" style={styles.container}>
+        <div className="auth-card" style={styles.box}>
+          <h2 style={{ color: 'white', fontSize: 20 }}>Bağlantı geçersiz</h2>
+          <p style={{ color: '#94A3B8', marginTop: 8 }}>
+            Bu bağlantının süresi dolmuş veya recovery oturumu bulunamadı.
+          </p>
+          <Link to="/sifremi-unuttum" style={styles.link}>Yeni bağlantı iste</Link>
         </div>
       </div>
     );
