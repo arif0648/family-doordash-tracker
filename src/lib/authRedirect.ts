@@ -1,5 +1,5 @@
 export const PRODUCTION_PASSWORD_RESET_URL =
-  'https://barbin-phase32-test.surge.sh/sifre-sifirla';
+  'https://barbin.surge.sh/sifre-sifirla';
 
 export function getPasswordResetRedirectUrl(isDevelopment: boolean, origin: string): string {
   return isDevelopment

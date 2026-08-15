@@ -11,7 +11,7 @@ describe('password recovery redirect contract', () => {
       PRODUCTION_PASSWORD_RESET_URL,
     );
     expect(PRODUCTION_PASSWORD_RESET_URL).toBe(
-      'https://barbin-phase32-test.surge.sh/sifre-sifirla',
+      'https://barbin.surge.sh/sifre-sifirla',
     );
   });
 
