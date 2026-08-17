@@ -5,6 +5,7 @@ import { playExpenseSound } from '../../lib/sound';
 import { translateError } from '../../lib/errorMessage';
 import { toPacificDateString } from '../../lib/timezone';
 import { MAX_AMOUNT } from '../../lib/format';
+import { NavLink } from 'react-router';
 
 interface Props {
   familyId: string;
@@ -26,13 +27,14 @@ export function ExpenseForm({ familyId, vehicles, creditCards, onSaved }: Props)
   const [amount, setAmount] = useState('');
   const [recordDate, setRecordDate] = useState(() => toPacificDateString(new Date()));
   const [paymentMethod, setPaymentMethod] = useState<'cash_bank' | 'credit_card'>('cash_bank');
-  const [creditCardId, setCreditCardId] = useState(creditCards[0]?.id ?? '');
+  const [creditCardId, setCreditCardId] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   const requiresVehicle = categoryTab === 'benzin' || categoryTab === 'arac_gideri';
   const resolvedCategory: ExpenseCategory = categoryTab === 'diger' ? 'diger_aile' : categoryTab;
+  const activeCreditCards = creditCards.filter((card) => card.is_active !== false);
 
 
   async function handleSubmit(e: FormEvent) {
@@ -144,16 +146,21 @@ export function ExpenseForm({ familyId, vehicles, creditCards, onSaved }: Props)
       {paymentMethod === 'credit_card' && (
         <>
           <label style={styles.label}>Kredi Kartı</label>
-          <select
-            style={styles.input}
-            value={creditCardId}
-            onChange={(e) => { setCreditCardId(e.target.value); setError(null); setSuccess(null); }}
-          >
-            <option value="">Kart seçin</option>
-            {creditCards.filter((card) => card.is_active).map((card) => (
-              <option key={card.id} value={card.id}>{card.card_name}</option>
-            ))}
-          </select>
+          {activeCreditCards.length > 0 ? <select
+              style={styles.input}
+              value={creditCardId}
+              onChange={(e) => { setCreditCardId(e.target.value); setError(null); setSuccess(null); }}
+            >
+              <option value="">Kart seçin</option>
+              {activeCreditCards.map((card) => (
+                <option key={card.id} value={card.id}>
+                  {card.card_name}{card.last_four ? ` ••••${card.last_four}` : ''}
+                </option>
+              ))}
+            </select> : <div style={styles.noCards}>
+              <span>Henüz kredi kartı eklenmemiş.</span>
+              <NavLink to="/kredi-kartlari" style={styles.addCard}>Kart Ekle</NavLink>
+            </div>}
         </>
       )}
 
@@ -179,5 +186,7 @@ const styles: Record<string, React.CSSProperties> = {
   input: { width:'100%', padding:'12px 14px', borderRadius:12, border:'1px solid var(--border)', background:'#090e16', color:'var(--text)', fontSize:15, minHeight:46, boxSizing:'border-box' },
   error: { color:'var(--negative)', fontSize:12, marginTop:4 },
   success: { color:'var(--positive)', fontSize:12, marginTop:4 },
+  noCards: { display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,padding:'11px 12px',border:'1px solid var(--border)',borderRadius:12,background:'#090e16',color:'var(--text-secondary)',fontSize:12 },
+  addCard: { flexShrink:0,color:'var(--accent)',fontWeight:750,textDecoration:'none',padding:'7px 9px',border:'1px solid rgba(60,200,237,.2)',borderRadius:9 },
   saveButton: { marginTop:8, minHeight:48, borderRadius:14, border:'1px solid rgba(53,201,121,.25)', background:'rgba(53,201,121,.88)', color:'#04120D', fontWeight:800, fontSize:14 },
 };

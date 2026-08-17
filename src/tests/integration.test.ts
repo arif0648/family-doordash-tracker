@@ -95,6 +95,21 @@ describe('Integration Tests - Family Operations Center', () => {
     });
   });
 
+  describe('Credit card expense picker regression', () => {
+    it('normalizes legacy NULL active status and keeps explicit selection validation', () => {
+      const hook = readFileSync('src/hooks/useFamilyRealtimeData.ts', 'utf8');
+      const form = readFileSync('src/components/expense/ExpenseForm.tsx', 'utf8');
+      const sql = readFileSync('supabase/migrations/0038_normalize_credit_card_active_status.sql', 'utf8');
+      expect(hook).toContain('is_active: dbCard.is_active !== false');
+      expect(form).toContain("useState('')");
+      expect(form).toContain("setError('Kredi kartı seçimi zorunludur.')");
+      expect(form).toContain('Henüz kredi kartı eklenmemiş.');
+      expect(form).toContain('••••${card.last_four}');
+      expect(sql).toContain('where is_active is null');
+      expect(sql).toContain('alter column is_active set not null');
+    });
+  });
+
   describe('Single-tap navigation regression', () => {
     it('preloads lazy routes and does not attach a duplicate touchstart closer', () => {
       const app = readFileSync('src/App.tsx', 'utf8');

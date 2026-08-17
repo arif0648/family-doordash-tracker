@@ -26,6 +26,15 @@ function normalizeVehicle(dbVehicle: Vehicle): Vehicle {
   };
 }
 
+export function normalizeCreditCard(dbCard: CreditCardRow): CreditCardRow {
+  return {
+    ...dbCard,
+    // Before migration 0038, legacy rows may arrive as NULL at runtime even
+    // though the generated application type expects a boolean.
+    is_active: dbCard.is_active !== false,
+  };
+}
+
 interface FamilyData {
   vehicles: Vehicle[];
   income: IncomeRow[];
@@ -115,7 +124,7 @@ export function useFamilyRealtimeData(familyId: string | null): FamilyData & { r
         expenses,
         mileageLog: m.data ?? [],
         fixedExpenses: f.data ?? [],
-        creditCards: c.data ?? [],
+        creditCards: (c.data ?? []).map((card) => normalizeCreditCard(card as CreditCardRow)),
         creditCardPayments: cp.data ?? [],
         appointments: a.error ? previous.appointments : (a.data ?? []),
         notifications: n.error ? previous.notifications : (n.data ?? []),
