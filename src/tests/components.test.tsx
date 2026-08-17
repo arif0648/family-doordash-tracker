@@ -11,7 +11,7 @@ import { EmptyState, ErrorScreen, LoadingScreen } from '../components/common/Sta
 import { WeeklyGoalCard } from '../components/home/WeeklyGoalCard';
 import { VehicleChampions } from '../components/home/VehicleChampions';
 import { calculateHourlyRate } from '../lib/hourlyRate';
-import { calculateQuarterGoldTry, parseUsdTry } from '../lib/marketRates';
+import { calculateQuarterGoldTry, parseMarketRatesPayload, parseUsdTry } from '../lib/marketRates';
 import { unlockAudio, setSoundEnabled } from '../lib/sound';
 import { shouldRefetchForRealtimeStatus } from '../hooks/useFamilyRealtimeData';
 import { createDebouncedRefetch } from '../lib/realtimeSync';
@@ -93,6 +93,8 @@ describe('Market data helpers', () => {
     expect(parseUsdTry({ rates: { TRY: 42.5 } })).toBe(42.5);
     expect(parseUsdTry({ rates: {} })).toBeNull();
     expect(calculateQuarterGoldTry(40, 3000)).toBeCloseTo(6203.81, 1);
+    expect(parseMarketRatesPayload({ usdTry: 47.88, goldUsd: 4392 })).toEqual({ usdTry: 47.88, goldUsd: 4392 });
+    expect(parseMarketRatesPayload({ usdTry: null, goldUsd: 4392 })).toBeNull();
   });
 });
 

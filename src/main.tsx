@@ -7,7 +7,7 @@ import './index.css';
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     if (import.meta.env.PROD) {
-      navigator.serviceWorker.register('/sw.js?v=6').catch(() => {});
+      navigator.serviceWorker.register('/sw.js?v=7').catch(() => {});
       return;
     }
 

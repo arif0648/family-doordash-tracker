@@ -1,4 +1,4 @@
-const CACHE_NAME = 'barbin-v6';
+const CACHE_NAME = 'barbin-v7';
 
 const isDevHost = (hostname) => hostname === 'localhost' || hostname === '127.0.0.1';
 const isDevAsset = (pathname) => pathname.startsWith('/@vite') || pathname.startsWith('/src/') || pathname.startsWith('/node_modules/.vite');
@@ -25,7 +25,9 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  if (url.hostname.endsWith('supabase.co')) return;
+  // Never proxy/cache third-party API traffic. Safari must talk to market and
+  // Supabase endpoints directly; only application assets belong in this cache.
+  if (url.origin !== self.location.origin) return;
   if (isDevHost(url.hostname) || isDevAsset(url.pathname)) return;
 
   if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname === '/manifest.json') {

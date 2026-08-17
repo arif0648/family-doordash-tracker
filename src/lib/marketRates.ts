@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { supabase } from './supabaseClient';
 
 export interface MarketRates {
   usdTry: number | null;
@@ -21,6 +22,15 @@ export function parseUsdTry(payload: unknown): number | null {
 export function calculateQuarterGoldTry(usdTry: number, goldUsdPerOunce: number): number | null {
   if (![usdTry, goldUsdPerOunce].every((value) => Number.isFinite(value) && value > 0)) return null;
   return goldUsdPerOunce * usdTry * (QUARTER_FINE_GOLD_GRAMS / OUNCE_GRAMS);
+}
+
+export function parseMarketRatesPayload(payload: unknown): { usdTry: number; goldUsd: number } | null {
+  const data = payload as { usdTry?: unknown; goldUsd?: unknown };
+  const usdTry = Number(data?.usdTry);
+  const goldUsd = Number(data?.goldUsd);
+  return Number.isFinite(usdTry) && usdTry > 0 && Number.isFinite(goldUsd) && goldUsd > 0
+    ? { usdTry, goldUsd }
+    : null;
 }
 
 const FETCH_TIMEOUT = 10_000;
@@ -98,7 +108,21 @@ async function fetchGoldUsd(): Promise<number | null> {
 }
 
 async function fetchRates() {
-  const [usdTry, goldUsd] = await Promise.all([fetchUsdTry(), fetchGoldUsd()]);
+  let usdTry: number | null = null;
+  let goldUsd: number | null = null;
+  try {
+    const { data, error } = await supabase.functions.invoke('market-rates', { method: 'GET' });
+    if (!error) {
+      const parsed = parseMarketRatesPayload(data);
+      if (parsed) ({ usdTry, goldUsd } = parsed);
+    }
+  } catch {
+    // Direct providers below remain a browser fallback if the edge function is unavailable.
+  }
+
+  if (usdTry === null || goldUsd === null) {
+    [usdTry, goldUsd] = await Promise.all([fetchUsdTry(), fetchGoldUsd()]);
+  }
   const errors: string[] = [];
 
   if (usdTry === null) errors.push('USD/TRY alınamadı');

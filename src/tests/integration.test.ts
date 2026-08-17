@@ -119,7 +119,7 @@ describe('Integration Tests - Family Operations Center', () => {
       expect(app).toContain('preloadPrimaryRoutes');
       expect(nav).toContain('onPointerDown');
       expect(sheet).not.toContain("addEventListener('touchstart'");
-      expect(sw).toContain("barbin-v6");
+      expect(sw).toContain("barbin-v7");
     });
   });
 
@@ -246,6 +246,18 @@ describe('Integration Tests - Family Operations Center', () => {
   });
 
   describe('Market Rates Error Handling', () => {
+    it('uses the Supabase proxy and keeps third-party traffic outside the service-worker cache', () => {
+      const rates = readFileSync('src/lib/marketRates.ts', 'utf8');
+      const edge = readFileSync('supabase/functions/market-rates/index.ts', 'utf8');
+      const sw = readFileSync('public/sw.js', 'utf8');
+      expect(rates).toContain("supabase.functions.invoke('market-rates'");
+      expect(edge).toContain('MARKET_DATA_UNAVAILABLE');
+      expect(edge).toContain('open.er-api.com');
+      expect(edge).toContain('api.gold-api.com');
+      expect(sw).toContain("url.origin !== self.location.origin");
+      expect(sw).toContain("barbin-v7");
+    });
+
     it('should handle API failures gracefully', async () => {
       // This test verifies the market rates error isolation
       // It should:
