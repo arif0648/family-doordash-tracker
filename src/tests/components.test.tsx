@@ -11,7 +11,7 @@ import { EmptyState, ErrorScreen, LoadingScreen } from '../components/common/Sta
 import { WeeklyGoalCard } from '../components/home/WeeklyGoalCard';
 import { VehicleChampions } from '../components/home/VehicleChampions';
 import { calculateHourlyRate } from '../lib/hourlyRate';
-import { calculateQuarterGoldTry, parseMarketRatesPayload, parseUsdTry } from '../lib/marketRates';
+import { parseMarketRatesPayload } from '../lib/marketRates';
 import { unlockAudio, setSoundEnabled } from '../lib/sound';
 import { shouldRefetchForRealtimeStatus } from '../hooks/useFamilyRealtimeData';
 import { createDebouncedRefetch } from '../lib/realtimeSync';
@@ -89,12 +89,15 @@ describe('WeeklyGoalCard', () => {
 });
 
 describe('Market data helpers', () => {
-  it('USD/TRY parse eder ve spot altından teorik çeyrek değerini hesaplar', () => {
-    expect(parseUsdTry({ rates: { TRY: 42.5 } })).toBe(42.5);
-    expect(parseUsdTry({ rates: {} })).toBeNull();
-    expect(calculateQuarterGoldTry(40, 3000)).toBeCloseTo(6203.81, 1);
-    expect(parseMarketRatesPayload({ usdTry: 47.88, goldUsd: 4392 })).toEqual({ usdTry: 47.88, goldUsd: 4392 });
-    expect(parseMarketRatesPayload({ usdTry: null, goldUsd: 4392 })).toBeNull();
+  it('Türkiye piyasası alış/satış verisini doğrular; eksik veya ters fiyatı reddeder', () => {
+    const payload = {
+      usdBuy: 47.88, usdSell: 47.91,
+      quarterGoldBuy: 10673.88, quarterGoldSell: 10919.78,
+      source: 'Trunçgil Finans', sourceUpdatedAt: '2026-08-17T07:49:01+03:00',
+    };
+    expect(parseMarketRatesPayload(payload)).toEqual(payload);
+    expect(parseMarketRatesPayload({ ...payload, quarterGoldBuy: null })).toBeNull();
+    expect(parseMarketRatesPayload({ ...payload, usdBuy: 50, usdSell: 49 })).toBeNull();
   });
 });
 

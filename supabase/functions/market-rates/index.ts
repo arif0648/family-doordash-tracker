@@ -4,29 +4,41 @@ const corsHeaders = {
 };
 
 const timeoutMs = 8_000;
+const SOURCE_URL = 'https://finans.truncgil.com/v4/today.json';
+const TCMB_URL = 'https://www.tcmb.gov.tr/kurlar/today.xml';
 
-async function fetchJson(url: string): Promise<unknown> {
+async function fetchBody(url: string): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(url, { signal: controller.signal, headers: { accept: 'application/json' } });
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: { accept: 'application/json, application/xml;q=0.9', 'user-agent': 'BARBIN-Ailesi/1.0' },
+    });
     if (!response.ok) throw new Error(`HTTP_${response.status}`);
-    return await response.json();
+    return await response.text();
   } finally {
     clearTimeout(timer);
   }
 }
 
-async function firstNumber(sources: Array<{ url: string; parse: (data: unknown) => number }>): Promise<number | null> {
-  for (const source of sources) {
-    try {
-      const value = source.parse(await fetchJson(source.url));
-      if (Number.isFinite(value) && value > 0) return value;
-    } catch {
-      // Continue with the next independent provider.
-    }
-  }
-  return null;
+function positive(value: unknown): number | null {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function turkeyTimestamp(value: unknown): string | null {
+  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/.test(value)) return null;
+  const iso = `${value.replace(' ', 'T')}+03:00`;
+  return Number.isFinite(new Date(iso).getTime()) ? iso : null;
+}
+
+function tcmbUsdMid(xml: string): number | null {
+  const block = xml.match(/<Currency[^>]+CurrencyCode="USD"[\s\S]*?<\/Currency>/)?.[0];
+  if (!block) return null;
+  const buy = positive(block.match(/<ForexBuying>([^<]+)<\/ForexBuying>/)?.[1]);
+  const sell = positive(block.match(/<ForexSelling>([^<]+)<\/ForexSelling>/)?.[1]);
+  return buy !== null && sell !== null ? (buy + sell) / 2 : null;
 }
 
 Deno.serve(async (request) => {
@@ -35,26 +47,48 @@ Deno.serve(async (request) => {
     return new Response(JSON.stringify({ error: 'METHOD_NOT_ALLOWED' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 
-  const [usdTry, goldUsd] = await Promise.all([
-    firstNumber([
-      { url: 'https://open.er-api.com/v6/latest/USD', parse: (data) => Number((data as { rates?: { TRY?: unknown } })?.rates?.TRY) },
-      { url: 'https://api.exchangerate-api.com/v4/latest/USD', parse: (data) => Number((data as { rates?: { TRY?: unknown } })?.rates?.TRY) },
-      { url: 'https://api.frankfurter.app/latest?from=USD&to=TRY', parse: (data) => Number((data as { rates?: { TRY?: unknown } })?.rates?.TRY) },
-    ]),
-    firstNumber([
-      { url: 'https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd', parse: (data) => Number((data as Record<string, { usd?: unknown }>)?.['pax-gold']?.usd) },
-      { url: 'https://api.gold-api.com/price/XAU', parse: (data) => Number((data as { price?: unknown })?.price) },
-    ]),
-  ]);
+  try {
+    const [marketText, tcmbResult] = await Promise.all([
+      fetchBody(SOURCE_URL),
+      fetchBody(TCMB_URL).catch(() => null),
+    ]);
+    const market = JSON.parse(marketText) as Record<string, unknown>;
+    const usd = market.USD as { Buying?: unknown; Selling?: unknown } | undefined;
+    const quarter = market.CEYREKALTIN as { Buying?: unknown; Selling?: unknown } | undefined;
+    const usdBuy = positive(usd?.Buying);
+    const usdSell = positive(usd?.Selling);
+    const quarterGoldBuy = positive(quarter?.Buying);
+    const quarterGoldSell = positive(quarter?.Selling);
+    const sourceUpdatedAt = turkeyTimestamp(market.Update_Date);
 
-  if (usdTry === null || goldUsd === null) {
-    return new Response(JSON.stringify({ error: 'MARKET_DATA_UNAVAILABLE', usdTry, goldUsd }), {
+    if (
+      usdBuy === null || usdSell === null || quarterGoldBuy === null || quarterGoldSell === null ||
+      sourceUpdatedAt === null || usdBuy > usdSell || quarterGoldBuy > quarterGoldSell
+    ) throw new Error('INVALID_SOURCE_DATA');
+
+    // TCMB is an official daily reference, not the displayed live market price.
+    // A large divergence protects the family screen from an obviously corrupt USD quote.
+    const tcmbMid = tcmbResult ? tcmbUsdMid(tcmbResult) : null;
+    const usdMid = (usdBuy + usdSell) / 2;
+    if (tcmbMid !== null && Math.abs(usdMid - tcmbMid) / tcmbMid > 0.10) {
+      throw new Error('USD_REFERENCE_MISMATCH');
+    }
+
+    return new Response(JSON.stringify({
+      usdBuy,
+      usdSell,
+      quarterGoldBuy,
+      quarterGoldSell,
+      source: 'Trunçgil Finans',
+      sourceUpdatedAt,
+      usdReference: tcmbMid === null ? null : { source: 'TCMB', mid: tcmbMid, withinTolerance: true },
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=120' },
+    });
+  } catch {
+    return new Response(JSON.stringify({ error: 'MARKET_DATA_UNAVAILABLE' }), {
       status: 503,
       headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
     });
   }
-
-  return new Response(JSON.stringify({ usdTry, goldUsd, updatedAt: new Date().toISOString() }), {
-    headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'public, max-age=120' },
-  });
 });

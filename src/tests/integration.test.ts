@@ -252,8 +252,10 @@ describe('Integration Tests - Family Operations Center', () => {
       const sw = readFileSync('public/sw.js', 'utf8');
       expect(rates).toContain("supabase.functions.invoke('market-rates'");
       expect(edge).toContain('MARKET_DATA_UNAVAILABLE');
-      expect(edge).toContain('open.er-api.com');
-      expect(edge).toContain('api.gold-api.com');
+      expect(edge).toContain('finans.truncgil.com/v4/today.json');
+      expect(edge).toContain('www.tcmb.gov.tr/kurlar/today.xml');
+      expect(edge).toContain('CEYREKALTIN');
+      expect(rates).not.toContain('calculateQuarterGoldTry');
       expect(sw).toContain("url.origin !== self.location.origin");
       expect(sw).toContain("barbin-v7");
     });
